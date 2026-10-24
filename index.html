@@ -201,7 +201,19 @@ const TL={"total": 762.6, "finalStart": 744.6, "questions": [{"id": 0, "kind": "
 const GUESTS=["Артём","Егор Н","Егор П","Паша","Катя","Аня","Рома","Никита","Илья","Клим"];
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
-const PEER_OPTS={debug:0,config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
+/* TURN: relays traffic when phones can't reach the host directly (mobile networks, strict NAT).
+   TURN_API — optional Metered credentials URL, e.g. "https://<app>.metered.live/api/v1/turn/credentials?apiKey=<key>";
+   if it is empty or fails, the public Open Relay servers below are used. */
+const TURN_API="";
+const PEER_OPTS={debug:0,config:{iceServers:[
+  {urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"},
+  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}
+]}};
+function loadIce(){
+  if(!TURN_API)return Promise.resolve();
+  const ctl=new AbortController();setTimeout(()=>ctl.abort(),4000);
+  return fetch(TURN_API,{signal:ctl.signal}).then(r=>r.json()).then(list=>{if(Array.isArray(list)&&list.length)PEER_OPTS.config.iceServers=PEER_OPTS.config.iceServers.slice(0,2).concat(list)}).catch(()=>{});
+}
 const hashJoin=(location.hash.match(/join=([\w-]+)/)||[])[1];
 
 /* ---------- confetti ---------- */
@@ -403,15 +415,20 @@ function player(){
     if(conn&&conn.open)conn.send({t:"join",name:n})}
   function setConn(on){$("conn").className="conn"+(on?" on":"")}
   function connect(){
-    if(!peer||peer.destroyed){peer=new Peer(PEER_OPTS);peer.on("open",dial);peer.on("error",e=>{setConn(false);if(e.type==="peer-unavailable"){$("waitTitle").textContent="Ведущий пока не на связи";$("waitText").textContent="Пробую снова…"}setTimeout(retry,2500)});peer.on("disconnected",()=>{setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)})}
+    if(!peer||peer.destroyed||peer.disconnected){try{peer&&peer.destroy()}catch(e){}
+      const p=peer=new Peer(PEER_OPTS);
+      setTimeout(()=>{if(peer===p&&!p.open&&(!conn||!conn.open)){try{p.destroy()}catch(e){}retry()}},10000);
+      peer.on("open",dial);peer.on("error",e=>{setConn(false);if(e.type==="peer-unavailable"){$("waitTitle").textContent="Ведущий пока не на связи";$("waitText").textContent="Пробую снова…"}setTimeout(retry,2500)});peer.on("disconnected",()=>{setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)})}
     else dial()}
   let retrying=false;function retry(){if(retrying)return;retrying=true;setTimeout(()=>{retrying=false;if(!conn||!conn.open)connect()},500)}
   function dial(){
-    conn=peer.connect(hostId,{reliable:true});
-    conn.on("open",()=>{setConn(true);if(myName)conn.send({t:"join",name:myName})});
-    conn.on("data",onMsg);
-    conn.on("close",()=>{setConn(false);setTimeout(retry,1500)});
-    conn.on("error",()=>{setConn(false);setTimeout(retry,2000)})}
+    try{conn&&conn.close()}catch(e){}
+    const c=conn=peer.connect(hostId,{reliable:true});
+    setTimeout(()=>{if(conn===c&&!c.open){try{c.close()}catch(e){}$("waitText").textContent="Связь не установилась, пробую снова…";retry()}},10000);
+    c.on("open",()=>{if(conn!==c)return;setConn(true);if(myName)c.send({t:"join",name:myName})});
+    c.on("data",m=>{if(conn===c)onMsg(m)});
+    c.on("close",()=>{if(conn!==c)return;setConn(false);setTimeout(retry,1500)});
+    c.on("error",()=>{if(conn!==c)return;setConn(false);setTimeout(retry,2000)})}
   function onMsg(m){
     if(m.t==="welcome"){myName=m.name;$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";
       if(!cur){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
@@ -448,7 +465,7 @@ function player(){
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(!conn||!conn.open))retry()});
 }
 
-hashJoin?player():host();
+loadIce().then(()=>hashJoin?player():host());
 </script>
 </body>
 </html>
