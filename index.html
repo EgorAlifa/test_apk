@@ -137,7 +137,7 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
       <div class="row" style="justify-content:space-between"><b>В игре: <span id="pcount">0</span></b><span class="status" id="netStatus">Подключаюсь…</span></div>
       <div class="chips" id="chips"><span class="muted">Пока никого. Сканируйте QR-код.</span></div>
     </div>
-    <div class="panel" style="margin-top:14px">
+    <div class="panel" id="vidPanel" style="margin-top:14px" hidden>
       <div class="row"><b>Видео</b><span class="status" id="vidStatus">Ищу video.mp4 рядом со страницей…</span></div>
       <div class="row"><label class="file">Выбрать файл с компьютера<input type="file" id="vidFile" accept="video/*"></label></div>
     </div>
@@ -194,25 +194,35 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
   </section>
 </main>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const TL={"total": 762.6, "finalStart": 744.6, "questions": [{"id": 0, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 1, "n": 8, "open": 31.4, "close": 41.4, "end": 45.2, "options": ["Пираты Карибского моря", "Титаник", "Аватар", "Перл-Харбор"], "correct": 1, "answer": "Титаник"}, {"id": 1, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 2, "n": 8, "open": 47.6, "close": 57.6, "end": 61.4, "options": ["Зверополис", "Книга джунглей", "Мадагаскар", "Король Лев"], "correct": 3, "answer": "Король Лев"}, {"id": 2, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 3, "n": 8, "open": 63.8, "close": 73.8, "end": 77.6, "options": ["Человек-паук", "Мстители", "Бэтмен", "Железный человек"], "correct": 0, "answer": "Человек-паук"}, {"id": 3, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 4, "n": 8, "open": 80.0, "close": 90.0, "end": 93.8, "options": ["Властелин колец", "Гарри Поттер", "Хроники Нарнии", "Перси Джексон"], "correct": 1, "answer": "Гарри Поттер"}, {"id": 4, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 5, "n": 8, "open": 96.2, "close": 106.2, "end": 110.0, "options": ["Золушка", "Хроники Нарнии", "Рапунцель", "Холодное сердце"], "correct": 3, "answer": "Холодное сердце"}, {"id": 5, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 6, "n": 8, "open": 112.4, "close": 122.4, "end": 126.2, "options": ["Джентльмены удачи", "Ирония судьбы", "Ёлки", "Иван Васильевич меняет профессию"], "correct": 1, "answer": "Ирония судьбы, или С лёгким паром!"}, {"id": 6, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 7, "n": 8, "open": 128.6, "close": 138.6, "end": 142.4, "options": ["Матрица", "Бойцовский клуб", "Начало", "Терминатор"], "correct": 0, "answer": "Матрица"}, {"id": 7, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 8, "n": 8, "open": 144.8, "close": 154.8, "end": 158.6, "options": ["Такси", "Форсаж", "Назад в будущее", "Интерстеллар"], "correct": 2, "answer": "Назад в будущее"}, {"id": 8, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 1, "n": 8, "open": 167.0, "close": 175.0, "end": 179.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 9, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 2, "n": 8, "open": 182.0, "close": 190.0, "end": 194.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 10, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 3, "n": 8, "open": 197.0, "close": 205.0, "end": 209.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 11, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 4, "n": 8, "open": 212.0, "close": 220.0, "end": 224.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 12, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 5, "n": 8, "open": 227.0, "close": 235.0, "end": 239.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 13, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 6, "n": 8, "open": 242.0, "close": 250.0, "end": 254.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 14, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 7, "n": 8, "open": 257.0, "close": 265.0, "end": 269.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 15, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 8, "n": 8, "open": 272.0, "close": 280.0, "end": 284.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 16, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 1, "n": 8, "open": 293.0, "close": 308.0, "end": 312.1, "options": ["Симпсоны", "В поисках Немо", "Губка Боб", "Гриффины"], "correct": 2, "answer": "Губка Боб Квадратные Штаны"}, {"id": 17, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 2, "n": 8, "open": 314.5, "close": 329.5, "end": 333.6, "options": ["Ну, погоди!", "Жил-был пёс", "Простоквашино", "Том и Джерри"], "correct": 0, "answer": "Ну, погоди!"}, {"id": 18, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 3, "n": 8, "open": 336.0, "close": 351.0, "end": 355.1, "options": ["Покемон", "Тетрис", "Тамагочи", "Бейблэйд"], "correct": 2, "answer": "Тамагочи"}, {"id": 19, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 4, "n": 8, "open": 357.5, "close": 372.5, "end": 376.6, "options": ["Как я встретил вашу маму", "Друзья", "Теория большого взрыва", "Универ"], "correct": 1, "answer": "Друзья"}, {"id": 20, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 5, "n": 8, "open": 379.0, "close": 394.0, "end": 398.1, "options": ["The Sims", "Terraria", "Minecraft", "Roblox"], "correct": 2, "answer": "Minecraft"}, {"id": 21, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 6, "n": 8, "open": 400.5, "close": 415.5, "end": 419.6, "options": ["Счастливы вместе", "Папины дочки", "Воронины", "Моя прекрасная няня"], "correct": 1, "answer": "Папины дочки"}, {"id": 22, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 7, "n": 8, "open": 422.0, "close": 437.0, "end": 441.1, "options": ["Лунтик", "Фиксики", "Смешарики", "Маша и Медведь"], "correct": 2, "answer": "Смешарики"}, {"id": 23, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 8, "n": 8, "open": 443.5, "close": 458.5, "end": 462.6, "options": ["Властелин колец", "Ведьмак", "Викинги", "Игра престолов"], "correct": 3, "answer": "Игра престолов"}, {"id": 24, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 1, "n": 6, "open": 471.0, "close": 478.0, "end": 482.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 25, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 2, "n": 6, "open": 484.5, "close": 491.5, "end": 495.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 26, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 3, "n": 6, "open": 498.0, "close": 505.0, "end": 509.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 27, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 4, "n": 6, "open": 511.5, "close": 518.5, "end": 522.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 28, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 5, "n": 6, "open": 525.0, "close": 532.0, "end": 536.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 29, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 6, "n": 6, "open": 538.5, "close": 545.5, "end": 549.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 30, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 1, "n": 8, "open": 558.0, "close": 573.0, "end": 577.1, "options": ["Мадагаскар", "Шрек", "Рапунцель", "Красавица и чудовище"], "correct": 1, "answer": "Шрек"}, {"id": 31, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 2, "n": 8, "open": 579.5, "close": 594.5, "end": 598.6, "options": ["Чарли и шоколадная фабрика", "Один дома", "Маска", "Ёлки"], "correct": 1, "answer": "Один дома"}, {"id": 32, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 3, "n": 8, "open": 601.0, "close": 616.0, "end": 620.1, "options": ["Пираты Карибского моря", "Остров сокровищ", "Ван Хельсинг", "Хроники Нарнии"], "correct": 0, "answer": "Пираты Карибского моря"}, {"id": 33, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 4, "n": 8, "open": 622.5, "close": 637.5, "end": 641.6, "options": ["Перевозчик", "Форсаж", "Такси", "Бумер"], "correct": 1, "answer": "Форсаж"}, {"id": 34, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 5, "n": 8, "open": 644.0, "close": 659.0, "end": 663.1, "options": ["Американский пирог", "Ёлки", "Мы — Миллеры", "Мальчишник в Вегасе"], "correct": 3, "answer": "Мальчишник в Вегасе"}, {"id": 35, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 6, "n": 8, "open": 665.5, "close": 680.5, "end": 684.6, "options": ["Аватар", "Звёздные войны", "Трансформеры", "Интерстеллар"], "correct": 0, "answer": "Аватар"}, {"id": 36, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 7, "n": 8, "open": 687.0, "close": 702.0, "end": 706.1, "options": ["Жмурки", "Бригада", "Бумер", "Брат 2"], "correct": 3, "answer": "Брат 2"}, {"id": 37, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 8, "n": 8, "open": 708.5, "close": 723.5, "end": 727.6, "options": ["Сумерки", "Голодные игры", "Дивергент", "Дневники вампира"], "correct": 0, "answer": "Сумерки"}], "cards": [{"start": 23.0, "end": 29.0, "round": 1, "title": "Эмодзи-кино"}, {"start": 158.6, "end": 164.6, "round": 2, "title": "Правда или ложь"}, {"start": 284.6, "end": 290.6, "round": 3, "title": "Три подсказки"}, {"start": 462.6, "end": 468.6, "round": 4, "title": "Кто скорее?"}, {"start": 549.6, "end": 555.6, "round": 5, "title": "Ужасный пересказ"}]};
 const GUESTS=["Артём","Егор Н","Егор П","Паша","Катя","Аня","Рома","Никита","Илья","Клим"];
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
-/* TURN: relays traffic when phones can't reach the host directly (mobile networks, strict NAT).
-   TURN_API — optional Metered credentials URL, e.g. "https://<app>.metered.live/api/v1/turn/credentials?apiKey=<key>";
-   if it is empty or fails, the public Open Relay servers below are used. */
-const TURN_API="";
-const PEER_OPTS={debug:0,config:{iceServers:[
-  {urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"},
-  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}
-]}};
-function loadIce(){
-  if(!TURN_API)return Promise.resolve();
-  const ctl=new AbortController();setTimeout(()=>ctl.abort(),4000);
-  return fetch(TURN_API,{signal:ctl.signal}).then(r=>r.json()).then(list=>{if(Array.isArray(list)&&list.length)PEER_OPTS.config.iceServers=PEER_OPTS.config.iceServers.slice(0,2).concat(list)}).catch(()=>{});
+/* ---------- network: MQTT over WebSocket ----------
+   Host and phones talk through public MQTT brokers, so it works from any network (Wi-Fi, LTE, NAT).
+   Every client connects to all brokers at once and sends each message through every connected one;
+   receivers drop duplicates, so the show keeps working while at least one broker is reachable. */
+const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
+const STALE=12000; // ms without messages before the other side counts as offline
+const rid=n=>Math.random().toString(36).slice(2,2+n);
+function mqttBus(subTopic,onData,onStatus){
+  const me=rid(8),seen=new Set(),seenQ=[],dec=new TextDecoder();let seq=0;
+  const clients=BROKERS.map(url=>{
+    const c=mqtt.connect(url,{clientId:"aeshow_"+rid(10),clean:true,keepalive:20,reconnectPeriod:3000,connectTimeout:8000});
+    c.on("connect",()=>{c.subscribe(subTopic,{qos:1});onStatus()});
+    c.on("close",onStatus);c.on("error",()=>{});
+    c.on("message",(t,buf)=>{let w;try{w=JSON.parse(dec.decode(buf))}catch(e){return}
+      if(!w||!w.i||seen.has(w.i))return;
+      seen.add(w.i);seenQ.push(w.i);if(seenQ.length>3000)seen.delete(seenQ.shift());
+      onData(w)});
+    return c});
+  return{
+    connected:()=>clients.filter(c=>c.connected).length,
+    pub(topic,w){w.i=me+"."+(++seq);const s=JSON.stringify(w);clients.forEach(c=>{if(c.connected)c.publish(topic,s,{qos:1})})}
+  }
 }
 const hashJoin=(location.hash.match(/join=([\w-]+)/)||[])[1];
 
@@ -242,17 +252,20 @@ function host(){
   const video=$("video");
 
   /* --- network --- */
-  let peer;
-  function startPeer(){
-    peer=new Peer(hostId,PEER_OPTS);
-    peer.on("open",()=>{setNet("Связь есть, можно подключаться","ok");drawQR()});
-    peer.on("connection",conn=>{conn.on("data",m=>onMsg(conn,m));conn.on("close",()=>{players.forEach(p=>{if(p.conn===conn)p.conn=null});renderChips()})});
-    peer.on("disconnected",()=>{setNet("Переподключаюсь к серверу связи…","err");setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)});
-    peer.on("error",e=>{
-      if(e.type==="unavailable-id"){setNet("Этот код уже открыт в другой вкладке. Закройте её или обновите страницу.","err")}
-      else if(e.type==="network"||e.type==="server-error"||e.type==="socket-error"){setNet("Нет связи с сервером. Проверьте интернет.","err");setTimeout(()=>{try{peer.reconnect()}catch(_){}},3000)}
-      else if(e.type!=="peer-unavailable")setNet("Ошибка связи: "+e.type,"err")});
-  }
+  const T="aeshow/"+hostId;
+  const conns=new Map(); // phone id -> connection {open, send, close}
+  function connOf(cid){let c=conns.get(cid);
+    if(!c){c={cid,seen:-1e9,was:false,get open(){return performance.now()-this.seen<STALE},send(m){bus.pub(T+"/p/"+cid,{m})},close(){this.seen=-1e9}};conns.set(cid,c)}
+    return c}
+  let bus,qrDrawn=false;
+  function netStatus(){const n=bus?bus.connected():0;
+    if(n){setNet("Связь есть, можно подключаться"+(n<BROKERS.length?` (серверов ${n} из ${BROKERS.length})`:""),"ok");if(!qrDrawn){qrDrawn=true;drawQR()}}
+    else setNet("Нет связи с сервером. Проверьте интернет.","err")}
+  function startNet(){
+    bus=mqttBus(T+"/h",w=>{if(!w.f||!w.m)return;const c=connOf(String(w.f));c.seen=performance.now();
+      if(w.m.t==="ping")c.send({t:"pong",who:!c._name});else onMsg(c,w.m);
+      if(!c.was){c.was=true;renderChips()}},netStatus);
+    setInterval(()=>{let ch=false;conns.forEach(c=>{if(c.was&&!c.open){c.was=false;ch=true}});if(ch)renderChips()},3000)}
   function setNet(t,c){const s=$("netStatus");s.textContent=t;s.className="status "+(c||"")}
   function joinUrl(){return location.origin+location.pathname+"#join="+hostId}
   function drawQR(){$("qr").innerHTML="";new QRCode($("qr"),{text:joinUrl(),width:640,height:640,colorDark:"#170c2b",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});$("joinLink").textContent=joinUrl()}
@@ -339,8 +352,8 @@ function host(){
   let vidOk=false;
   function vidReady(label){vidOk=true;const s=$("vidStatus");s.textContent=label;s.className="status ok";$("start").disabled=false}
   video.src="video.mp4";
-  video.addEventListener("loadedmetadata",()=>{if(Math.abs(video.duration-TL.total)>3){$("vidStatus").textContent="Похоже, это другое видео: длительность не совпадает";$("vidStatus").className="status err"}else vidReady(vidOk?"Видео выбрано":"Видео найдено рядом со страницей")});
-  video.addEventListener("error",()=>{if(!vidOk){$("vidStatus").textContent="video.mp4 не найден — выберите файл вручную";$("vidStatus").className="status err"}});
+  video.addEventListener("loadedmetadata",()=>{if(Math.abs(video.duration-TL.total)>3){$("vidPanel").hidden=false;$("vidStatus").textContent="Похоже, это другое видео: длительность не совпадает";$("vidStatus").className="status err"}else vidReady(vidOk?"Видео выбрано":"Видео найдено рядом со страницей")});
+  video.addEventListener("error",()=>{if(!vidOk){$("vidPanel").hidden=false;$("vidStatus").textContent="video.mp4 не найден — выберите файл вручную";$("vidStatus").className="status err"}});
   $("vidFile").onchange=e=>{const f=e.target.files[0];if(!f)return;vidOk=true;video.src=URL.createObjectURL(f);$("vidStatus").textContent="Загружаю файл…"};
 
   /* --- reset --- */
@@ -395,7 +408,7 @@ function host(){
     pd.hidden=false;setTimeout(()=>{burst(260,.3,.4);burst(260,.7,.35)},1300);setTimeout(()=>burst(300,.5,.25),1900);
     players.forEach(p=>send(p,{t:"final",rank:rankOf(p.name),total:players.size,score:p.score}))}
 
-  renderChips();startPeer();requestAnimationFrame(tick);
+  renderChips();startNet();requestAnimationFrame(tick);
 }
 
 /* =====================================================================
@@ -403,7 +416,7 @@ function host(){
    ===================================================================== */
 function player(){
   $("player").hidden=false;
-  const hostId=hashJoin;let peer,conn,myName=store.get("aeshow-name"),cur=null,timerRaf=null;
+  const hostId=hashJoin;let myName=store.get("aeshow-name"),cur=null,timerRaf=null;
   const scr=id=>["pName","pWait","pQ","pRes"].forEach(s=>$(s).hidden=s!==id);
   // name grid
   GUESTS.forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>join(n);$("nameGrid").append(b)});
@@ -414,21 +427,21 @@ function player(){
     $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
     if(conn&&conn.open)conn.send({t:"join",name:n})}
   function setConn(on){$("conn").className="conn"+(on?" on":"")}
-  function connect(){
-    if(!peer||peer.destroyed||peer.disconnected){try{peer&&peer.destroy()}catch(e){}
-      const p=peer=new Peer(PEER_OPTS);
-      setTimeout(()=>{if(peer===p&&!p.open&&(!conn||!conn.open)){try{p.destroy()}catch(e){}retry()}},10000);
-      peer.on("open",dial);peer.on("error",e=>{setConn(false);if(e.type==="peer-unavailable"){$("waitTitle").textContent="Ведущий пока не на связи";$("waitText").textContent="Пробую снова…"}setTimeout(retry,2500)});peer.on("disconnected",()=>{setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)})}
-    else dial()}
-  let retrying=false;function retry(){if(retrying)return;retrying=true;setTimeout(()=>{retrying=false;if(!conn||!conn.open)connect()},500)}
-  function dial(){
-    try{conn&&conn.close()}catch(e){}
-    const c=conn=peer.connect(hostId,{reliable:true});
-    setTimeout(()=>{if(conn===c&&!c.open){try{c.close()}catch(e){}$("waitText").textContent="Связь не установилась, пробую снова…";retry()}},10000);
-    c.on("open",()=>{if(conn!==c)return;setConn(true);if(myName)c.send({t:"join",name:myName})});
-    c.on("data",m=>{if(conn===c)onMsg(m)});
-    c.on("close",()=>{if(conn!==c)return;setConn(false);setTimeout(retry,1500)});
-    c.on("error",()=>{if(conn!==c)return;setConn(false);setTimeout(retry,2000)})}
+  const T="aeshow/"+hostId;
+  let cid=store.get("aeshow-cid");if(!cid){cid=rid(10);store.set("aeshow-cid",cid)}
+  let hostSeen=-1e9,knocks=0;
+  const conn={get open(){return performance.now()-hostSeen<STALE},send(m){bus.pub(T+"/h",{f:cid,m})}};
+  const bus=mqttBus(T+"/p/"+cid,w=>{const m=w.m;if(!m)return;const was=conn.open;hostSeen=performance.now();knocks=0;
+    if((!was&&m.t!=="welcome"||m.who)&&myName)conn.send({t:"join",name:myName}); // host does not know us (e.g. it reloaded)
+    if(!was)setConn(true);
+    if(m.t!=="pong")onMsg(m)},()=>{if(bus&&bus.connected())tickNet()});
+  // ping the host; while it is silent, keep knocking with "join" so we get back in as soon as it is reachable
+  function tickNet(){
+    if(conn.open){conn.send({t:"ping"});return}
+    setConn(false);
+    if(!myName){conn.send({t:"ping"});return}
+    conn.send({t:"join",name:myName});
+    if(++knocks>=2&&!$("pWait").hidden){$("waitTitle").textContent=bus.connected()?"Ведущий пока не на связи":"Нет интернета";$("waitText").textContent="Пробую снова…"}}
   function onMsg(m){
     if(m.t==="welcome"){myName=m.name;$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";
       if(!cur){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
@@ -461,11 +474,11 @@ function player(){
     else{big.className="big no";big.textContent="Мимо";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
     scr("pRes")}
   if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
-  setConn(false);connect();
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(!conn||!conn.open))retry()});
+  setConn(false);setInterval(tickNet,4000);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)tickNet()});
 }
 
-loadIce().then(()=>hashJoin?player():host());
+hashJoin?player():host();
 </script>
 </body>
 </html>
