@@ -115,6 +115,9 @@ function makeGround(){ // pre-rendered plateau: rock gradient, old craters, pebb
     if(ps.length>1?alive<=1:alive===0){if(S.ending<0){S.ending=t;
         const w=ps.find(p=>p.alive);ctx.banner(w?`${w.name} выжил!`:"Никто не выжил!",2)}
       if(t-S.ending>1.2)ctx.finish()}
+    // phone cue: standing inside a red circle
+    for(const p of ps){if(!p.alive)continue;const d=p.data;
+      ctx.status(p,S.met.some(m=>Math.hypot(d.x-m.x,d.y-m.y)<m.r+HIT_IN)?"Опасно! Уходи из круга":"",{color:"red",vibrate:120})}
   },
 
   draw(ctx,g){

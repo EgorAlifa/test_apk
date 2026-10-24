@@ -58,6 +58,13 @@ Notes (as implemented in `index.html`):
 - `ctx.finish(order)` — end the round. `order` = array of players best → worst. If omitted, engine ranks
   alive players first (in array order) then eliminated players in reverse elimination order.
 - `ctx.banner(text, seconds=1.5)` — big overlay text on screen (e.g. "Льдина тает!").
+- `ctx.status(p, text, opts)` — game-driven status line on that player's phone (e.g. «БОМБА У ТЕБЯ! 5 с», «Монет: 7»).
+  `opts = {color: "red"|"green"|"gold"|null, vibrate: ms}`; `text` `""`/`null` clears it (≤ 60 chars).
+  Call it every frame if you like: the engine stores the latest value per player and sends it to the phone only when
+  text/colour changed, at most every 250 ms. `vibrate` is applied only when the text/colour actually changes (so a
+  status you re-set every frame does not buzz repeatedly). Works during intro and play; ignored for anything that is not
+  in `ctx.players` (e.g. robots). The engine clears it on `ctx.eliminate(p)` and when the round finishes.
+  The phone shows it as a big line under the rules; `color` tints the line and the screen edge.
 - `ctx.drawPlayer(g, p, x, y, r)` — standard avatar: filled circle in `p.color` with the name label; use it so all games look consistent.
 
 Scoring (engine): place 1 → 500, 2 → 300, 3 → 150, everyone else who played → 50. Added to the shared leaderboard.
@@ -66,9 +73,11 @@ Scoring (engine): place 1 → 500, 2 → 300, 3 → 150, everyone else who playe
 - phone → host: `{t:"in", x, y, b, k}` (k = press counter), QoS 0 (`mqttBus().pub(topic, w, qos)` takes an optional QoS).
   Sent immediately on touch/press/release (then repeated for 300 ms in case one is dropped), every ~80 ms (~12 Hz)
   while the value changes, and as a 400 ms heartbeat while the stick or button is held still.
-- host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score}`
+- host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score, st, sc, vib}`
   with `ph` ∈ `"intro"` (rules + countdown), `"play"`, `"out"` (eliminated, still watching), `"res"` (round result).
-  Extra fields: `round` (round id, changes every round), `left` (seconds until start, intro only), `n` (players in round).
+  Extra fields: `round` (round id, changes every round), `left` (seconds until start, intro only), `n` (players in round),
+  `st`/`sc` (current `ctx.status` text/colour, also in the state re-sent on rejoin), `vib` (ms, only on the message that
+  carries a fresh status change).
   Players not in the round get `{t:"idle"}` ("сыграешь в следующем раунде").
   A phone that rejoins mid-round must get the current `pad` state again.
 
@@ -85,3 +94,9 @@ Scoring (engine): place 1 → 500, 2 → 300, 3 → 150, everyone else who playe
 - Screen `pPad`: title + one-line rules, player color swatch, virtual joystick (touch, large, left/center), optional action button, or one big tap button for "tap" games.
 - No page scrolling/zoom while playing (`touch-action:none`), works with one thumb.
 - Shows "Ты выбыл — смотри на экран" when out, and result screen at the end.
+- Shows the game's `ctx.status` line (big text, coloured background + screen-edge tint, `navigator.vibrate` if present).
+
+## Host screen
+- The intro wraps long rules/hint lines (max 3 / 2 lines).
+- During an action round the host buttons (`#aCtl`) are hidden over the canvas and appear while the mouse moves
+  (or a button has keyboard focus); the admin phone's remote works as always.

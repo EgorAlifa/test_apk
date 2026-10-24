@@ -88,6 +88,11 @@ function chips(x,y,n,col){for(let i=0;i<n;i++){const a=Math.random()*TAU,v=60+Ma
     S.tiles=S.tiles.filter(tl=>!(tl.drop>=0&&t-tl.drop>DROP_T));
     const standing=ps.filter(p=>p.alive&&p.data.fall<0).length,falling=ps.some(p=>p.alive&&p.data.fall>=0);
     if(!falling&&(ps.length>1?standing<=1:standing===0)){if(S.ending<0)S.ending=t;if(t-S.ending>.6)ctx.finish()}
+    // phone cues: the tile under you is cracking / jump ready
+    for(const p of ps){const d=p.data;if(!p.alive||d.fall>=0)continue;const tl=d.air>0?null:hexAt(d.x,d.y);
+      if(tl&&tl.st>=0&&t-tl.st>.45)ctx.status(p,"Плитка падает!",{color:"red"});
+      else if(d.cd<=0&&d.air<=0)ctx.status(p,"Прыжок готов",{color:"green"});
+      else ctx.status(p,d.air>0?"Прыжок!":`Прыжок через ${Math.ceil(d.cd)} с`)}
   },
 
   // timeout / early end: survivors ranked by how solid the ground under them is, then by distance to the centre

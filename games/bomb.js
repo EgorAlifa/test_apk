@@ -133,6 +133,12 @@ function botThink(e,t){
     const hs=ctx.players,humansAlive=hs.filter(p=>p.alive).length,entsAlive=live.length;
     const over=entsAlive<=1||humansAlive===0||(hs.length>=2&&humansAlive<=1);
     if(over){if(S.ending<0)S.ending=t;if(t-S.ending>1.3)ctx.finish()}
+    // carrier's phone: big red warning + seconds left, one buzz when the bomb arrives
+    const bb=S.bomb;
+    for(const p of hs){if(!p.alive)continue;const mine=!!bb&&bb.holder===p&&t>=START_DELAY*.75;
+      if(mine)ctx.status(p,`БОМБА У ТЕБЯ! ${Math.max(0,Math.ceil(bb.left))} с`,{color:"red",vibrate:p.data.hadB?0:350});
+      else if(p.data.hadB)ctx.status(p,"");
+      p.data.hadB=mine}
   },
 
   // timeout / admin "Дальше": survivors ranked by distance from the bomb, the carrier last among them

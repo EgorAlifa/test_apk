@@ -119,6 +119,8 @@ function knock(ctx,p,k,thief,steal){const d=p.data;k=Math.min(k,d.score);if(k<=0
     const top=order(ctx)[0];
     if(ps.length>1&&top&&top.data.score>=5&&top!==S.lead&&top.data.score>Math.max(...ps.filter(p=>p!==top).map(p=>p.data.score))){
       if(S.lead)ctx.banner(`${top.name} лидирует!`,1.2);S.lead=top}
+    // phone status: own coin count, gold while leading
+    for(const p of ps)ctx.status(p,`Монет: ${p.data.score}`+(ps.length>1&&p===S.lead&&p===top?" · лидер!":""),{color:ps.length>1&&p===S.lead&&p===top?"gold":null})
   },
 
   standings(ctx){return order(ctx)},

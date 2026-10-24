@@ -56,7 +56,7 @@ function order(ctx){return ctx.players.slice().sort((a,b)=>{const A=a.data,Bd=b.
       if(n>0){
         if(S.light==="red"&&S.lt>GRACE){ // caught tapping on red: roll back (capped per stop so one mistake is not the end)
           const back=Math.min(n*PEN,PEN_MAX-d.pen);
-          if(back>0){d.pen+=back;d.pos=Math.max(0,d.pos-back);d.v=-2.5;d.hurt=.6;d.shake=12;if(d.ft&&d.ft.l>.4){d.ft.text=`−${Math.round(d.pen)} м`;d.ft.l=1.1}else{float(px(d.pos),y-40,`−${Math.round(back)} м`,"#ff5d73");d.ft=S.txt[S.txt.length-1]};puff(px(d.pos),y,8,"#ff5d73",220,.4)}}
+          if(back>0){d.pen+=back;d.pos=Math.max(0,d.pos-back);d.v=-2.5;d.hurt=.6;d.shake=12;if(d.ft&&d.ft.l>.4){d.ft.text=`−${Math.round(d.pen)} м`;d.ft.l=1.1}else{float(px(d.pos)+laneR(ctx)*2.6,y-Math.min(40,laneY(ctx,p.idx).h*.15),`−${Math.round(back)} м`,"#ff5d73");d.ft=S.txt[S.txt.length-1]};puff(px(d.pos),y,8,"#ff5d73",220,.4)}}
         else if(S.light!=="red"){d.v=Math.min(VMAX,d.v+IMP*n);d.tapT=t;d.tapsTotal+=n}}
       const drag=S.light==="red"?5:DRAG;d.v*=Math.exp(-drag*dt);
       d.pos=Math.max(0,d.pos+d.v*dt);
@@ -76,6 +76,12 @@ function order(ctx){return ctx.players.slice().sort((a,b)=>{const A=a.data,Bd=b.
     // end: everybody finished, or the rest ran out of time after the first finisher
     const done=S.nfin===ps.length||(S.first>=0&&t-S.first>=AFTER+1.5);
     if(done){if(S.ending<0)S.ending=t;if(t-S.ending>1)ctx.finish(order(ctx))}
+    // phone status: the light (the screen may be far away) and penalty feedback
+    for(const p of ps){const d=p.data;
+      if(d.fin>=0)ctx.status(p,ps.length>1?`Финиш! ${d.place}-е место`:"Финиш!",{color:"gold"});
+      else if(S.light==="red")ctx.status(p,d.pen>0?`СТОП! −${Math.round(d.pen)} м`:"СТОП! Не жми",{color:"red",vibrate:d.pen>0?120:250});
+      else if(S.light==="yellow")ctx.status(p,"Скоро СТОП!",{color:"gold"});
+      else ctx.status(p,"")}
   },
 
   standings(ctx){return order(ctx)},
