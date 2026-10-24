@@ -113,6 +113,8 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 #aCtl{position:absolute;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px;opacity:.25;transition:opacity .25s}
 #aCtl:hover,#aCtl:focus-within{opacity:1}
 #aCtl button{font:800 14px var(--body);background:rgba(23,12,43,.85);color:var(--ink);border:1.5px solid var(--plum2);border-radius:10px;padding:8px 12px}
+#aCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;background:#0d0619}
+.alist .sw{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:.5em;vertical-align:-.05em;border:2px solid rgba(255,255,255,.7)}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
 
 /* ---------- PLAYER ---------- */
@@ -158,6 +160,23 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 .admbtns button.main{background:var(--gold);color:var(--night)}
 .admbtns button:disabled{opacity:.4}
 .adm .note{text-align:left;color:var(--coral)}
+html.padmode,html.padmode body{overflow:hidden;overscroll-behavior:none;touch-action:none}
+#pPad{justify-content:flex-start;gap:12px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.padhead{display:flex;gap:12px;align-items:center}
+.padhead i{width:46px;height:46px;border-radius:50%;flex:none;border:3px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.padhead b{display:block;font:900 20px var(--display)}
+.padhead span{display:block;font-size:14px;color:var(--muted);line-height:1.35;margin-top:3px}
+.padmsg{font:900 clamp(20px,6vw,26px) var(--display);text-align:center;min-height:1.3em;color:var(--gold)}
+.padzone{flex:1;display:flex;gap:12px;align-items:stretch;min-height:280px;touch-action:none;transition:opacity .3s}
+.padzone.off{opacity:.25;pointer-events:none}
+.stickarea{flex:1;position:relative;border-radius:24px;background:rgba(42,23,72,.55);border:1.5px dashed var(--plum2);touch-action:none;overflow:hidden}
+.stickarea::after{content:"Двигай пальцем";position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:13px;color:var(--muted);pointer-events:none}
+.stickbase{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:rgba(255,255,255,.07);border:3px solid rgba(255,255,255,.22);pointer-events:none}
+.knob{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--pc,var(--mint));border:3px solid #fff;box-shadow:0 5px 0 rgba(0,0,0,.35)}
+.actbtn{align-self:flex-end;flex:none;width:128px;height:128px;border-radius:50%;border:0;font:900 17px var(--display);color:var(--night);background:var(--gold);box-shadow:0 7px 0 #c48d10;touch-action:none;user-select:none;-webkit-user-select:none;margin-bottom:24px}
+.actbtn.on{transform:translateY(5px);box-shadow:0 2px 0 #c48d10;background:#fff}
+.bigtap{flex:1;border:0;border-radius:32px;font:900 clamp(36px,12vw,60px) var(--display);color:var(--night);background:var(--pc,var(--coral));box-shadow:0 8px 0 rgba(0,0,0,.35);touch-action:none;user-select:none;-webkit-user-select:none}
+.bigtap.on{transform:translateY(5px);box-shadow:0 3px 0 rgba(0,0,0,.35);filter:brightness(1.25)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -225,6 +244,7 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 
 <!-- HOST MINI-GAMES -->
 <div id="arena" hidden>
+  <canvas id="aCanvas" hidden></canvas>
   <span class="lab" id="aLab"></span>
   <h2 id="aTitle"></h2>
   <span class="acount" id="aCount"></span>
@@ -263,6 +283,15 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
     <button class="tapbtn" id="tapBtn">ЖДИ…</button>
     <p class="muted" id="tapText"></p>
   </section>
+  <section class="pscreen" id="pPad" hidden>
+    <div class="padhead"><i id="padColor"></i><div><b id="padTitle"></b><span id="padRules"></span></div></div>
+    <div class="padmsg" id="padMsg"></div>
+    <div class="padzone" id="padZone">
+      <div class="stickarea" id="stickArea"><div class="stickbase" id="stickBase"><i class="knob" id="knob"></i></div></div>
+      <button class="actbtn" id="actBtn">Жми</button>
+      <button class="bigtap" id="bigTap">ЖМИ!</button>
+    </div>
+  </section>
   <section class="pscreen" id="pRes" hidden>
     <div class="big" id="resBig"></div>
     <div class="gain" id="resGain"></div>
@@ -272,60 +301,24 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- action mini-games: one file each, see docs/action-games-spec.md -->
+<script src="games/sumo.js"></script>
 <script>
 const TL={"total": 762.6, "finalStart": 744.6, "questions": [{"id": 0, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 1, "n": 8, "open": 31.4, "close": 41.4, "end": 45.2, "options": ["Пираты Карибского моря", "Титаник", "Аватар", "Перл-Харбор"], "correct": 1, "answer": "Титаник"}, {"id": 1, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 2, "n": 8, "open": 47.6, "close": 57.6, "end": 61.4, "options": ["Зверополис", "Книга джунглей", "Мадагаскар", "Король Лев"], "correct": 3, "answer": "Король Лев"}, {"id": 2, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 3, "n": 8, "open": 63.8, "close": 73.8, "end": 77.6, "options": ["Человек-паук", "Мстители", "Бэтмен", "Железный человек"], "correct": 0, "answer": "Человек-паук"}, {"id": 3, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 4, "n": 8, "open": 80.0, "close": 90.0, "end": 93.8, "options": ["Властелин колец", "Гарри Поттер", "Хроники Нарнии", "Перси Джексон"], "correct": 1, "answer": "Гарри Поттер"}, {"id": 4, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 5, "n": 8, "open": 96.2, "close": 106.2, "end": 110.0, "options": ["Золушка", "Хроники Нарнии", "Рапунцель", "Холодное сердце"], "correct": 3, "answer": "Холодное сердце"}, {"id": 5, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 6, "n": 8, "open": 112.4, "close": 122.4, "end": 126.2, "options": ["Джентльмены удачи", "Ирония судьбы", "Ёлки", "Иван Васильевич меняет профессию"], "correct": 1, "answer": "Ирония судьбы, или С лёгким паром!"}, {"id": 6, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 7, "n": 8, "open": 128.6, "close": 138.6, "end": 142.4, "options": ["Матрица", "Бойцовский клуб", "Начало", "Терминатор"], "correct": 0, "answer": "Матрица"}, {"id": 7, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 8, "n": 8, "open": 144.8, "close": 154.8, "end": 158.6, "options": ["Такси", "Форсаж", "Назад в будущее", "Интерстеллар"], "correct": 2, "answer": "Назад в будущее"}, {"id": 8, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 1, "n": 8, "open": 167.0, "close": 175.0, "end": 179.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 9, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 2, "n": 8, "open": 182.0, "close": 190.0, "end": 194.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 10, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 3, "n": 8, "open": 197.0, "close": 205.0, "end": 209.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 11, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 4, "n": 8, "open": 212.0, "close": 220.0, "end": 224.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 12, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 5, "n": 8, "open": 227.0, "close": 235.0, "end": 239.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 13, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 6, "n": 8, "open": 242.0, "close": 250.0, "end": 254.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 14, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 7, "n": 8, "open": 257.0, "close": 265.0, "end": 269.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 15, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 8, "n": 8, "open": 272.0, "close": 280.0, "end": 284.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 16, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 1, "n": 8, "open": 293.0, "close": 308.0, "end": 312.1, "options": ["Симпсоны", "В поисках Немо", "Губка Боб", "Гриффины"], "correct": 2, "answer": "Губка Боб Квадратные Штаны"}, {"id": 17, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 2, "n": 8, "open": 314.5, "close": 329.5, "end": 333.6, "options": ["Ну, погоди!", "Жил-был пёс", "Простоквашино", "Том и Джерри"], "correct": 0, "answer": "Ну, погоди!"}, {"id": 18, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 3, "n": 8, "open": 336.0, "close": 351.0, "end": 355.1, "options": ["Покемон", "Тетрис", "Тамагочи", "Бейблэйд"], "correct": 2, "answer": "Тамагочи"}, {"id": 19, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 4, "n": 8, "open": 357.5, "close": 372.5, "end": 376.6, "options": ["Как я встретил вашу маму", "Друзья", "Теория большого взрыва", "Универ"], "correct": 1, "answer": "Друзья"}, {"id": 20, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 5, "n": 8, "open": 379.0, "close": 394.0, "end": 398.1, "options": ["The Sims", "Terraria", "Minecraft", "Roblox"], "correct": 2, "answer": "Minecraft"}, {"id": 21, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 6, "n": 8, "open": 400.5, "close": 415.5, "end": 419.6, "options": ["Счастливы вместе", "Папины дочки", "Воронины", "Моя прекрасная няня"], "correct": 1, "answer": "Папины дочки"}, {"id": 22, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 7, "n": 8, "open": 422.0, "close": 437.0, "end": 441.1, "options": ["Лунтик", "Фиксики", "Смешарики", "Маша и Медведь"], "correct": 2, "answer": "Смешарики"}, {"id": 23, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 8, "n": 8, "open": 443.5, "close": 458.5, "end": 462.6, "options": ["Властелин колец", "Ведьмак", "Викинги", "Игра престолов"], "correct": 3, "answer": "Игра престолов"}, {"id": 24, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 1, "n": 6, "open": 471.0, "close": 478.0, "end": 482.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 25, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 2, "n": 6, "open": 484.5, "close": 491.5, "end": 495.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 26, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 3, "n": 6, "open": 498.0, "close": 505.0, "end": 509.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 27, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 4, "n": 6, "open": 511.5, "close": 518.5, "end": 522.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 28, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 5, "n": 6, "open": 525.0, "close": 532.0, "end": 536.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 29, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 6, "n": 6, "open": 538.5, "close": 545.5, "end": 549.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 30, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 1, "n": 8, "open": 558.0, "close": 573.0, "end": 577.1, "options": ["Мадагаскар", "Шрек", "Рапунцель", "Красавица и чудовище"], "correct": 1, "answer": "Шрек"}, {"id": 31, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 2, "n": 8, "open": 579.5, "close": 594.5, "end": 598.6, "options": ["Чарли и шоколадная фабрика", "Один дома", "Маска", "Ёлки"], "correct": 1, "answer": "Один дома"}, {"id": 32, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 3, "n": 8, "open": 601.0, "close": 616.0, "end": 620.1, "options": ["Пираты Карибского моря", "Остров сокровищ", "Ван Хельсинг", "Хроники Нарнии"], "correct": 0, "answer": "Пираты Карибского моря"}, {"id": 33, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 4, "n": 8, "open": 622.5, "close": 637.5, "end": 641.6, "options": ["Перевозчик", "Форсаж", "Такси", "Бумер"], "correct": 1, "answer": "Форсаж"}, {"id": 34, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 5, "n": 8, "open": 644.0, "close": 659.0, "end": 663.1, "options": ["Американский пирог", "Ёлки", "Мы — Миллеры", "Мальчишник в Вегасе"], "correct": 3, "answer": "Мальчишник в Вегасе"}, {"id": 35, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 6, "n": 8, "open": 665.5, "close": 680.5, "end": 684.6, "options": ["Аватар", "Звёздные войны", "Трансформеры", "Интерстеллар"], "correct": 0, "answer": "Аватар"}, {"id": 36, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 7, "n": 8, "open": 687.0, "close": 702.0, "end": 706.1, "options": ["Жмурки", "Бригада", "Бумер", "Брат 2"], "correct": 3, "answer": "Брат 2"}, {"id": 37, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 8, "n": 8, "open": 708.5, "close": 723.5, "end": 727.6, "options": ["Сумерки", "Голодные игры", "Дивергент", "Дневники вампира"], "correct": 0, "answer": "Сумерки"}], "cards": [{"start": 23.0, "end": 29.0, "round": 1, "title": "Эмодзи-кино"}, {"start": 158.6, "end": 164.6, "round": 2, "title": "Правда или ложь"}, {"start": 284.6, "end": 290.6, "round": 3, "title": "Три подсказки"}, {"start": 462.6, "end": 468.6, "round": 4, "title": "Кто скорее?"}, {"start": 549.6, "end": 555.6, "round": 5, "title": "Ужасный пересказ"}]};
 const GUESTS=["Артём","Егор Н","Егор П","Паша","Катя","Аня","Рома","Никита","Илья","Клим"];
 const ADMIN="Егор Н"; // this guest gets the remote control on their phone (after entering the host password)
 const PASS_HASH="b6e4c34afe9e1aeda8cb003ad6480dbd0f8973c837ffcd3566b11c24b802bf61"; // SHA-256 of "aeshow:" + host password
 async function passHash(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("aeshow:"+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-/* Mini-games played live after (or between) the video. Quiz items: first answer is the correct one, options are shuffled. */
+/* Mini-games played live after (or between) the video. */
 const GAMES=[
-  {id:"caps",title:"Столицы мира",kind:"quiz",n:5,dur:12,pool:[
-    {q:"Столица Австралии",a:["Канберра","Сидней","Мельбурн","Перт"]},
-    {q:"Столица Канады",a:["Оттава","Торонто","Ванкувер","Монреаль"]},
-    {q:"Столица Бразилии",a:["Бразилиа","Рио-де-Жанейро","Сан-Паулу","Сальвадор"]},
-    {q:"Столица Турции",a:["Анкара","Стамбул","Измир","Анталья"]},
-    {q:"Столица Швейцарии",a:["Берн","Цюрих","Женева","Базель"]},
-    {q:"Столица Казахстана",a:["Астана","Алматы","Шымкент","Караганда"]},
-    {q:"Столица Новой Зеландии",a:["Веллингтон","Окленд","Крайстчерч","Гамильтон"]},
-    {q:"Столица Марокко",a:["Рабат","Касабланка","Марракеш","Фес"]},
-    {q:"Столица Вьетнама",a:["Ханой","Хошимин","Дананг","Хайфон"]}]},
-  {id:"prov",title:"Продолжи пословицу",kind:"quiz",n:5,dur:12,pool:[
-    {q:"Без труда не выловишь и…",a:["рыбку из пруда","щуку из реки","сома из моря","рака из ручья"]},
-    {q:"Тише едешь —…",a:["дальше будешь","меньше устанешь","быстрей приедешь","больше видишь"]},
-    {q:"Не имей сто рублей, а…",a:["имей сто друзей","имей сто идей","имей сто карт","имей сто котов"]},
-    {q:"Семь раз отмерь —…",a:["один раз отрежь","два раза проверь","восьмой подумай","потом поешь"]},
-    {q:"Цыплят по осени…",a:["считают","кормят","продают","ищут"]},
-    {q:"Делу время —…",a:["потехе час","отдыху день","сну ночь","обеду два"]},
-    {q:"Утро вечера…",a:["мудренее","светлее","веселее","короче"]},
-    {q:"Любишь кататься — люби и…",a:["саночки возить","падать красиво","горки строить","в гору ходить"]},
-    {q:"Под лежачий камень…",a:["вода не течёт","трава не растёт","свет не проникает","мышь не залезет"]}]},
-  {id:"first",title:"Что было раньше?",kind:"quiz",n:5,dur:10,pool:[
-    {q:"Что было раньше?",a:["Первое видео на YouTube","Первый iPhone"]},
-    {q:"Что было раньше?",a:["Полёт Гагарина","Высадка на Луну"]},
-    {q:"Что было раньше?",a:["Фильм «Титаник»","Первый фильм о Гарри Поттере"]},
-    {q:"Что было раньше?",a:["Основание Google","Основание Facebook"]},
-    {q:"Что было раньше?",a:["Падение Берлинской стены","Распад СССР"]},
-    {q:"Что было раньше?",a:["Первый «Шрек»","Первый «Ледниковый период»"]},
-    {q:"Что было раньше?",a:["Игра «Тетрис»","Игра Super Mario Bros."]},
-    {q:"Что было раньше?",a:["Запуск Instagram","Запуск Telegram"]},
-    {q:"Что было раньше?",a:["Основание Москвы","Основание Санкт-Петербурга"]}]},
-  {id:"riddle",title:"Загадки",kind:"quiz",n:5,dur:15,pool:[
-    {q:"Зимой и летом — одним цветом",a:["Ёлка","Снег","Берёза","Клён"]},
-    {q:"Висит груша — нельзя скушать",a:["Лампочка","Луна","Мяч","Яблоко"]},
-    {q:"Сто одёжек — и все без застёжек",a:["Капуста","Матрёшка","Книга","Шкаф"]},
-    {q:"Без окон, без дверей — полна горница людей",a:["Огурец","Автобус","Дом","Лифт"]},
-    {q:"Что принадлежит тебе, но другие пользуются этим чаще?",a:["Твоё имя","Телефон","Зарядка","Место в очереди"]},
-    {q:"Чем больше из неё берёшь, тем больше она становится",a:["Яма","Копилка","Пицца","Очередь"]},
-    {q:"Что можно сломать, даже не прикоснувшись?",a:["Обещание","Стекло","Лёд","Карандаш"]},
-    {q:"У кого есть шея, но нет головы?",a:["У бутылки","У жирафа","У шарфа","У лебедя"]},
-    {q:"Что становится больше, если перевернуть вверх ногами?",a:["Число 6","Стакан","Зонт","Шляпа"]}]},
   {id:"maj",title:"Кто из нас?",kind:"maj",n:5,dur:15,pool:[
     {q:"Кто первым уснёт на вечеринке?"},{q:"Кто опоздает даже на собственную свадьбу?"},{q:"Кто станет миллионером?"},
     {q:"Кто дольше всех собирается выйти из дома?"},{q:"Кто выживет на необитаемом острове?"},{q:"Кто съест последний кусок торта?"},
     {q:"Кто чаще всех сидит в телефоне?"},{q:"Кто станет знаменитым?"},{q:"Кто громче всех смеётся?"},{q:"Кто заблудится даже с навигатором?"}]},
   {id:"tap",title:"Быстрый палец",kind:"tap",rounds:3}
 ];
+/* real-time action games from games/*.js join the vote too */
+(window.ACTION_GAMES||[]).forEach(m=>{if(m&&m.id&&!GAMES.some(g=>g.id===m.id))GAMES.push({id:m.id,title:m.title,kind:"action",mod:m})});
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 /* ---------- network: MQTT over WebSocket ----------
@@ -348,7 +341,7 @@ function mqttBus(subTopic,onData,onStatus){
     return c});
   return{
     connected:()=>clients.filter(c=>c.connected).length,
-    pub(topic,w){w.i=me+"."+(++seq);const s=JSON.stringify(w);clients.forEach(c=>{if(c.connected)c.publish(topic,s,{qos:1})})}
+    pub(topic,w,qos=1){w.i=me+"."+(++seq);const s=JSON.stringify(w);clients.forEach(c=>{if(c.connected)c.publish(topic,s,{qos})})}
   }
 }
 const hashJoin=(location.hash.match(/join=([\w-]+)/)||[])[1];
@@ -412,6 +405,7 @@ function host(){
       send(p,{t:"welcome",name,score:p.score,rank:rankOf(name),total:players.size});
       if(open)sendQ(p,open);
       if(arena&&arena.tap&&arena.tap.ph!=="done")send(p,{t:"tap",ph:arena.tap.ph,r:arena.tap.r});
+      if(arena&&arena.act)actRejoin(arena.act,p);
       if(name===ADMIN)lastAdm="";
       return}
     const p=players.get(conn._name);if(!p)return;
@@ -420,6 +414,7 @@ function host(){
       const el=open.live?(performance.now()-open.t0)/1000:Math.max(0,video.currentTime-open.q.open);
       p.answers[open.q.id]={opt,el};if(!open.test)save();
       send(p,{t:"got",qid:open.q.id,opt});updatePill();arenaCount()}
+    if(m.t==="in"){actInput(p,m);return}
     if(m.t==="tapped")onTapped(p,m);
     if(m.t==="auth"&&p.name===ADMIN&&m.h===PASS_HASH){conn._admin=true;lastAdm=""}
     if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c])CMDS[m.c]();
@@ -557,7 +552,7 @@ function host(){
     if(open&&open.test)endTest();
     if(!$("show").hidden){video.pause();if(open&&!open.live)closeQ(false)}
     $("arena").hidden=false;$("pill").hidden=true}
-  function aSet(lab,title){$("aLab").textContent=lab;$("aTitle").textContent=title;$("aCount").textContent="";$("aTimerBox").hidden=true;$("aNote").textContent="";$("aBody").innerHTML=""}
+  function aSet(lab,title){$("aCanvas").hidden=true;$("aLab").textContent=lab;$("aTitle").textContent=title;$("aCount").textContent="";$("aTimerBox").hidden=true;$("aNote").textContent="";$("aBody").innerHTML=""}
   function aCtl(){const ph=arena?arena.phase:"idle";$("aVote").hidden=ph!=="idle";$("aNext").hidden=ph==="idle";$("aStop").hidden=ph==="idle"}
   function arenaIdle(doneTitle){
     openArena();clearArenaTimer();if(open&&open.live)closeQ(false);
@@ -571,7 +566,7 @@ function host(){
     $("aNote").textContent=`Дальше — голосование за следующую игру (кнопка внизу или с телефона: ${ADMIN})`;
     bcast({t:"idle",text:"Мини-игры! Скоро голосование за следующую игру."});aCtl()}
   function closeArena(){
-    clearArenaTimer();if(open&&open.live)closeQ(false);arena=null;$("arena").hidden=true;
+    clearArenaTimer();if(open&&open.live)closeQ(false);arena=null;$("arena").hidden=true;$("aCanvas").hidden=true;
     bcast({t:"idle",text:"Смотри на экран"});renderChips();
     if(!$("show").hidden&&!$("podium").hidden)showPodium()}
   function startVote(){
@@ -584,6 +579,7 @@ function host(){
     played.add(g.id);const stamp=Date.now();
     arena={phase:"q",game:g,idx:0,stamp};
     if(g.kind==="tap"){tapRound(1);return}
+    if(g.kind==="action"){actStart(g);return}
     const names=[...players.keys()],who=names.length>=2?names:GUESTS;
     arena.qs=shuffle(g.pool).slice(0,g.n).map((it,k)=>{
       const q={id:`${g.id}${stamp}_${k}`,kind:g.kind,label:g.title,i:k+1,n:g.n,text:it.q,open:0,close:g.dur};
@@ -622,6 +618,7 @@ function host(){
   function arenaNext(){
     if(!arena)return;clearArenaTimer();
     const ph=arena.phase,g=arena.game;
+    if(ph==="action"){actNext();return}
     if(ph==="vote"||ph==="q"){finishLive();return}
     if(ph==="tap"){tapClose();return}
     if(ph!=="res")return;
@@ -658,6 +655,120 @@ function host(){
     if(early.length)$("aNote").textContent="Фальстарт: "+early.join(", ");
     if(ok.length)burst(140,.5,.3);
     arena.phase="res";aCtl();arena.to=setTimeout(arenaNext,6000)}
+  /* --- action games (games/*.js, contract in docs/action-games-spec.md) ---
+     The host owns the simulation: fixed 60 Hz steps, rendered on #aCanvas scaled to a 1600x900 world.
+     Phones are controllers (screen pPad) and only send {t:"in"} input messages. */
+  const AW=1600,AH=900,INTRO=5,APR=[500,300,150],ASTEP=1/60,STALE_IN=1500;
+  const ACOL=["#ff5d73","#ffc94a","#5ce1c6","#7aa8ff","#c792ff","#ff9f43","#9be15d","#ff7ad9","#3fd7ff","#f4f4f4"];
+  const AFONT='"Unbounded","Arial Black",system-ui,sans-serif',BFONT='"Manrope",system-ui,sans-serif';
+  const cv=$("aCanvas"),cg=cv.getContext("2d");
+  function sizeCv(){const w=Math.round(innerWidth*devicePixelRatio),h=Math.round(innerHeight*devicePixelRatio);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}}
+  function drawPlayer(g,p,x,y,r){
+    g.save();if(!p.alive)g.globalAlpha*=.45;
+    g.fillStyle="rgba(0,0,0,.28)";g.beginPath();g.ellipse(x+r*.1,y+r*.25,r,r*.86,0,0,Math.PI*2);g.fill();
+    g.fillStyle=p.color;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
+    g.lineWidth=Math.max(3,r*.12);g.strokeStyle="rgba(23,12,43,.75)";g.stroke();
+    g.fillStyle="rgba(255,255,255,.35)";g.beginPath();g.ellipse(x-r*.35,y-r*.42,r*.34,r*.2,-.6,0,Math.PI*2);g.fill();
+    const ix=(p.input&&p.input.x)||0,iy=(p.input&&p.input.y)||0;
+    for(const s of[-1,1]){const ex=x+s*r*.32+ix*r*.12,ey=y-r*.08+iy*r*.12;
+      g.fillStyle="#fff";g.beginPath();g.arc(ex,ey,r*.22,0,Math.PI*2);g.fill();
+      g.fillStyle="#170c2b";g.beginPath();g.arc(ex+ix*r*.1,ey+iy*r*.1,r*.11,0,Math.PI*2);g.fill()}
+    const fs=Math.round(Math.max(20,r*.7));g.font=`800 ${fs}px ${BFONT}`;g.textAlign="center";g.textBaseline="bottom";
+    g.lineJoin="round";g.lineWidth=6;g.strokeStyle="rgba(23,12,43,.9)";g.strokeText(p.name,x,y-r-6);g.fillStyle="#fff";g.fillText(p.name,x,y-r-6);
+    g.restore()}
+  function actStart(g){
+    const mod=g.mod,list=[...players.values()].filter(p=>p.conn&&p.conn.open);
+    arena.phase="action";arena.act=null;
+    if(!list.length){aSet(g.title,"Нет игроков на связи");aCtl();arena.to=setTimeout(()=>arenaIdle(),3000);return}
+    const A={g,mod,ph:"intro",t0:performance.now(),last:performance.now(),acc:0,elim:[],banners:[],order:null,byName:new Map()};
+    const ctx=A.ctx={W:AW,H:AH,t:0,rand:Math.random,drawPlayer,
+      players:list.map((p,i)=>({name:p.name,color:ACOL[i%ACOL.length],idx:i,input:{x:0,y:0,btn:false,taps:0},alive:true,data:{},_k:0,_in:0})),
+      eliminate(ap){if(!ap||!ap.alive||A.ph==="res")return;ap.alive=false;A.elim.push(ap);padSend(A,ap)},
+      finish(order){actFinish(A,order)},
+      banner(text,sec=1.5){A.banners.push({text:String(text),t:performance.now(),dur:sec*1000})}};
+    ctx.players.forEach(ap=>A.byName.set(ap.name,ap));
+    arena.act=A;
+    try{mod.init(ctx)}catch(e){console.error("action game init",e)}
+    aSet("","");cv.hidden=false;sizeCv();aCtl();
+    players.forEach(p=>{if(!A.byName.has(p.name))send(p,{t:"idle",text:`Идёт «${g.title}» — смотри на экран. Сыграешь в следующем раунде!`})});
+    padAll(A);requestAnimationFrame(()=>actLoop(A))}
+  function actPlay(A){if(A.ph!=="intro")return;A.ph="play";A.ctx.t=0;A.acc=0;A.last=performance.now();A.ctx.banner("Старт!",.9);padAll(A)}
+  function actDefaultOrder(A,rest){const alive=rest.filter(p=>p.alive),out=A.elim.filter(p=>rest.includes(p)).reverse();
+    return alive.concat(out,rest.filter(p=>!alive.includes(p)&&!out.includes(p)))}
+  function actStandings(A){let o=null;if(A.mod.standings){try{o=A.mod.standings(A.ctx)}catch(e){console.error(e)}}return o}
+  function actFinish(A,order){
+    if(A.ph!=="play"&&A.ph!=="intro")return;
+    const all=A.ctx.players,seen=new Set(),o=[];
+    (Array.isArray(order)?order:[]).forEach(p=>{if(all.includes(p)&&!seen.has(p)){seen.add(p);o.push(p)}});
+    A.order=o.concat(actDefaultOrder(A,all.filter(p=>!seen.has(p))));
+    A.ph="done";A.doneAt=performance.now();A.banners=[];A.ctx.banner("Финиш!",1.8)}
+  function actNext(){const A=arena&&arena.act;if(!A){arenaIdle();return}
+    if(A.ph==="intro")actPlay(A);else if(A.ph==="play")actFinish(A,actStandings(A));else if(A.ph==="done")actResults(A);else arenaIdle(A.g.title)}
+  function actLoop(A){
+    if(!arena||arena.act!==A||A.ph==="res")return;
+    const now=performance.now(),dt=Math.min(.25,(now-A.last)/1000);A.last=now;
+    if(A.ph==="intro"&&now-A.t0>=INTRO*1000)actPlay(A);
+    if(A.ph==="play"){
+      A.ctx.players.forEach(ap=>{if(now-ap._in>STALE_IN){ap.input.x=0;ap.input.y=0;ap.input.btn=false}});
+      A.acc+=dt;let n=0;
+      while(A.acc>=ASTEP&&A.ph==="play"&&n<8){A.acc-=ASTEP;n++;A.ctx.t+=ASTEP;
+        try{A.mod.update(A.ctx,ASTEP)}catch(e){console.error("action game update",e);actFinish(A,actStandings(A))}
+        if(A.ph==="play"&&A.ctx.t>=(A.mod.duration||60))actFinish(A,actStandings(A))}
+      if(n>=8)A.acc=0}
+    if(A.ph==="done"&&now-A.doneAt>1800){actResults(A);return}
+    actDraw(A,now);requestAnimationFrame(()=>actLoop(A))}
+  function actDraw(A,now){
+    sizeCv();const g=cg,cw=cv.width,ch=cv.height,s=Math.min(cw/AW,ch/AH),ox=(cw-AW*s)/2,oy=(ch-AH*s)/2;
+    g.setTransform(1,0,0,1,0,0);g.fillStyle="#0d0619";g.fillRect(0,0,cw,ch);
+    g.setTransform(s,0,0,s,ox,oy);g.save();g.beginPath();g.rect(0,0,AW,AH);g.clip();
+    g.save();try{A.mod.draw(A.ctx,g)}catch(e){console.error("action game draw",e)}g.restore();
+    g.textAlign="center";g.textBaseline="middle";g.lineJoin="round";
+    const label=(t,x,y,font,fill,lw=10)=>{g.font=font;g.lineWidth=lw;g.strokeStyle="rgba(23,12,43,.92)";g.strokeText(t,x,y);g.fillStyle=fill;g.fillText(t,x,y)};
+    if(A.ph==="play"||A.ph==="done"){const left=Math.max(0,Math.ceil((A.mod.duration||60)-A.ctx.t));
+      g.fillStyle="rgba(23,12,43,.8)";g.beginPath();g.roundRect(AW/2-70,14,140,58,29);g.fill();
+      label(String(left),AW/2,45,`900 36px ${AFONT}`,left<=10?"#ff5d73":"#fbf4ff",0)}
+    A.banners=A.banners.filter(b=>now-b.t<b.dur);const b=A.banners[A.banners.length-1];
+    if(b){const k=(now-b.t)/b.dur,sc=k<.12?.6+.4*(k/.12):1;g.save();g.globalAlpha=k>.8?(1-k)/.2:1;g.translate(AW/2,AH*.2);g.scale(sc,sc);
+      label(b.text,0,0,`900 ${b.text.length>22?54:76}px ${AFONT}`,"#ffc94a",14);g.restore()}
+    if(A.ph==="intro"){
+      const el=(now-A.t0)/1000,left=INTRO-el;
+      g.fillStyle="rgba(23,12,43,.97)";g.fillRect(0,0,AW,AH);
+      label(A.g.title,AW/2,150,`900 92px ${AFONT}`,"#ffc94a",0);
+      label(A.mod.rules||"",AW/2,250,`800 40px ${BFONT}`,"#fbf4ff",0);
+      const c=A.mod.controls,hint=c==="tap"?"На телефоне: жми большую кнопку":c==="stick+btn"?`На телефоне: джойстик — двигаться, кнопка «${A.mod.btnLabel||"Жми"}»`:"На телефоне: джойстик — двигаться";
+      label(hint,AW/2,310,`700 30px ${BFONT}`,"#5ce1c6",0);
+      const ps=A.ctx.players,per=Math.min(ps.length,5),rows=Math.ceil(ps.length/5);
+      ps.forEach((p,i)=>{const row=i/5|0,inRow=row<rows-1?per:ps.length-row*5,col=i%5;
+        drawPlayer(g,p,AW/2+(col-(inRow-1)/2)*250,450+row*140,38)});
+      const n=Math.ceil(left);
+      if(n<=3&&n>=1){const f=n-left;g.save();g.globalAlpha=1-f*.6;g.translate(AW/2,450+rows*140+70);g.scale(1.4-f*.4,1.4-f*.4);
+        label(String(n),0,0,`900 130px ${AFONT}`,"#ff5d73",14);g.restore()}
+      else label("Приготовьтесь!",AW/2,450+rows*140+50,`900 52px ${AFONT}`,"#fbf4ff",0)}
+    g.restore()}
+  function actResults(A){
+    if(A.ph==="res")return;A.ph="res";
+    const sid="act"+arena.stamp,first=!scored.has(sid);
+    A.order.forEach((ap,i)=>{ap.place=i+1;ap.gain=APR[i]||50;const p=players.get(ap.name);if(p&&first)p.score+=ap.gain});
+    if(first){scored.add(sid);saveScored();save()}
+    renderChips();
+    aSet(`«${A.g.title}» · итоги`,`Победитель: ${A.order[0].name}!`);
+    const list=document.createElement("div");list.className="alist";
+    A.order.slice(0,10).forEach((ap,i)=>{const d=document.createElement("div");d.style.animationDelay=(i*.06)+"s";
+      d.innerHTML=`<span><b>${i+1}</b><i class="sw"></i><span class="n"></span></span><span class="s">+${ap.gain}</span>`;
+      d.querySelector(".sw").style.background=ap.color;d.querySelector(".n").textContent=ap.name;list.append(d)});
+    $("aBody").append(list);aCtl();padAll(A);burst(180,.5,.3);
+    arena.to=setTimeout(()=>{if(arena&&arena.act===A)arenaIdle(A.g.title)},8000)}
+  function padMsg(A,ap){const p=players.get(ap.name),ph=A.ph==="res"?"res":A.ph==="intro"?"intro":ap.alive?"play":"out";
+    return{t:"pad",ph,round:arena.stamp,game:A.g.id,title:A.g.title,rules:A.mod.rules||"",controls:A.mod.controls||"stick",btnLabel:A.mod.btnLabel||"",color:ap.color,
+      left:ph==="intro"?Math.max(0,INTRO-(performance.now()-A.t0)/1000):0,place:ap.place||0,gain:ap.gain||0,score:p?p.score:0,n:A.ctx.players.length}}
+  function padSend(A,ap){const p=players.get(ap.name);if(p)send(p,padMsg(A,ap))}
+  function padAll(A){A.ctx.players.forEach(ap=>padSend(A,ap))}
+  function actRejoin(A,p){const ap=A.byName.get(p.name);if(ap)padSend(A,ap);else send(p,{t:"idle",text:`Идёт «${A.g.title}» — смотри на экран. Сыграешь в следующем раунде!`})}
+  function actInput(p,m){const A=arena&&arena.act;if(!A)return;const ap=A.byName.get(p.name);if(!ap)return;
+    let x=+m.x||0,y=+m.y||0;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
+    ap.input.x=x;ap.input.y=y;ap.input.btn=!!m.b;
+    const k=Math.max(0,m.k|0);if(k>ap._k)ap.input.taps+=k-ap._k;else if(k<ap._k)ap.input.taps+=k; // k restarts when the phone reloads
+    ap._k=k;ap._in=performance.now()}
   $("miniBtn").onclick=()=>arenaIdle();$("cMini").onclick=()=>arenaIdle();
   $("aVote").onclick=startVote;$("aNext").onclick=arenaNext;$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
 
@@ -691,7 +802,7 @@ function host(){
 function player(){
   $("player").hidden=false;
   const hostId=hashJoin;let myName=store.get("aeshow-name"),cur=null,timerRaf=null;
-  const scr=id=>["pName","pWait","pQ","pTap","pRes"].forEach(s=>$(s).hidden=s!==id);
+  const scr=id=>{["pName","pWait","pQ","pTap","pPad","pRes"].forEach(s=>$(s).hidden=s!==id);document.documentElement.classList.toggle("padmode",id==="pPad")};
   // name grid
   GUESTS.forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>join(n);$("nameGrid").append(b)});
   $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
@@ -704,7 +815,7 @@ function player(){
   const T="aeshow/"+hostId;
   let cid=store.get("aeshow-cid");if(!cid){cid=rid(10);store.set("aeshow-cid",cid)}
   let hostSeen=-1e9,knocks=0;
-  const conn={get open(){return performance.now()-hostSeen<STALE},send(m){bus.pub(T+"/h",{f:cid,m})}};
+  const conn={get open(){return performance.now()-hostSeen<STALE},send(m,qos){bus.pub(T+"/h",{f:cid,m},qos)}};
   const bus=mqttBus(T+"/p/"+cid,w=>{const m=w.m;if(!m)return;const was=conn.open;hostSeen=performance.now();knocks=0;
     if((!was&&m.t!=="welcome"||m.who)&&myName)conn.send({t:"join",name:myName}); // host does not know us (e.g. it reloaded)
     if(!was)setConn(true);
@@ -718,19 +829,20 @@ function player(){
     if(++knocks>=2&&!$("pWait").hidden){$("waitTitle").textContent=bus.connected()?"Ведущий пока не на связи":"Нет интернета";$("waitText").textContent="Пробую снова…"}}
   function onMsg(m){
     if(m.t==="welcome"){myName=m.name;$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN)$("adm").hidden=true;else adminAuth();
-      if(!cur){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
-    if(m.t==="idle"){cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
+      if(!cur&&!pad){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
+    if(m.t==="idle"){pad=null;cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
     if(m.t==="q")showQ(m);
     if(m.t==="got"&&cur&&cur.qid===m.qid)markChosen(m.opt);
     if(m.t==="res")showRes(m);
     if(m.t==="tap")onTap(m);
+    if(m.t==="pad")onPad(m);
     if(m.t==="admin")renderAdmin(m.st);
-    if(m.t==="kicked"){myName=null;store.del("aeshow-name");cur=null;tap=null;stopTimer();$("adm").hidden=true;admKey="";$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+    if(m.t==="kicked"){pad=null;myName=null;store.del("aeshow-name");cur=null;tap=null;stopTimer();$("adm").hidden=true;admKey="";$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
     if(m.t==="final"){cur=null;stopTimer();$("resBig").className="big ok";$("resBig").textContent=m.rank===1?"Победа!":`${m.rank}-е место`;
       $("resGain").textContent=m.score+" очков";$("resText").textContent=m.rank===1?"Ты лучший игрок вечера! Забирай приз.":`из ${m.total} игроков. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
   }
   function showQ(m){
-    const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
+    pad=null;const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
     $("qLab").textContent=`${m.label} · ${m.i} из ${m.n}`;$("qText").textContent=m.text||(m.kind==="who"?"Артём или Егор?":m.kind==="tf"?"Правда или ложь?":"Что это?");
     const o=$("opts");if(fresh){o.innerHTML="";o.className="opts"+(m.options.length===2?" two":"")+(m.options.length>4?" many":"")+(m.kind==="tf"?" tf":"");
       m.options.forEach((t,i)=>{const b=document.createElement("button");b.className="o"+(i%4);b.textContent=t;b.onclick=()=>pick(i);o.append(b)});
@@ -758,7 +870,7 @@ function player(){
   let tap=null;
   function onTap(m){
     const b=$("tapBtn");
-    if(m.ph==="ready"||(m.ph==="go"&&(!tap||tap.r!==m.r))){cur=null;stopTimer();tap={r:m.r,go:0,done:false};b.className="tapbtn";b.textContent="ЖДИ…";
+    if(m.ph==="ready"||(m.ph==="go"&&(!tap||tap.r!==m.r))){pad=null;cur=null;stopTimer();tap={r:m.r,go:0,done:false};b.className="tapbtn";b.textContent="ЖДИ…";
       $("tapTitle").textContent=`Быстрый палец · раунд ${m.r}`;$("tapText").textContent="Жми, как только кнопка станет зелёной. Раньше — фальстарт!";scr("pTap")}
     if(m.ph==="go"&&!tap.done&&!tap.go){tap.go=performance.now();b.className="tapbtn go";b.textContent="ЖМИ!";$("tapText").textContent="";if(navigator.vibrate)try{navigator.vibrate(80)}catch(e){}}
     if(m.ph==="res"){tap=null;$("meScore").textContent=m.score+" очк.";const big=$("resBig"),g=$("resGain"),t=$("resText");
@@ -769,6 +881,46 @@ function player(){
   $("tapBtn").onpointerdown=e=>{e.preventDefault();if(!tap||tap.done||!conn.open)return;tap.done=true;const b=$("tapBtn");b.className="tapbtn done";
     if(!tap.go){conn.send({t:"tapped",r:tap.r,early:true});b.textContent="Фальстарт!"}
     else{const ms=Math.round(performance.now()-tap.go);conn.send({t:"tapped",r:tap.r,ms});b.textContent=ms+" мс"}};
+  /* action-game controller: joystick (+ button) or one big tap button; sends {t:"in",x,y,b,k} with QoS 0 */
+  let pad=null,padEnd=0,padB=false,padK=0,padSent="",padAt=0,padForce=0;
+  const stk={id:null,ox:0,oy:0,x:0,y:0},SR=60,SA=$("stickArea"),sBase=$("stickBase"),knob=$("knob"),actBtn=$("actBtn"),bigTap=$("bigTap");
+  function stickReset(){stk.id=null;stk.x=stk.y=0;sBase.style.left="50%";sBase.style.top="50%";knob.style.transform="";padB=false;actBtn.classList.remove("on")}
+  function onPad(m){
+    cur=null;stopTimer();tap=null;
+    if(!pad||pad.round!==m.round){stickReset();padK=0;padSent=""}
+    const was=pad&&pad.round===m.round?pad.ph:null;pad=m;
+    if(m.score!=null)$("meScore").textContent=m.score+" очк.";
+    if(m.ph==="res"){stickReset();const big=$("resBig");big.className="big "+(m.place<=3?"ok":"no");big.textContent=m.place===1?"Победа!":`${m.place}-е место`;
+      $("resGain").textContent="+"+m.gain;$("resText").textContent=`«${m.title}» · ${m.place} из ${m.n}`;scr("pRes");if(m.place===1)burst(160,.5,.35);return}
+    $("padTitle").textContent=m.title;$("padRules").textContent=m.rules;$("padColor").style.background=m.color;$("pPad").style.setProperty("--pc",m.color);
+    SA.hidden=m.controls==="tap";actBtn.hidden=m.controls!=="stick+btn";actBtn.textContent=m.btnLabel||"Жми";bigTap.hidden=m.controls!=="tap";
+    $("padZone").classList.toggle("off",m.ph==="out");
+    if(m.ph==="intro")padEnd=performance.now()+m.left*1000;
+    $("padMsg").textContent=m.ph==="out"?"Ты выбыл — смотри на экран":m.ph==="play"?"Играй! Смотри на экран":"";
+    if(m.ph==="out"){stickReset();if(was!=="out"&&navigator.vibrate)try{navigator.vibrate([80,60,80])}catch(e){}}
+    if(m.ph==="play"&&was==="intro"&&navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
+    scr("pPad")}
+  const padLive=()=>pad&&pad.ph==="play"&&!$("pPad").hidden&&conn.open;
+  function padSend(force){const x=Math.round(stk.x*100)/100,y=Math.round(stk.y*100)/100,key=`${x},${y},${padB?1:0},${padK}`,now=performance.now();
+    if(!force&&key===padSent&&now>padForce&&!((stk.id!=null||padB)&&now-padAt>400))return;
+    conn.send({t:"in",x,y,b:padB?1:0,k:padK},0);padSent=key;padAt=now}
+  function padNow(){if(!padLive())return;padForce=performance.now()+300;padSend(true)} // + a few repeats: QoS 0 may drop one
+  setInterval(()=>{if(!pad||$("pPad").hidden)return;
+    if(pad.ph==="intro"){const s=Math.ceil((padEnd-performance.now())/1000);$("padMsg").textContent=s>0?`Старт через ${s}…`:"Старт!"}
+    if(padLive())padSend(false)},80);
+  function stickMove(e){const r=SA.getBoundingClientRect();let dx=e.clientX-r.left-stk.ox,dy=e.clientY-r.top-stk.oy;const d=Math.hypot(dx,dy),lim=SR*1.5;
+    if(d>lim){const k=(d-lim)/d;stk.ox+=dx*k;stk.oy+=dy*k;dx-=dx*k;dy-=dy*k;sBase.style.left=stk.ox+"px";sBase.style.top=stk.oy+"px"} // the base follows the finger
+    let x=dx/SR,y=dy/SR;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}if(l<.15){x=0;y=0}
+    stk.x=x;stk.y=y;knob.style.transform=`translate(${x*SR}px,${y*SR}px)`}
+  SA.addEventListener("pointerdown",e=>{e.preventDefault();if(stk.id!=null)return;stk.id=e.pointerId;try{SA.setPointerCapture(e.pointerId)}catch(_){}
+    const r=SA.getBoundingClientRect();stk.ox=e.clientX-r.left;stk.oy=e.clientY-r.top;sBase.style.left=stk.ox+"px";sBase.style.top=stk.oy+"px";stickMove(e);padNow()});
+  SA.addEventListener("pointermove",e=>{if(e.pointerId!==stk.id)return;e.preventDefault();stickMove(e)});
+  const stickUp=e=>{if(e.pointerId!==stk.id)return;stk.id=null;stk.x=stk.y=0;sBase.style.left="50%";sBase.style.top="50%";knob.style.transform="";padNow()};
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>SA.addEventListener(t,stickUp));
+  actBtn.addEventListener("pointerdown",e=>{e.preventDefault();try{actBtn.setPointerCapture(e.pointerId)}catch(_){}padB=true;padK++;actBtn.classList.add("on");padNow();if(navigator.vibrate)try{navigator.vibrate(25)}catch(_){}});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>actBtn.addEventListener(t,()=>{if(!padB)return;padB=false;actBtn.classList.remove("on");padNow()}));
+  bigTap.addEventListener("pointerdown",e=>{e.preventDefault();padK++;bigTap.classList.add("on");setTimeout(()=>bigTap.classList.remove("on"),90);padNow()});
+  [SA,actBtn,bigTap,$("pPad")].forEach(el=>el.addEventListener("contextmenu",e=>e.preventDefault()));
   /* remote control, shown only to ADMIN; the host decides what is allowed */
   let admKey="",admOk=false;
   function adminAuth(){
