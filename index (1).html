@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Шоу Артёма и Егора</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Manrope:wght@500;700;800&display=swap">
+<style>
+:root{
+  --night:#170c2b;--plum:#2a1748;--plum2:#3a2163;--gold:#ffc94a;--coral:#ff5d73;--mint:#5ce1c6;--sky:#7aa8ff;--violet:#c792ff;
+  --ink:#fbf4ff;--muted:#bfa9dc;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;--body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(120% 90% at 50% 0%,var(--plum) 0%,var(--night) 62%) fixed,var(--night);color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--mint);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.05;text-wrap:balance}
+.muted{color:var(--muted)}
+.btn{font:800 17px var(--body);border:0;border-radius:14px;padding:14px 24px;background:var(--coral);color:#fff;box-shadow:0 5px 0 #b8324a}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b8324a}
+.btn.gold{background:var(--gold);color:var(--night);box-shadow:0 5px 0 #c48d10}
+.btn.ghost{background:transparent;border:1.5px solid var(--plum2);color:var(--ink);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* ---------- HOST: lobby ---------- */
+#lobby{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center;max-width:1300px;margin:0 auto;padding-block:32px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+@media (max-width:820px){#lobby{grid-template-columns:1fr}}
+.eyebrow{font:800 13px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--mint)}
+#lobby h1{font-size:clamp(34px,4.6vw,64px);background:linear-gradient(180deg,var(--gold),var(--coral));-webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0 14px}
+.steps{display:flex;flex-direction:column;gap:10px;margin:18px 0 24px;padding:0;list-style:none}
+.steps li{display:flex;gap:12px;align-items:baseline;line-height:1.45}
+.steps b{font:900 15px var(--display);color:var(--gold);min-width:1.4em}
+.qrbox{background:#fff;border-radius:24px;padding:22px;display:grid;place-items:center;width:min(380px,100%);aspect-ratio:1;margin-inline:auto}
+#qr img,#qr canvas{width:100%!important;height:auto!important}
+.joinlink{font:700 13px var(--body);color:var(--muted);text-align:center;margin-top:12px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.chip{background:var(--plum);border-radius:999px;padding:8px 14px;font-weight:800;display:inline-flex;gap:6px;align-items:center;animation:pop .5s cubic-bezier(.2,1.6,.4,1) both}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--mint);display:inline-block}
+.chip.off i{background:var(--muted)} .chip.off{opacity:.55}
+.panel{background:rgba(42,23,72,.6);border:1.5px solid var(--plum2);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.status{font-size:14px;color:var(--muted)}
+.status.ok{color:var(--mint)} .status.err{color:var(--coral)}
+label.file{display:inline-flex;align-items:center;gap:8px;font:800 15px var(--body);background:var(--plum2);border-radius:12px;padding:10px 14px;cursor:pointer}
+label.file input{position:absolute;opacity:0;width:1px;height:1px}
+
+/* ---------- HOST: show ---------- */
+#show{position:fixed;inset:0;background:#000;z-index:5}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.ov{position:absolute;inset:0;pointer-events:none;container-type:size}
+.stage{position:absolute;left:50%;top:50%;width:min(100vw,177.78vh);height:min(56.25vw,100vh);transform:translate(-50%,-50%)}
+.pill{position:absolute;left:50%;bottom:2.4%;transform:translateX(-50%);background:rgba(23,12,43,.85);border:2px solid var(--plum2);border-radius:999px;padding:.55em 1.2em;font:800 clamp(14px,1.6vw,30px) var(--body);display:flex;gap:.6em;align-items:center;white-space:nowrap}
+.pill .dots{display:flex;gap:.25em}
+.pill .dots span{width:.55em;height:.55em;border-radius:50%;background:var(--plum2)}
+.pill .dots span.on{background:var(--mint)}
+.strip{position:absolute;left:50%;bottom:2.4%;transform:translateX(-50%);display:flex;gap:.6em;align-items:center;background:rgba(23,12,43,.88);border:2px solid var(--plum2);border-radius:999px;padding:.5em 1.1em;font:800 clamp(13px,1.45vw,28px) var(--body);white-space:nowrap;max-width:94%}
+.strip .ok{color:var(--mint)} .strip .fast{color:var(--gold)}
+.bars{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);width:62%;display:flex;flex-direction:column;gap:.5em;font:800 clamp(14px,1.6vw,30px) var(--body)}
+.bar{display:grid;grid-template-columns:5.5em 1fr 3.5em;gap:.6em;align-items:center}
+.bar .tr{height:1.1em;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar .fl{height:100%;border-radius:999px;transition:width 1s cubic-bezier(.2,.9,.3,1)}
+.board{position:absolute;left:50%;top:70%;transform:translateX(-50%);display:flex;gap:.6em;flex-wrap:nowrap;font:800 clamp(13px,1.5vw,28px) var(--body)}
+.board .b{background:rgba(23,12,43,.9);border:2px solid var(--plum2);border-radius:14px;padding:.45em .9em;display:flex;gap:.5em;align-items:center;white-space:nowrap;animation:rise .6s cubic-bezier(.2,1.4,.4,1) both}
+.board .b:first-child{border-color:var(--gold)}
+.board .p{font-family:var(--display);color:var(--gold)} .board .s{color:var(--muted);font-variant-numeric:tabular-nums}
+@keyframes rise{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.ctrl{position:absolute;left:0;right:0;top:0;display:flex;gap:8px;justify-content:center;padding:12px;opacity:0;transition:opacity .25s;pointer-events:auto}
+#show:hover .ctrl,.ctrl:focus-within{opacity:1}
+.ctrl button{font:800 14px var(--body);background:rgba(23,12,43,.85);color:var(--ink);border:1.5px solid var(--plum2);border-radius:10px;padding:8px 12px}
+#podium{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%,var(--plum) 0%,var(--night) 62%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;pointer-events:auto}
+#podium h2{font-size:clamp(28px,4.5vw,80px)}
+.pod{display:flex;align-items:flex-end;gap:1.5vw;width:min(900px,90vw)}
+.pod .st{flex:1;display:flex;flex-direction:column;align-items:center;gap:1vh;min-width:0;animation:rise .8s cubic-bezier(.2,1.4,.4,1) both}
+.pod .nm{font:900 clamp(18px,2.6vw,46px) var(--display);overflow-wrap:anywhere;text-align:center}
+.pod .sc{color:var(--muted);font:800 clamp(14px,1.5vw,26px) var(--body);font-variant-numeric:tabular-nums}
+.pod .blk{width:100%;border-radius:18px 18px 4px 4px;display:grid;place-items:center;font:900 clamp(30px,5vw,90px) var(--display);color:var(--night)}
+.pod .p1 .blk{height:30vh;background:var(--gold)} .pod .p2 .blk{height:21vh;background:var(--mint)} .pod .p3 .blk{height:14vh;background:var(--coral);color:#fff}
+.rest{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:90vw;font:800 clamp(13px,1.3vw,22px) var(--body)}
+.rest span{background:var(--plum);border-radius:999px;padding:6px 12px;color:var(--muted)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+
+/* ---------- PLAYER ---------- */
+#player{min-height:100%;display:flex;flex-direction:column;padding-block:max(18px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));gap:16px;max-width:560px;margin:0 auto}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:800}
+.ptop .me{font-family:var(--display);font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptop .score{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.conn{width:9px;height:9px;border-radius:50%;background:var(--coral);display:inline-block;margin-right:6px}
+.conn.on{background:var(--mint)}
+.pscreen{flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center}
+.pscreen h2{font-size:clamp(24px,7vw,34px);text-align:center}
+.pscreen p{text-align:center;margin:0;line-height:1.5}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.names button{font:800 18px var(--body);background:var(--plum);color:var(--ink);border:1.5px solid var(--plum2);border-radius:14px;padding:16px 10px}
+.names button:active{background:var(--plum2)}
+.other{display:flex;gap:8px}
+.other input{flex:1;min-width:0;font:700 17px var(--body);padding:14px;border-radius:14px;border:1.5px solid var(--plum2);background:var(--night);color:var(--ink)}
+.qhead{text-align:center;display:flex;flex-direction:column;gap:6px}
+.qhead .lab{font:800 13px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--coral)}
+.qhead .q{font:900 22px var(--display)}
+.timer{height:10px;border-radius:999px;background:var(--plum2);overflow:hidden}
+.timer i{display:block;height:100%;background:var(--mint);width:100%;transform-origin:left}
+.opts{display:grid;gap:12px;flex:1;max-height:520px}
+.opts.two{grid-template-columns:1fr}
+.opts button{border:0;border-radius:18px;font:900 clamp(18px,5.4vw,26px) var(--display);color:var(--night);padding:14px;text-align:center;line-height:1.15;box-shadow:0 6px 0 rgba(0,0,0,.35);min-height:72px;overflow-wrap:anywhere}
+.opts button:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.opts button.o0{background:var(--gold)} .opts button.o1{background:var(--mint)} .opts button.o2{background:var(--sky)} .opts button.o3{background:var(--violet)}
+.opts.tf button.o0{background:var(--mint)} .opts.tf button.o1{background:var(--coral);color:#fff}
+.opts.chosen button{opacity:.35}
+.opts.chosen button.pick{opacity:1;outline:4px solid var(--ink);outline-offset:3px}
+.big{font:900 clamp(40px,13vw,72px)/1 var(--display);text-align:center}
+.big.ok{color:var(--mint)} .big.no{color:var(--coral)}
+.gain{font:900 32px var(--display);text-align:center;color:var(--gold)}
+.note{font-size:14px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+
+<!-- HOST LOBBY -->
+<main id="lobby" hidden>
+  <section>
+    <div class="eyebrow">Ноутбук ведущего</div>
+    <h1>Большое шоу Артёма и Егора</h1>
+    <ol class="steps">
+      <li><b>1</b><span>Гости сканируют QR-код камерой телефона и нажимают своё имя.</span></li>
+      <li><b>2</b><span>Нажмите «Пробный вопрос»: у всех на телефонах должны появиться кнопки.</span></li>
+      <li><b>3</b><span>Нажмите «Начать шоу». Вопросы на телефонах появляются сами, очки считаются сами.</span></li>
+    </ol>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><b>В игре: <span id="pcount">0</span></b><span class="status" id="netStatus">Подключаюсь…</span></div>
+      <div class="chips" id="chips"><span class="muted">Пока никого. Сканируйте QR-код.</span></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <div class="row"><b>Видео</b><span class="status" id="vidStatus">Ищу video.mp4 рядом со страницей…</span></div>
+      <div class="row"><label class="file">Выбрать файл с компьютера<input type="file" id="vidFile" accept="video/*"></label></div>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" id="testQ">Пробный вопрос</button>
+      <button class="btn gold" id="start" disabled>Начать шоу</button>
+      <button class="btn ghost" id="resetScores">Обнулить очки</button>
+    </div>
+    <div class="row" id="resetConfirm" hidden style="margin-top:10px"><span class="muted">Точно обнулить очки всех игроков?</span><button class="btn" id="resetYes">Да</button><button class="btn ghost" id="resetNo">Нет</button></div>
+  </section>
+  <section>
+    <div class="qrbox"><div id="qr"></div></div>
+    <div class="joinlink" id="joinLink"></div>
+  </section>
+</main>
+
+<!-- HOST SHOW -->
+<div id="show" hidden>
+  <video id="video" playsinline preload="auto"></video>
+  <div class="ov"><div class="stage" id="stage">
+    <div class="pill" id="pill" hidden></div>
+    <div class="strip" id="strip" hidden></div>
+    <div class="bars" id="bars" hidden></div>
+    <div class="board" id="board" hidden></div>
+  </div></div>
+  <div class="ctrl">
+    <button id="cPlay">Пауза</button><button id="cBack">−10 с</button><button id="cFwd">+10 с</button><button id="cFull">Во весь экран</button><button id="cLobby">В лобби</button>
+  </div>
+  <div id="podium" hidden></div>
+</div>
+
+<!-- PLAYER -->
+<main id="player" hidden>
+  <div class="ptop"><span class="me"><span class="conn" id="conn"></span><span id="meName">Шоу Артёма и Егора</span></span><span class="score" id="meScore"></span></div>
+  <section class="pscreen" id="pName">
+    <h2>Как тебя зовут?</h2>
+    <div class="names" id="nameGrid"></div>
+    <div class="other"><input id="otherName" maxlength="20" placeholder="Другое имя"><button class="btn" id="otherGo">Войти</button></div>
+  </section>
+  <section class="pscreen" id="pWait" hidden>
+    <h2 id="waitTitle">Ты в игре!</h2>
+    <p class="muted" id="waitText">Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.</p>
+    <p class="note"><button class="btn ghost" id="notMe" style="font-size:14px;padding:8px 14px">Это не я</button></p>
+  </section>
+  <section class="pscreen" id="pQ" hidden>
+    <div class="qhead"><span class="lab" id="qLab"></span><span class="q" id="qText"></span></div>
+    <div class="timer"><i id="qTimer"></i></div>
+    <div class="opts" id="opts"></div>
+  </section>
+  <section class="pscreen" id="pRes" hidden>
+    <div class="big" id="resBig"></div>
+    <div class="gain" id="resGain"></div>
+    <p class="muted" id="resText"></p>
+  </section>
+</main>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const TL={"total": 762.6, "finalStart": 744.6, "questions": [{"id": 0, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 1, "n": 8, "open": 31.4, "close": 41.4, "end": 45.2, "options": ["Пираты Карибского моря", "Титаник", "Аватар", "Перл-Харбор"], "correct": 1, "answer": "Титаник"}, {"id": 1, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 2, "n": 8, "open": 47.6, "close": 57.6, "end": 61.4, "options": ["Зверополис", "Книга джунглей", "Мадагаскар", "Король Лев"], "correct": 3, "answer": "Король Лев"}, {"id": 2, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 3, "n": 8, "open": 63.8, "close": 73.8, "end": 77.6, "options": ["Человек-паук", "Мстители", "Бэтмен", "Железный человек"], "correct": 0, "answer": "Человек-паук"}, {"id": 3, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 4, "n": 8, "open": 80.0, "close": 90.0, "end": 93.8, "options": ["Властелин колец", "Гарри Поттер", "Хроники Нарнии", "Перси Джексон"], "correct": 1, "answer": "Гарри Поттер"}, {"id": 4, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 5, "n": 8, "open": 96.2, "close": 106.2, "end": 110.0, "options": ["Золушка", "Хроники Нарнии", "Рапунцель", "Холодное сердце"], "correct": 3, "answer": "Холодное сердце"}, {"id": 5, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 6, "n": 8, "open": 112.4, "close": 122.4, "end": 126.2, "options": ["Джентльмены удачи", "Ирония судьбы", "Ёлки", "Иван Васильевич меняет профессию"], "correct": 1, "answer": "Ирония судьбы, или С лёгким паром!"}, {"id": 6, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 7, "n": 8, "open": 128.6, "close": 138.6, "end": 142.4, "options": ["Матрица", "Бойцовский клуб", "Начало", "Терминатор"], "correct": 0, "answer": "Матрица"}, {"id": 7, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 8, "n": 8, "open": 144.8, "close": 154.8, "end": 158.6, "options": ["Такси", "Форсаж", "Назад в будущее", "Интерстеллар"], "correct": 2, "answer": "Назад в будущее"}, {"id": 8, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 1, "n": 8, "open": 167.0, "close": 175.0, "end": 179.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 9, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 2, "n": 8, "open": 182.0, "close": 190.0, "end": 194.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 10, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 3, "n": 8, "open": 197.0, "close": 205.0, "end": 209.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 11, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 4, "n": 8, "open": 212.0, "close": 220.0, "end": 224.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 12, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 5, "n": 8, "open": 227.0, "close": 235.0, "end": 239.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 13, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 6, "n": 8, "open": 242.0, "close": 250.0, "end": 254.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 14, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 7, "n": 8, "open": 257.0, "close": 265.0, "end": 269.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 15, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 8, "n": 8, "open": 272.0, "close": 280.0, "end": 284.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 16, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 1, "n": 8, "open": 293.0, "close": 308.0, "end": 312.1, "options": ["Симпсоны", "В поисках Немо", "Губка Боб", "Гриффины"], "correct": 2, "answer": "Губка Боб Квадратные Штаны"}, {"id": 17, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 2, "n": 8, "open": 314.5, "close": 329.5, "end": 333.6, "options": ["Ну, погоди!", "Жил-был пёс", "Простоквашино", "Том и Джерри"], "correct": 0, "answer": "Ну, погоди!"}, {"id": 18, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 3, "n": 8, "open": 336.0, "close": 351.0, "end": 355.1, "options": ["Покемон", "Тетрис", "Тамагочи", "Бейблэйд"], "correct": 2, "answer": "Тамагочи"}, {"id": 19, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 4, "n": 8, "open": 357.5, "close": 372.5, "end": 376.6, "options": ["Как я встретил вашу маму", "Друзья", "Теория большого взрыва", "Универ"], "correct": 1, "answer": "Друзья"}, {"id": 20, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 5, "n": 8, "open": 379.0, "close": 394.0, "end": 398.1, "options": ["The Sims", "Terraria", "Minecraft", "Roblox"], "correct": 2, "answer": "Minecraft"}, {"id": 21, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 6, "n": 8, "open": 400.5, "close": 415.5, "end": 419.6, "options": ["Счастливы вместе", "Папины дочки", "Воронины", "Моя прекрасная няня"], "correct": 1, "answer": "Папины дочки"}, {"id": 22, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 7, "n": 8, "open": 422.0, "close": 437.0, "end": 441.1, "options": ["Лунтик", "Фиксики", "Смешарики", "Маша и Медведь"], "correct": 2, "answer": "Смешарики"}, {"id": 23, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 8, "n": 8, "open": 443.5, "close": 458.5, "end": 462.6, "options": ["Властелин колец", "Ведьмак", "Викинги", "Игра престолов"], "correct": 3, "answer": "Игра престолов"}, {"id": 24, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 1, "n": 6, "open": 471.0, "close": 478.0, "end": 482.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 25, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 2, "n": 6, "open": 484.5, "close": 491.5, "end": 495.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 26, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 3, "n": 6, "open": 498.0, "close": 505.0, "end": 509.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 27, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 4, "n": 6, "open": 511.5, "close": 518.5, "end": 522.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 28, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 5, "n": 6, "open": 525.0, "close": 532.0, "end": 536.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 29, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 6, "n": 6, "open": 538.5, "close": 545.5, "end": 549.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 30, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 1, "n": 8, "open": 558.0, "close": 573.0, "end": 577.1, "options": ["Мадагаскар", "Шрек", "Рапунцель", "Красавица и чудовище"], "correct": 1, "answer": "Шрек"}, {"id": 31, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 2, "n": 8, "open": 579.5, "close": 594.5, "end": 598.6, "options": ["Чарли и шоколадная фабрика", "Один дома", "Маска", "Ёлки"], "correct": 1, "answer": "Один дома"}, {"id": 32, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 3, "n": 8, "open": 601.0, "close": 616.0, "end": 620.1, "options": ["Пираты Карибского моря", "Остров сокровищ", "Ван Хельсинг", "Хроники Нарнии"], "correct": 0, "answer": "Пираты Карибского моря"}, {"id": 33, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 4, "n": 8, "open": 622.5, "close": 637.5, "end": 641.6, "options": ["Перевозчик", "Форсаж", "Такси", "Бумер"], "correct": 1, "answer": "Форсаж"}, {"id": 34, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 5, "n": 8, "open": 644.0, "close": 659.0, "end": 663.1, "options": ["Американский пирог", "Ёлки", "Мы — Миллеры", "Мальчишник в Вегасе"], "correct": 3, "answer": "Мальчишник в Вегасе"}, {"id": 35, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 6, "n": 8, "open": 665.5, "close": 680.5, "end": 684.6, "options": ["Аватар", "Звёздные войны", "Трансформеры", "Интерстеллар"], "correct": 0, "answer": "Аватар"}, {"id": 36, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 7, "n": 8, "open": 687.0, "close": 702.0, "end": 706.1, "options": ["Жмурки", "Бригада", "Бумер", "Брат 2"], "correct": 3, "answer": "Брат 2"}, {"id": 37, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 8, "n": 8, "open": 708.5, "close": 723.5, "end": 727.6, "options": ["Сумерки", "Голодные игры", "Дивергент", "Дневники вампира"], "correct": 0, "answer": "Сумерки"}], "cards": [{"start": 23.0, "end": 29.0, "round": 1, "title": "Эмодзи-кино"}, {"start": 158.6, "end": 164.6, "round": 2, "title": "Правда или ложь"}, {"start": 284.6, "end": 290.6, "round": 3, "title": "Три подсказки"}, {"start": 462.6, "end": 468.6, "round": 4, "title": "Кто скорее?"}, {"start": 549.6, "end": 555.6, "round": 5, "title": "Ужасный пересказ"}]};
+const GUESTS=["Артём","Егор Н","Егор П","Паша","Катя","Аня","Рома","Никита","Илья","Клим"];
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const PEER_OPTS={debug:0,config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
+const hashJoin=(location.hash.match(/join=([\w-]+)/)||[])[1];
+
+/* ---------- confetti ---------- */
+const fx=$("fx"),fctx=fx.getContext("2d");let parts=[],fraf=null;
+function sizeFx(){fx.width=innerWidth*devicePixelRatio;fx.height=innerHeight*devicePixelRatio}addEventListener("resize",sizeFx);sizeFx();
+function burst(n=200,x=.5,y=.35){const C=["#ffc94a","#ff5d73","#5ce1c6","#7aa8ff","#c792ff"],W=fx.width,H=fx.height,d=devicePixelRatio;
+ for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(4+Math.random()*11)*d;parts.push({x:W*x,y:H*y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-6*d,r:(5+Math.random()*7)*d,c:C[i%5],rot:Math.random()*6,vr:Math.random()*.3-.15,l:170+Math.random()*90})}
+ if(!fraf)floop()}
+function floop(){fctx.clearRect(0,0,fx.width,fx.height);parts=parts.filter(p=>p.l-->0&&p.y<fx.height+40);
+ for(const p of parts){p.vy+=.25*devicePixelRatio;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.rot);fctx.fillStyle=p.c;fctx.globalAlpha=Math.min(1,p.l/40);fctx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);fctx.restore()}
+ fraf=parts.length?requestAnimationFrame(floop):(fctx.clearRect(0,0,fx.width,fx.height),null)}
+
+/* =====================================================================
+   HOST
+   ===================================================================== */
+function host(){
+  $("lobby").hidden=false;
+  let hostId=store.get("aeshow-host");
+  if(!hostId){hostId="aeshow-"+Math.random().toString(36).slice(2,10);store.set("aeshow-host",hostId)}
+  const players=new Map(); // name -> {name,conn,score,answers:{}}
+  try{const saved=JSON.parse(store.get("aeshow-scores")||"{}");for(const [n,v] of Object.entries(saved))players.set(n,{name:n,conn:null,score:v.score||0,answers:v.answers||{}})}catch(e){}
+  const save=()=>{const o={};players.forEach(p=>o[p.name]={score:p.score,answers:p.answers});store.set("aeshow-scores",JSON.stringify(o))};
+  const scored=new Set(JSON.parse(store.get("aeshow-scored")||"[]"));
+  const saveScored=()=>store.set("aeshow-scored",JSON.stringify([...scored]));
+  let open=null; // {q, test?}
+  const video=$("video");
+
+  /* --- network --- */
+  let peer;
+  function startPeer(){
+    peer=new Peer(hostId,PEER_OPTS);
+    peer.on("open",()=>{setNet("Связь есть, можно подключаться","ok");drawQR()});
+    peer.on("connection",conn=>{conn.on("data",m=>onMsg(conn,m));conn.on("close",()=>{players.forEach(p=>{if(p.conn===conn)p.conn=null});renderChips()})});
+    peer.on("disconnected",()=>{setNet("Переподключаюсь к серверу связи…","err");setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)});
+    peer.on("error",e=>{
+      if(e.type==="unavailable-id"){setNet("Этот код уже открыт в другой вкладке. Закройте её или обновите страницу.","err")}
+      else if(e.type==="network"||e.type==="server-error"||e.type==="socket-error"){setNet("Нет связи с сервером. Проверьте интернет.","err");setTimeout(()=>{try{peer.reconnect()}catch(_){}},3000)}
+      else if(e.type!=="peer-unavailable")setNet("Ошибка связи: "+e.type,"err")});
+  }
+  function setNet(t,c){const s=$("netStatus");s.textContent=t;s.className="status "+(c||"")}
+  function joinUrl(){return location.origin+location.pathname+"#join="+hostId}
+  function drawQR(){$("qr").innerHTML="";new QRCode($("qr"),{text:joinUrl(),width:640,height:640,colorDark:"#170c2b",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});$("joinLink").textContent=joinUrl()}
+  function send(p,m){if(p.conn&&p.conn.open){try{p.conn.send(m)}catch(e){}}}
+  function bcast(m){players.forEach(p=>send(p,m))}
+  function ranked(){return [...players.values()].sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name))}
+  function rankOf(name){return ranked().findIndex(p=>p.name===name)+1}
+
+  function onMsg(conn,m){
+    if(!m||typeof m!=="object")return;
+    if(m.t==="join"){
+      const name=String(m.name||"").trim().slice(0,20);if(!name)return;
+      let p=players.get(name);
+      if(!p){p={name,conn:null,score:0,answers:{}};players.set(name,p)}
+      if(p.conn&&p.conn!==conn){try{p.conn.close()}catch(e){}}
+      p.conn=conn;conn._name=name;save();renderChips();
+      send(p,{t:"welcome",name,score:p.score,rank:rankOf(name),total:players.size});
+      if(open)sendQ(p,open);
+      return}
+    const p=players.get(conn._name);if(!p)return;
+    if(m.t==="answer"&&open&&m.qid===open.q.id&&!(open.q.id in p.answers)){
+      const opt=+m.opt;if(!(opt>=0&&opt<open.q.options.length))return;
+      const el=open.test?(performance.now()-open.t0)/1000:Math.max(0,video.currentTime-open.q.open);
+      p.answers[open.q.id]={opt,el};if(!open.test)save();
+      send(p,{t:"got",qid:open.q.id,opt});updatePill()}
+    if(m.t==="leave"){players.delete(p.name);save();renderChips()}
+  }
+  function sendQ(p,o){const q=o.q,left=o.test?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
+    send(p,{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.test&&video.paused,mine:p.answers[q.id]?p.answers[q.id].opt:null})}
+
+  function renderChips(){
+    $("pcount").textContent=players.size;
+    const c=$("chips");c.innerHTML="";
+    if(!players.size){c.innerHTML='<span class="muted">Пока никого. Сканируйте QR-код.</span>';return}
+    ranked().forEach(p=>{const s=document.createElement("span");s.className="chip"+(p.conn&&p.conn.open?"":" off");s.innerHTML="<i></i>";s.append(p.name+(p.score?" · "+p.score:""));c.append(s)})}
+
+  /* --- scoring --- */
+  function points(q,a){if(!a||q.correct==null||a.opt!==q.correct)return 0;const d=q.close-q.open;return Math.round(500+500*Math.max(0,1-a.el/d))}
+  function closeQ(final){
+    const o=open;open=null;$("pill").hidden=true;if(!o)return;
+    const q=o.q;
+    if(!final){bcast({t:"idle",text:"Вопрос отменён, смотрим дальше"});return}
+    if(o.test){
+      players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:"test",ok:true,opt:a?a.opt:null,gain:0,score:p.score,rank:rankOf(p.name),total:players.size})});
+      players.forEach(p=>delete p.answers[q.id]);showStripText(`Связь работает: ответили ${countAns(q)} из ${players.size}`);return}
+    if(q.kind==="who"){
+      const tally=[0,0];players.forEach(p=>{const a=p.answers[q.id];if(a)tally[a.opt]++});showBars(q,tally);
+      players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:"who",opt:a?a.opt:null,tally,options:q.options,score:p.score,rank:rankOf(p.name),total:players.size})});
+      return}
+    let fastest=null,okN=0,ansN=0;
+    if(!scored.has(q.id)){
+      players.forEach(p=>{const a=p.answers[q.id];const g=points(q,a);p.score+=g;if(a)p._last=g})
+      scored.add(q.id);saveScored();save()}
+    players.forEach(p=>{const a=p.answers[q.id];if(a){ansN++;if(a.opt===q.correct){okN++;if(!fastest||a.el<fastest.el)fastest={name:p.name,el:a.el}}}});
+    players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:points(q,a),score:p.score,rank:rankOf(p.name),total:players.size})});
+    renderChips();
+    const st=$("strip");st.innerHTML="";
+    const s1=document.createElement("span");s1.className="ok";s1.textContent=`Правильно ответили ${okN} из ${players.size}`;st.append(s1);
+    if(fastest){const s2=document.createElement("span");s2.className="fast";s2.textContent=`· Быстрее всех: ${fastest.name}, ${fastest.el.toFixed(1)} с`;st.append(s2)}
+    st.hidden=false}
+  const countAns=q=>[...players.values()].filter(p=>q.id in p.answers).length;
+  function showStripText(t){const st=$("strip");st.textContent=t;st.hidden=false;setTimeout(()=>{st.hidden=true},4000)}
+  function showBars(q,tally){const tot=tally[0]+tally[1]||1,b=$("bars");b.innerHTML="";
+    q.options.forEach((nm,i)=>{const r=document.createElement("div");r.className="bar";const pct=Math.round(tally[i]/tot*100);
+      r.innerHTML=`<span></span><span class="tr"><span class="fl" style="width:0;background:${i?"var(--mint)":"var(--gold)"}"></span></span><span>${pct}%</span>`;r.firstChild.textContent=nm;b.append(r);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>r.querySelector(".fl").style.width=pct+"%"))});b.hidden=false}
+  function updatePill(){if(!open){$("pill").hidden=true;return}const n=countAns(open.q),tot=players.size,pill=$("pill");
+    pill.innerHTML="";const t=document.createElement("span");t.textContent=`Ответили ${n} из ${tot}`;const d=document.createElement("span");d.className="dots";
+    for(let i=0;i<tot;i++){const x=document.createElement("span");if(i<n)x.className="on";d.append(x)}pill.append(t,d);pill.hidden=!$("show").hidden?false:true}
+  function openQ(q,test=false,dur=10){
+    open={q,test,t0:performance.now(),dur};$("strip").hidden=true;$("bars").hidden=true;
+    players.forEach(p=>sendQ(p,open));updatePill()}
+
+  /* --- test question from lobby --- */
+  let testIv=null;
+  function endTest(){if(testIv){clearInterval(testIv);testIv=null}if(open&&open.test)closeQ(true);$("testQ").disabled=false;$("testQ").textContent="Пробный вопрос"}
+  $("testQ").onclick=()=>{
+    if(open)return;const q={id:"test"+Date.now(),kind:"tf",label:"Пробный вопрос",i:1,n:1,text:"Сегодня лучший вечер в году",options:["Правда","Ложь"],correct:0,open:0,close:10};
+    openQ(q,true,10);$("testQ").disabled=true;$("testQ").textContent="Ждём ответы… 10 с";
+    let s=10;testIv=setInterval(()=>{s--;$("testQ").textContent=`Ждём ответы… ${s} с`;if(s<=0){clearInterval(testIv);testIv=null;const n=countAns(q);closeQ(true);
+      $("testQ").disabled=false;$("testQ").textContent="Пробный вопрос";setNet(`Проверка: ответили ${n} из ${players.size}`,n===players.size&&n>0?"ok":"err")}},1000)};
+
+  /* --- video --- */
+  let vidOk=false;
+  function vidReady(label){vidOk=true;const s=$("vidStatus");s.textContent=label;s.className="status ok";$("start").disabled=false}
+  video.src="video.mp4";
+  video.addEventListener("loadedmetadata",()=>{if(Math.abs(video.duration-TL.total)>3){$("vidStatus").textContent="Похоже, это другое видео: длительность не совпадает";$("vidStatus").className="status err"}else vidReady(vidOk?"Видео выбрано":"Видео найдено рядом со страницей")});
+  video.addEventListener("error",()=>{if(!vidOk){$("vidStatus").textContent="video.mp4 не найден — выберите файл вручную";$("vidStatus").className="status err"}});
+  $("vidFile").onchange=e=>{const f=e.target.files[0];if(!f)return;vidOk=true;video.src=URL.createObjectURL(f);$("vidStatus").textContent="Загружаю файл…"};
+
+  /* --- reset --- */
+  $("resetScores").onclick=()=>$("resetConfirm").hidden=false;
+  $("resetNo").onclick=()=>$("resetConfirm").hidden=true;
+  $("resetYes").onclick=()=>{players.forEach(p=>{p.score=0;p.answers={}});scored.clear();saveScored();save();renderChips();$("resetConfirm").hidden=true;
+    players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:rankOf(p.name),total:players.size}))};
+
+  /* --- show --- */
+  $("start").onclick=async()=>{
+    endTest();
+    $("lobby").hidden=true;$("show").hidden=false;$("podium").hidden=true;
+    if(video.ended||video.currentTime>TL.total-1)video.currentTime=0;
+    try{await $("show").requestFullscreen()}catch(e){}
+    try{await video.play()}catch(e){}
+    bcast({t:"idle",text:"Шоу началось! Смотри на экран."})};
+  $("cPlay").onclick=()=>video.paused?video.play():video.pause();
+  $("cBack").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
+  $("cFwd").onclick=()=>video.currentTime=Math.min(video.duration||TL.total,video.currentTime+10);
+  $("cFull").onclick=()=>{document.fullscreenElement?document.exitFullscreen():$("show").requestFullscreen().catch(()=>{})};
+  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}renderChips()};
+  addEventListener("keydown",e=>{if($("show").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
+  video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";if(open)players.forEach(p=>sendQ(p,open))});
+  video.addEventListener("pause",()=>{$("cPlay").textContent="Играть";if(open)players.forEach(p=>sendQ(p,open))});
+  video.addEventListener("ended",showPodium);
+
+  let boardShownFor=null;
+  function tick(){
+    if(!$("show").hidden&&!(open&&open.test)){
+      const t=video.currentTime;
+      const act=TL.questions.find(q=>t>=q.open&&t<q.close);
+      if(open&&(!act||act.id!==open.q.id)){closeQ(t>=open.q.close)}
+      if(act&&!open)openQ(act);
+      const q=TL.questions.find(q=>t>=q.close&&t<q.end);
+      if(!q&&!act){$("strip").hidden=true;$("bars").hidden=true}
+      const card=TL.cards.find(c=>t>=c.start&&t<c.end&&c.round>1);
+      if(card&&boardShownFor!==card.round){boardShownFor=card.round;showBoard()}
+      if(!card&&boardShownFor!==null){boardShownFor=null;$("board").hidden=true}
+      if(t<TL.finalStart&&!$("podium").hidden)$("podium").hidden=true;
+    }
+    requestAnimationFrame(tick)}
+  function showBoard(){const b=$("board");b.innerHTML="";ranked().slice(0,5).forEach((p,i)=>{const d=document.createElement("div");d.className="b";d.style.animationDelay=(i*.08)+"s";
+    d.innerHTML=`<span class="p">${i+1}</span><span class="n"></span><span class="s">${p.score}</span>`;d.querySelector(".n").textContent=p.name;b.append(d)});b.hidden=!players.size}
+  function showPodium(){
+    const r=ranked(),pd=$("podium");pd.innerHTML="";
+    const h=document.createElement("h2");h.textContent=r.length?"Победитель шоу — "+r[0].name+"!":"Шоу окончено!";pd.append(h);
+    const pod=document.createElement("div");pod.className="pod";
+    [[r[1],"p2",2,.5],[r[0],"p1",1,1.1],[r[2],"p3",3,0]].forEach(([p,c,n,dl])=>{if(!p)return;const s=document.createElement("div");s.className="st "+c;s.style.animationDelay=dl+"s";
+      s.innerHTML=`<div class="nm"></div><div class="sc">${p.score} очков</div><div class="blk">${n}</div>`;s.querySelector(".nm").textContent=p.name;pod.append(s)});
+    pd.append(pod);
+    if(r.length>3){const rest=document.createElement("div");rest.className="rest";r.slice(3).forEach((p,i)=>{const x=document.createElement("span");x.textContent=`${i+4}. ${p.name} · ${p.score}`;rest.append(x)});pd.append(rest)}
+    pd.hidden=false;setTimeout(()=>{burst(260,.3,.4);burst(260,.7,.35)},1300);setTimeout(()=>burst(300,.5,.25),1900);
+    players.forEach(p=>send(p,{t:"final",rank:rankOf(p.name),total:players.size,score:p.score}))}
+
+  renderChips();startPeer();requestAnimationFrame(tick);
+}
+
+/* =====================================================================
+   PLAYER
+   ===================================================================== */
+function player(){
+  $("player").hidden=false;
+  const hostId=hashJoin;let peer,conn,myName=store.get("aeshow-name"),cur=null,timerRaf=null;
+  const scr=id=>["pName","pWait","pQ","pRes"].forEach(s=>$(s).hidden=s!==id);
+  // name grid
+  GUESTS.forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>join(n);$("nameGrid").append(b)});
+  $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
+  $("otherName").onkeydown=e=>{if(e.key==="Enter")$("otherGo").click()};
+  $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});store.del("aeshow-name");myName=null;$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")};
+  function join(n){myName=n;store.set("aeshow-name",n);$("meName").textContent=n;
+    $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
+    if(conn&&conn.open)conn.send({t:"join",name:n})}
+  function setConn(on){$("conn").className="conn"+(on?" on":"")}
+  function connect(){
+    if(!peer||peer.destroyed){peer=new Peer(PEER_OPTS);peer.on("open",dial);peer.on("error",e=>{setConn(false);if(e.type==="peer-unavailable"){$("waitTitle").textContent="Ведущий пока не на связи";$("waitText").textContent="Пробую снова…"}setTimeout(retry,2500)});peer.on("disconnected",()=>{setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)})}
+    else dial()}
+  let retrying=false;function retry(){if(retrying)return;retrying=true;setTimeout(()=>{retrying=false;if(!conn||!conn.open)connect()},500)}
+  function dial(){
+    conn=peer.connect(hostId,{reliable:true});
+    conn.on("open",()=>{setConn(true);if(myName)conn.send({t:"join",name:myName})});
+    conn.on("data",onMsg);
+    conn.on("close",()=>{setConn(false);setTimeout(retry,1500)});
+    conn.on("error",()=>{setConn(false);setTimeout(retry,2000)})}
+  function onMsg(m){
+    if(m.t==="welcome"){myName=m.name;$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";
+      if(!cur){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
+    if(m.t==="idle"){cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
+    if(m.t==="q")showQ(m);
+    if(m.t==="got"&&cur&&cur.qid===m.qid)markChosen(m.opt);
+    if(m.t==="res")showRes(m);
+    if(m.t==="final"){cur=null;stopTimer();$("resBig").className="big ok";$("resBig").textContent=m.rank===1?"Победа!":`${m.rank}-е место`;
+      $("resGain").textContent=m.score+" очков";$("resText").textContent=m.rank===1?"Ты лучший игрок вечера! Забирай приз.":`из ${m.total} игроков. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
+  }
+  function showQ(m){
+    const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
+    $("qLab").textContent=`${m.label} · ${m.i} из ${m.n}`;$("qText").textContent=m.text||(m.kind==="who"?"Артём или Егор?":m.kind==="tf"?"Правда или ложь?":"Что это?");
+    const o=$("opts");if(fresh){o.innerHTML="";o.className="opts"+(m.options.length===2?" two":"")+(m.kind==="tf"?" tf":"");
+      m.options.forEach((t,i)=>{const b=document.createElement("button");b.className="o"+i;b.textContent=t;b.onclick=()=>pick(i);o.append(b)});
+      if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}}
+    if(m.mine!=null)markChosen(m.mine);
+    scr("pQ");startTimer()}
+  function pick(i){if(!cur||cur.mine!=null||!conn||!conn.open)return;cur.mine=i;markChosen(i);conn.send({t:"answer",qid:cur.qid,opt:i})}
+  function markChosen(i){if(cur)cur.mine=i;const o=$("opts");o.classList.add("chosen");[...o.children].forEach((b,k)=>b.classList.toggle("pick",k===i))}
+  function startTimer(){stopTimer();const bar=$("qTimer");const f=()=>{if(!cur)return;const el=cur.paused?0:(performance.now()-cur.at)/1000;const left=Math.max(0,cur.left-el);
+      bar.style.transform=`scaleX(${cur.dur?left/cur.dur:0})`;bar.style.background=left<=3?"var(--coral)":"var(--mint)";timerRaf=requestAnimationFrame(f)};f()}
+  function stopTimer(){if(timerRaf)cancelAnimationFrame(timerRaf);timerRaf=null}
+  function showRes(m){cur=null;stopTimer();$("meScore").textContent=m.score+" очк.";const big=$("resBig"),g=$("resGain"),t=$("resText");
+    if(m.kind==="test"){big.className="big ok";big.textContent="Работает!";g.textContent="";t.textContent="Связь есть. Ждём начала шоу.";}
+    else if(m.kind==="who"){big.className="big ok";big.textContent=m.opt==null?"Без голоса":"Голос учтён";g.textContent="";
+      t.textContent=`${m.options[0]}: ${m.tally[0]} · ${m.options[1]}: ${m.tally[1]}`}
+    else if(m.opt==null){big.className="big no";big.textContent="Не успел";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
+    else if(m.ok){big.className="big ok";big.textContent="Верно!";g.textContent="+"+m.gain;t.textContent=`Ты на ${m.rank}-м месте из ${m.total}.`;burst(120,.5,.35)}
+    else{big.className="big no";big.textContent="Мимо";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
+    scr("pRes")}
+  if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
+  setConn(false);connect();
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(!conn||!conn.open))retry()});
+}
+
+hashJoin?player():host();
+</script>
+</body>
+</html>
