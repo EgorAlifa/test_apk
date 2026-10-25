@@ -65,13 +65,13 @@ function knock(ctx,p,k,thief,steal){const d=p.data;k=Math.min(k,d.score);if(k<=0
       const pressed=inp.taps>d.taps||(inp.btn&&!d.pb);d.taps=inp.taps;d.pb=inp.btn;
       if(pressed&&d.cd<=0){let dx=inp.x,dy=inp.y,l=Math.hypot(dx,dy);
         if(l<.2){dx=d.vx;dy=d.vy;l=Math.hypot(dx,dy)}if(l<1){dx=Math.cos(d.face);dy=Math.sin(d.face);l=1}
-        d.vx=dx/l*DASH;d.vy=dy/l*DASH;d.dash=DASH_T;d.hitWin=DASH_T+HIT_WIN;d.cd=DASH_CD;fx(d.x,d.y,10,"#fff",260,.35)}
+        d.vx=dx/l*DASH;d.vy=dy/l*DASH;d.dash=DASH_T;d.hitWin=DASH_T+HIT_WIN;d.cd=DASH_CD;fx(d.x,d.y,10,"#fff",260,.35);ctx.ack(p)}
       d.vx+=inp.x*ACC*dt;d.vy+=inp.y*ACC*dt;
       const k=Math.exp(-(d.dash>0?.8:DRAG)*dt);d.vx*=k;d.vy*=k;
       const sp=Math.hypot(d.vx,d.vy);
       if(d.dash<=0&&sp>VMAX){const ns=VMAX+(sp-VMAX)*Math.exp(-6*dt);d.vx*=ns/sp;d.vy*=ns/sp}
       if(sp>40)d.face=Math.atan2(d.vy,d.vx);
-      d.cd-=dt;d.dash-=dt;d.hitWin-=dt;d.inv-=dt;d.lost-=dt;d.got-=dt;
+      d.cd-=dt;ctx.cooldown(p,d.cd,DASH_CD);d.dash-=dt;d.hitWin-=dt;d.inv-=dt;d.lost-=dt;d.got-=dt;
       d.trail.push({x:d.x,y:d.y});if(d.trail.length>(d.dash>0?9:2))d.trail.shift();if(d.dash<=0&&d.trail.length>1)d.trail.shift()}
     // collisions
     for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const A=ps[i],B=ps[j],a=A.data,b=B.data;
