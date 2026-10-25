@@ -31,6 +31,9 @@ Each file does:
   standings(ctx){},          // OPTIONAL: return players best → worst; used when the round ends by timeout or by the
                              // admin's "Дальше" (e.g. sumo ranks survivors by distance to the centre). Partial lists are
                              // completed with the default order (see ctx.finish).
+  hud:"alive",               // OPTIONAL: the phone HUD shows "<aliveLabel> 4/6" (elimination games) instead of the live
+                             // place "2-й из 6" (default when standings() exists; games without standings show alive too)
+  aliveLabel:"На льдине",    // OPTIONAL: label for the alive count (default "В игре")
 });
 ```
 
@@ -65,6 +68,14 @@ Notes (as implemented in `index.html`):
   status you re-set every frame does not buzz repeatedly). Works during intro and play; ignored for anything that is not
   in `ctx.players` (e.g. robots). The engine clears it on `ctx.eliminate(p)` and when the round finishes.
   The phone shows it as a big line under the rules; `color` tints the line and the screen edge.
+- `ctx.ack(p)` — "this press did something" (dash/jump actually happened). The phone flashes the action button and
+  vibrates only on this confirmation, and the big screen draws a short pulse ring at the avatar (`p.data.x/y`, lifted by
+  `p.data.z` if set). Games that never call it get the confirmation as soon as the engine has processed the press
+  counter, and the pulse on every button press. Call it once per real action (sumo/coins/bomb/tiles do).
+- `ctx.cooldown(p, left, total)` — seconds until the action is ready again and the full cooldown length; call it every
+  frame (e.g. right after `d.cd-=dt`). The phone draws the real host-side cooldown sweep/ring on the action button and
+  animates it locally between updates. If a game stops calling it for a player (fell, eliminated) it counts as ready.
+- `ctx.pulse(p)` — the pulse ring alone, for any other "it landed" moment.
 - `ctx.drawPlayer(g, p, x, y, r)` — standard avatar: filled circle in `p.color` with the name label; use it so all games look consistent.
 
 Scoring (engine): place 1 → 500, 2 → 300, 3 → 150, everyone else who played → 50. Added to the shared leaderboard.
@@ -73,7 +84,7 @@ For balance, the other sources of points: video quiz 125–250 per correct answe
 «Перестрелка» (one tap-reaction round for the tied players), which only orders them and adds no points.
 
 ## Network protocol (engine)
-- phone → host: `{t:"in", x, y, b, k}` (k = press counter), QoS 0 (`mqttBus().pub(topic, w, qos)` takes an optional QoS).
+- phone → host: `{t:"in", x, y, b, k, s}` (k = press counter, s = optional message sequence number, echoed in the HUD), QoS 0 (`mqttBus().pub(topic, w, qos)` takes an optional QoS).
   Sent immediately on touch/press/release (then repeated for 300 ms in case one is dropped), every ~80 ms (~12 Hz)
   while the value changes, and as a 400 ms heartbeat while the stick or button is held still.
 - host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score, st, sc, vib}`
@@ -81,6 +92,16 @@ For balance, the other sources of points: video quiz 125–250 per correct answe
   Extra fields: `round` (round id, changes every round), `left` (seconds until start, intro only), `n` (players in round),
   `st`/`sc` (current `ctx.status` text/colour, also in the state re-sent on rejoin), `vib` (ms, only on the message that
   carries a fresh status change).
+  Also `dur` (round length), `hm` (`"place"`|`"alive"`), `hl` (alive label) and `hud` (the current HUD object below,
+  during play/out) so a rejoining phone has everything at once.
+- host → phone during play: `{t:"hud", round, tl, tx, pl, al, n, k, ok, s, sd, cd, cdT}`, QoS 0, only when something
+  changed: `tl`/`tx` seconds left (whole / 0.1 s), `pl` live place from `standings()` (place games), `al`/`n` alive /
+  players, `k` last press counter the engine processed, `ok` count of `ctx.ack` for this player, `s` last input sequence
+  received and `sd` ms it was held before this HUD (phone RTT = now − send time of `s` − `sd`), `cd`/`cdT` cooldown from
+  `ctx.cooldown`. Press-related changes (k/ok/cooldown restart) go out at most every 60 ms ("stick+btn" games only),
+  everything else at most every 300 ms, so a phone gets ~1 HUD/s idle and ~3–4/s while playing actively
+  (measured: 4 phones, coins, everybody moving and pressing: ~3.7 HUD/s per phone, ~4.9 msgs/s per phone in total).
+  Old phones ignore `hud`; phones that do not send `s` simply get no RTT.
   Players not in the round get `{t:"idle"}` ("сыграешь в следующем раунде").
   A phone that rejoins mid-round must get the current `pad` state again.
 
@@ -94,10 +115,24 @@ For balance, the other sources of points: video quiz 125–250 per correct answe
 - Distinct colors for up to 10 players.
 
 ## Phone controller (player side)
-- Screen `pPad`: title + one-line rules, player color swatch, virtual joystick (touch, large, left/center), optional action button, or one big tap button for "tap" games.
-- No page scrolling/zoom while playing (`touch-action:none`), works with one thumb.
+- Screen `pPad`, full screen, console-style. Title + rules + "твой цвет" only during the intro; nothing to read during play.
+- Landscape is the main layout: left half = floating joystick (the touch point becomes the centre; translucent base +
+  knob only), right half = action button hit area with a big round button. Portrait fallback: stick on top, button below,
+  plus a gentle «Поверни телефон ↻» hint. On the first finger lift in a stick game the pad tries fullscreen +
+  `screen.orientation.lock("landscape")` (optional, ignored where unsupported) and undoes it after the round.
+- "tap" games: everything under the top strip is one tap target, a ripple per finger; every finger counts.
+- Stick and button track their own pointers: two thumbs work at once. `touch-action:none`, no callout/context menu,
+  `pointercancel` handled, safe-area insets respected.
+- Top strip (HUD): time left (mm:ss + thin bar at the top edge), place «2-й из 6» or «На льдине 4/6», connection dot with
+  RTT (green < 250 ms, yellow < 600 ms, red otherwise), score. The admin remote collapses to a 44 px ☰ button in the
+  strip and opens as a sheet over a dimmed backdrop; it never overlaps the hit areas.
+- Press feedback: instant local press animation; the flash + vibration only when the host confirms (`ok`/`k` echo); a
+  press that reached the host during cooldown gets a small shake. No echo within ~700 ms (or no HUD for 2.5 s) →
+  «нет связи» chip, and the reconnect knock runs immediately. The knob glows while the host is acknowledging recent
+  stick input and turns grey when that is stale for > 1 s.
+- Screen edge glows in the player's colour; the game's `ctx.status` line is a big pill at the top centre (colour tints
+  the pill and the screen edge, `vibrate` buzzes).
 - Shows "Ты выбыл — смотри на экран" when out, and result screen at the end.
-- Shows the game's `ctx.status` line (big text, coloured background + screen-edge tint, `navigator.vibrate` if present).
 
 ## Host screen
 - The intro wraps long rules/hint lines (max 3 / 2 lines).
