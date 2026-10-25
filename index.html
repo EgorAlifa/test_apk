@@ -160,6 +160,12 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 .admhead b{color:var(--gold)}
 .admbtns{display:flex;flex-wrap:wrap;gap:6px}
 .admbtns button{flex:1 1 auto;font:800 15px var(--body);background:var(--plum2);color:var(--ink);border:0;border-radius:10px;padding:9px 10px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.ask{position:fixed;inset:0;z-index:50;background:rgba(10,4,22,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px max(16px,env(safe-area-inset-bottom,0px));touch-action:manipulation}
+.askbox{width:min(100%,480px);background:var(--plum);border:1.5px solid var(--gold);border-radius:20px;padding:18px 16px 16px;display:flex;flex-direction:column;gap:16px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.askbox p{margin:0;font:900 clamp(18px,5.4vw,22px)/1.25 var(--display);text-align:center;text-wrap:balance}
+.askbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.askbtns button{font:800 18px var(--body);border:0;border-radius:14px;min-height:56px;padding:12px;touch-action:manipulation}
+#askNo{background:var(--plum2);color:var(--ink)} #askYes{background:var(--coral);color:#fff}
 .admbtns button.sent{outline:2px solid var(--gold);outline-offset:1px}
 /* the admin is also a player: with the remote on screen the question gets less room, so it packs tighter */
 html.isadm #player{gap:10px}
@@ -227,6 +233,7 @@ html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:
     <button class="btn gold">Войти</button>
     <p class="status err" id="gateErr"></p>
   </form>
+  <button class="btn gold" id="gateTap" type="button" hidden style="font-size:clamp(20px,2.4vw,30px);padding:22px 36px">Нажмите, чтобы открыть пульт ведущего</button>
 </main>
 
 <!-- HOST LOBBY -->
@@ -299,6 +306,7 @@ html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:
     <div class="admbtns" id="admBtns"></div>
     <div class="note" id="admNote"></div>
   </section>
+  <div class="ask" id="admAsk" hidden role="dialog" aria-modal="true" aria-labelledby="askQ"><div class="askbox"><p id="askQ"></p><div class="askbtns"><button type="button" id="askNo">Отмена</button><button type="button" id="askYes">Да</button></div></div></div>
   <section class="pscreen" id="pName">
     <h2>Как тебя зовут?</h2>
     <div class="names" id="nameGrid"></div>
@@ -421,14 +429,14 @@ function host(){
   const T="aeshow/"+hostId;
   const conns=new Map(); // phone id -> connection {open, send, close}
   function connOf(cid){let c=conns.get(cid);
-    if(!c){c={cid,seen:-1e9,was:false,get open(){return performance.now()-this.seen<STALE},send(m){bus.pub(T+"/p/"+cid,{m})},close(){this.seen=-1e9}};conns.set(cid,c)}
+    if(!c){c={cid,seen:-1e9,was:false,get open(){return Date.now()-this.seen<STALE},send(m){bus.pub(T+"/p/"+cid,{m})},close(){this.seen=-1e9}};conns.set(cid,c)}
     return c}
   let bus,qrDrawn=false;
   function netStatus(){const n=bus?bus.connected():0;
     if(n){setNet("Связь есть, можно подключаться"+(n<BROKERS.length?` (серверов ${n} из ${BROKERS.length})`:""),"ok");if(!qrDrawn){qrDrawn=true;drawQR()}}
     else setNet("Нет связи с сервером. Проверьте интернет.","err")}
   function startNet(){
-    bus=mqttBus(T+"/h",w=>{if(!w.f||!w.m)return;const c=connOf(String(w.f));c.seen=performance.now();
+    bus=mqttBus(T+"/h",w=>{if(!w.f||!w.m)return;const c=connOf(String(w.f));c.seen=Date.now();
       if(w.m.t==="ping")c.send({t:"pong",who:!c._name});else onMsg(c,w.m);
       if(!c.was){c.was=true;renderChips()}},netStatus);
     setInterval(()=>{let ch=false;conns.forEach(c=>{if(c.was&&!c.open){c.was=false;ch=true}});if(ch)renderChips()},3000)}
@@ -466,7 +474,7 @@ function host(){
     if(m.t==="in"){actInput(p,m);return}
     if(m.t==="tapped")onTapped(p,m);
     if(m.t==="auth"&&p.name===ADMIN&&m.h===PASS_HASH){conn._admin=true;lastAdm=""}
-    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c])CMDS[m.c](m);
+    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c]){send(p,{t:"ack",c:m.c});CMDS[m.c](m)}
     if(m.t==="leave"){detach(conn);renderChips()} // keep the score: picking the same name again restores it
   }
   // a phone loses its name (leave / takeover / switch): the player and their score stay
@@ -866,7 +874,7 @@ function host(){
 
   /* --- remote control from the admin's phone --- */
   let adminNote="",lastAdm="",lastAdmAt=0;
-  const playFail="Ноутбук не дал запустить видео: браузеру нужен хотя бы один клик по странице на ноутбуке.";
+  const playFail="Ноутбук не дал запустить видео: браузер ждёт клика. Кликните один раз по странице на ноутбуке и снова нажмите «Играть» здесь.";
   const CMDS={
     play:m=>{if($("show").hidden||aShown())return;const want=m&&m.want||(video.paused?"play":"pause"); // want: what the button said when tapped
       if(want==="play"&&video.paused)video.play().then(()=>adminNote="").catch(()=>adminNote=playFail);else if(want==="pause"&&!video.paused)video.pause()},
@@ -902,7 +910,7 @@ function player(){
   $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
   $("otherName").onkeydown=e=>{if(e.key==="Enter")$("otherGo").click()};
   $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});forget()};
-  function forget(){pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";admShape="";admOk=false;document.documentElement.classList.remove("isadm");if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+  function forget(){pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";admShape="";admOk=false;$("admAsk").hidden=true;document.documentElement.classList.remove("isadm");if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
   function join(n){myName=n;$("nameNote").textContent="";store.set("aeshow-name",n);$("meName").textContent=n;
     $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
     if(conn&&conn.open)conn.send({t:"join",name:n})}
@@ -910,16 +918,17 @@ function player(){
   const T="aeshow/"+hostId;
   let cid=store.get("aeshow-cid");if(!cid){cid=rid(10);store.set("aeshow-cid",cid)}
   let hostSeen=-1e9,knocks=0;
-  const conn={get open(){return performance.now()-hostSeen<STALE},send(m,qos){bus.pub(T+"/h",{f:cid,m},qos)}};
-  const bus=mqttBus(T+"/p/"+cid,w=>{const m=w.m;if(!m)return;const was=conn.open;hostSeen=performance.now();knocks=0;
+  // liveness uses the wall clock: performance.now() may not advance while the phone sleeps, which would make a dead link look fresh
+  const conn={get open(){return Date.now()-hostSeen<STALE},send(m,qos){bus.pub(T+"/h",{f:cid,m},qos)}};
+  const bus=mqttBus(T+"/p/"+cid,w=>{const m=w.m;if(!m)return;const was=conn.open;hostSeen=Date.now();knocks=0;
     if((!was&&m.t!=="welcome"||m.who)&&myName)conn.send({t:"join",name:myName}); // host does not know us (e.g. it reloaded)
     if(!was)setConn(true);
     if(m.t!=="pong")onMsg(m)},()=>{if(bus&&bus.connected())tickNet()});
   // ping the host; while it is silent, keep knocking with "join" so we get back in as soon as it is reachable
   let kickAt=0;
-  function reconnect(){if(performance.now()-kickAt<15000)return;kickAt=performance.now();bus.kick()}
+  function reconnect(){if(Date.now()-kickAt<15000)return;kickAt=Date.now();bus.kick()}
   function tickNet(){
-    if(conn.open){conn.send({t:"ping"});if(performance.now()-hostSeen>7000)reconnect();return} // pongs stopped: the socket may be dead
+    if(conn.open){conn.send({t:"ping"});if(Date.now()-hostSeen>7000)reconnect();return} // pongs stopped: the socket may be dead
     setConn(false);
     if(knocks>=2&&bus.connected())reconnect(); // sockets say "connected" but the host has been silent for a while
     if(!myName){conn.send({t:"ping"});return}
@@ -1046,9 +1055,9 @@ function player(){
     if(admPend)st={...st,paused:admWant}; // keep the instant label until then
     admSt=st;
     const B=[],b=(c,t,o={})=>B.push({c,t,...o});
-    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start",st.startLabel||"Начать шоу",{dis:!st.canStart,main:1});if(st.resume)b("startOver","Начать сначала",{dis:!st.canStart,confirm:1});b("vote","Мини-игры");b("kick","Выкинуть всех игроков",{confirm:1})}
-    else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра");b("lobby","В лобби")}
-    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{confirm:1})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{confirm:1})}b("close","Закрыть мини-игры",{confirm:1})}
+    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start",st.startLabel||"Начать шоу",{dis:!st.canStart,main:1});if(st.resume)b("startOver","Начать сначала",{dis:!st.canStart,ask:"Начать шоу с самого начала?"});b("vote","Мини-игры");b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}
+    else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра",{ask:"Поставить видео на паузу и открыть мини-игры?"});b("lobby","В лобби",{ask:"Остановить шоу и вернуться в лобби?"})}
+    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{ask:"Прервать игру без очков?"})}b("close","Закрыть мини-игры",{ask:"Закрыть мини-игры?"})}
     const mode={lobby:"Лобби",show:st.paused?"Видео на паузе":"Идёт видео",arena:"Мини-игры"}[st.mode];
     const key=JSON.stringify([B,mode,st.note]);$("adm").hidden=false;if(key===admKey)return;admKey=key;
     $("admMode").textContent=mode;$("admNote").textContent=st.note||"";
@@ -1056,24 +1065,43 @@ function player(){
     // so a state update (it comes every time the video pauses / plays) never replaces a button under the finger
     const box=$("admBtns"),shape=B.map(x=>x.c).join();
     if(shape!==admShape){admShape=shape;box.innerHTML="";B.forEach(()=>{const e=document.createElement("button");e.type="button";e.onclick=()=>admTap(e);box.append(e)})}
-    B.forEach((x,i)=>{const e=box.children[i];e._x=x;e.className=x.main?"main":"";e.disabled=!!x.dis;if(!e.dataset.arm)e.textContent=x.t})}
-  function admTap(e){const x=e._x;if(!x)return;
+    B.forEach((x,i)=>{const e=box.children[i];e._x=x;e.className=x.main?"main":"";e.disabled=!!x.dis;e.textContent=x.t});
+    if(asking&&!B.some(x=>x.c===asking.c&&x.ask===asking.ask&&!x.dis))askClose()} // the state moved on: that action no longer applies
+  function admTap(e){const x=e._x;if(!x)return;if(!wakeLock){wakeTry=0;keepAwake()}
     if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — переподключаюсь… Нажми ещё раз через пару секунд.";admKey="";kickAt=0;reconnect();tickNet();return}
-    if(x.confirm&&!e.dataset.arm){e.dataset.arm=1;e.textContent="Точно? Нажми ещё раз";setTimeout(()=>{if(!e.dataset.arm)return;delete e.dataset.arm;if(e._x)e.textContent=e._x.t},4000);return}
-    if(x.confirm){delete e.dataset.arm;e.textContent=x.t} // confirmed: disarm right away
+    if(x.ask){askOpen(x);return}
+    admSend(x,e)}
+  function admSend(x,e){
     const m={t:"cmd",c:x.c};if(x.c==="next")m.tok=admTok;
     if(x.c==="play"&&admSt){m.want=admSt.paused?"play":"pause"; // flip the label at once; the host gets the wanted state, so a quick second tap cannot undo the first
       admWant=!admSt.paused;admPend=performance.now()+2500;renderAdmin(admSt)}
-    conn.send(m);e.classList.add("sent");setTimeout(()=>e.classList.remove("sent"),350)}
+    conn.send(m);e.classList.add("sent");setTimeout(()=>e.classList.remove("sent"),350);
+    // the host answers every command right away; silence means it got lost on a dead link: say so and reconnect
+    const at=Date.now();setTimeout(()=>{if(hostSeen>=at)return;$("admNote").textContent="Команда не дошла до ноутбука — переподключаюсь… Нажми ещё раз.";admKey="";kickAt=0;reconnect()},2500)}
+  /* confirmation popup for destructive commands (not window.confirm: that would freeze the page and the connection) */
+  let asking=null;
+  function askOpen(x){asking=x;$("askQ").textContent=x.ask;$("askYes").textContent="Да";$("admAsk").hidden=false}
+  function askClose(){asking=null;$("admAsk").hidden=true}
+  $("askNo").onclick=askClose;
+  $("admAsk").onclick=e=>{if(e.target===$("admAsk"))askClose()};
+  $("askYes").onclick=()=>{const x=asking;askClose();if(!x)return;
+    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — переподключаюсь… Нажми ещё раз через пару секунд.";admKey="";kickAt=0;reconnect();tickNet();return}
+    admSend(x,[...$("admBtns").children].find(b=>b._x&&b._x.c===x.c)||$("askYes"))}
   if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
   setConn(false);setInterval(tickNet,4000);
   // back from a locked screen / another app: if the host went quiet meanwhile, reconnect at once instead of waiting for the keepalive
-  const wake=()=>{if(document.hidden)return;if(performance.now()-hostSeen>6000){kickAt=0;reconnect()}tickNet();keepAwake()};
+  const wake=()=>{if(document.hidden)return;if(Date.now()-hostSeen>6000){kickAt=0;reconnect()}tickNet();keepAwake()};
   document.addEventListener("visibilitychange",wake);addEventListener("pageshow",wake);addEventListener("online",wake);
+  // timers stand still while the phone sleeps: a big wall-clock gap between two beats means we just woke up (no event is guaranteed)
+  let beat=Date.now();setInterval(()=>{const now=Date.now(),gap=now-beat;beat=now;if(gap>5000)wake()},1000);
 }
 
 function gate(){
-  if(store.get("aeshow-auth")===PASS_HASH){host();return}
+  if(store.get("aeshow-auth")===PASS_HASH){ // password saved: still wait for one click/key, otherwise the browser blocks video.play() started from the phone
+    $("gate").hidden=false;$("gateForm").hidden=true;$("gateTap").hidden=false;
+    const go=e=>{if(e.type==="keydown"&&["Shift","Control","Alt","Meta","Tab"].includes(e.key))return;
+      ["pointerdown","keydown"].forEach(t=>removeEventListener(t,go,true));$("gate").hidden=true;$("gateTap").hidden=true;host()};
+    ["pointerdown","keydown"].forEach(t=>addEventListener(t,go,true));return}
   $("gate").hidden=false;$("gatePass").focus();
   $("gateForm").onsubmit=async e=>{e.preventDefault();const h=await passHash($("gatePass").value.trim());
     if(h!==PASS_HASH){$("gateErr").textContent="Неверный пароль";$("gatePass").select();return}
