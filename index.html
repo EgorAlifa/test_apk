@@ -83,6 +83,41 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 .pod .p1 .blk{height:30vh;background:var(--gold)} .pod .p2 .blk{height:21vh;background:var(--mint)} .pod .p3 .blk{height:14vh;background:var(--coral);color:#fff}
 .rest{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:90vw;font:800 clamp(13px,1.3vw,22px) var(--body)}
 .rest span{background:var(--plum);border-radius:999px;padding:6px 12px;color:var(--muted)}
+#gate{min-height:100%;display:grid;place-items:center;padding:24px}
+.gatebox{display:flex;flex-direction:column;gap:14px;width:min(360px,100%);text-align:center}
+.gatebox h2{font-size:clamp(26px,4vw,40px)}
+.gatebox input{font:700 20px var(--body);padding:14px;border-radius:14px;border:1.5px solid var(--plum2);background:var(--night);color:var(--ink);text-align:center}
+/* ---------- HOST: mini-games ---------- */
+#arena{position:fixed;inset:0;z-index:10;background:radial-gradient(120% 90% at 50% 0%,var(--plum) 0%,var(--night) 62%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.6vh;padding:4vh 5vw 9vh;text-align:center}
+#arena .lab{font:800 clamp(13px,1.4vw,24px) var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--coral)}
+#arena h2{font-size:clamp(26px,4vw,72px);max-width:24ch}
+.acount{font:800 clamp(14px,1.5vw,26px) var(--body);color:var(--muted);min-height:1.3em}
+.atimer{width:min(900px,90%);height:12px;border-radius:999px;background:var(--plum2);overflow:hidden}
+.atimer i{display:block;height:100%;width:100%;background:var(--mint);transform-origin:left}
+#aBody{width:100%;display:flex;justify-content:center}
+.aopts{display:grid;grid-template-columns:1fr 1fr;gap:1.6vw;width:min(1300px,94vw)}
+.aopts.many{grid-template-columns:repeat(auto-fit,minmax(16vw,1fr))}
+.aopts>div{border-radius:20px;padding:2.2vh 1.2vw;font:900 clamp(18px,2.4vw,44px) var(--display);color:var(--night);display:flex;justify-content:space-between;align-items:center;gap:1vw;transition:opacity .4s,transform .4s;overflow-wrap:anywhere;text-align:left}
+.aopts.many>div{font-size:clamp(15px,1.7vw,32px)}
+.aopts .o0{background:var(--gold)} .aopts .o1{background:var(--mint)} .aopts .o2{background:var(--sky)} .aopts .o3{background:var(--violet)}
+.aopts .cnt{font-family:var(--body);font-weight:800;font-variant-numeric:tabular-nums;opacity:.8;white-space:nowrap}
+.aopts.done>div{opacity:.35} .aopts.done>div.right{opacity:1;transform:scale(1.04);outline:5px solid var(--ink);outline-offset:4px}
+.anote{font:800 clamp(15px,1.7vw,30px) var(--body);color:var(--mint);min-height:1.4em}
+.alist{display:flex;flex-direction:column;gap:1vh;width:min(800px,90vw);font:800 clamp(16px,1.9vw,34px) var(--body)}
+.alist>div{display:flex;justify-content:space-between;gap:1em;background:rgba(23,12,43,.7);border:2px solid var(--plum2);border-radius:14px;padding:1vh 1.4vw;animation:rise .5s cubic-bezier(.2,1.4,.4,1) both}
+.alist>div:first-child{border-color:var(--gold)}
+.alist.two{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(5,auto);column-gap:1.4vw;width:min(1200px,92vw)}
+.alist b{font-family:var(--display);color:var(--gold);margin-right:.8em}
+.alist .s{color:var(--muted);font-variant-numeric:tabular-nums}
+.tapcirc{width:min(38vh,60vw);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font:900 clamp(30px,6vw,110px) var(--display);color:var(--night);background:var(--coral)}
+.tapcirc.go{background:var(--mint)}
+#aCtl{position:absolute;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px;opacity:.25;transition:opacity .25s}
+#aCtl:hover,#aCtl:focus-within{opacity:1}
+#arena.actmode #aCtl{opacity:0;pointer-events:none;z-index:2}
+#arena.actmode.mouse #aCtl,#arena.actmode #aCtl:focus-within{opacity:1;pointer-events:auto}
+#aCtl button{font:800 14px var(--body);background:rgba(23,12,43,.85);color:var(--ink);border:1.5px solid var(--plum2);border-radius:10px;padding:8px 12px}
+#aCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;background:#0d0619}
+.alist .sw{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:.5em;vertical-align:-.05em;border:2px solid rgba(255,255,255,.7)}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
 
 /* ---------- PLAYER ---------- */
@@ -111,17 +146,79 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 .opts button:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
 .opts button.o0{background:var(--gold)} .opts button.o1{background:var(--mint)} .opts button.o2{background:var(--sky)} .opts button.o3{background:var(--violet)}
 .opts.tf button.o0{background:var(--mint)} .opts.tf button.o1{background:var(--coral);color:#fff}
+.opts.many{grid-template-columns:1fr 1fr;gap:10px} .opts.many button{font-size:clamp(15px,4.4vw,20px);min-height:56px}
 .opts.chosen button{opacity:.35}
 .opts.chosen button.pick{opacity:1;outline:4px solid var(--ink);outline-offset:3px}
 .big{font:900 clamp(40px,13vw,72px)/1 var(--display);text-align:center}
 .big.ok{color:var(--mint)} .big.no{color:var(--coral)}
 .gain{font:900 32px var(--display);text-align:center;color:var(--gold)}
 .note{font-size:14px;color:var(--muted);text-align:center}
+.tapbtn{width:min(78vw,340px);aspect-ratio:1;border-radius:50%;border:0;margin:0 auto;font:900 clamp(28px,9vw,44px) var(--display);color:var(--night);background:var(--coral);box-shadow:0 8px 0 rgba(0,0,0,.35);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.tapbtn.go{background:var(--mint)} .tapbtn.done{background:var(--plum2);color:var(--ink)}
+.adm{background:rgba(42,23,72,.75);border:1.5px solid var(--gold);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.admhead{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.admhead b{color:var(--gold)}
+.admbtns{display:flex;flex-wrap:wrap;gap:8px}
+.admbtns button{flex:1 1 auto;font:800 15px var(--body);background:var(--plum2);color:var(--ink);border:0;border-radius:10px;padding:10px 12px}
+.admbtns button.main{background:var(--gold);color:var(--night)}
+.admbtns button:disabled{opacity:.4}
+.adm .note{text-align:left;color:var(--coral)}
+.note.warn{color:var(--coral);font-weight:800;font-size:15px}.note.warn:empty{display:none}
+html.padmode,html.padmode body{overflow:hidden;overscroll-behavior:none;touch-action:none}
+/* pad mode: the page cannot scroll, so everything shrinks to fit; the admin remote folds into one line (tap it to open) */
+html.padmode #player{height:100%;min-height:0;gap:10px;padding-block:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-bottom,0px))}
+.admtog{display:none;font:800 13px var(--body);background:none;border:0;color:var(--gold);padding:0}
+html.padmode .admtog{display:inline}
+html.padmode .adm{padding:6px 10px;gap:6px}
+html.padmode .adm:not(.open) .admbtns,html.padmode .adm:not(.open) #admLock,html.padmode .adm:not(.open) .note{display:none}
+html.padmode .admbtns button{font-size:13px;padding:7px 8px}
+html.padmode #pPad{min-height:0;gap:8px}
+html.padmode .padzone{min-height:150px}
+html.padmode .padst{font-size:clamp(20px,6.5vw,32px);padding:8px 12px}
+html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:12px}
+#pPad{justify-content:flex-start;gap:12px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.padhead{display:flex;gap:12px;align-items:center}
+.padhead i{width:46px;height:46px;border-radius:50%;flex:none;border:3px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.padhead b{display:block;font:900 20px var(--display)}
+.padhead span{display:block;font-size:14px;color:var(--muted);line-height:1.35;margin-top:3px}
+.padmsg{font:900 clamp(20px,6vw,26px) var(--display);text-align:center;min-height:1.3em;color:var(--gold)}
+.padmsg:empty{display:none}
+.padst{font:900 clamp(24px,8vw,38px)/1.15 var(--display);text-align:center;padding:12px 14px;border-radius:18px;background:rgba(42,23,72,.75);border:2px solid var(--plum2);overflow-wrap:anywhere}
+.padst[hidden]{display:none}
+.padst.red{background:var(--coral);border-color:#fff;color:#fff;animation:stpulse .8s ease-in-out infinite alternate}
+.padst.green{background:var(--mint);border-color:#fff;color:var(--night)}
+.padst.gold{background:var(--gold);border-color:#fff;color:var(--night)}
+@keyframes stpulse{to{transform:scale(1.04)}}
+#padTint{position:fixed;inset:0;pointer-events:none;z-index:5;transition:box-shadow .25s}
+#padTint.red{box-shadow:inset 0 0 0 8px #ff5d73,inset 0 0 140px rgba(255,93,115,.55)}
+#padTint.green{box-shadow:inset 0 0 0 8px #5ce1c6,inset 0 0 140px rgba(92,225,198,.45)}
+#padTint.gold{box-shadow:inset 0 0 0 8px #ffc94a,inset 0 0 140px rgba(255,201,74,.45)}
+.padzone{flex:1;display:flex;gap:12px;align-items:stretch;min-height:280px;touch-action:none;transition:opacity .3s}
+.padzone.off{opacity:.25;pointer-events:none}
+.stickarea{flex:1;position:relative;border-radius:24px;background:rgba(42,23,72,.55);border:1.5px dashed var(--plum2);touch-action:none;overflow:hidden}
+.stickarea::after{content:"Двигай пальцем";position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:13px;color:var(--muted);pointer-events:none}
+.stickbase{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:rgba(255,255,255,.07);border:3px solid rgba(255,255,255,.22);pointer-events:none}
+.knob{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--pc,var(--mint));border:3px solid #fff;box-shadow:0 5px 0 rgba(0,0,0,.35)}
+.actbtn{align-self:flex-end;flex:none;width:128px;height:128px;border-radius:50%;border:0;font:900 17px var(--display);color:var(--night);background:var(--gold);box-shadow:0 7px 0 #c48d10;touch-action:none;user-select:none;-webkit-user-select:none;margin-bottom:24px}
+.actbtn.on{transform:translateY(5px);box-shadow:0 2px 0 #c48d10;background:#fff}
+.bigtap{flex:1;border:0;border-radius:32px;font:900 clamp(36px,12vw,60px) var(--display);color:var(--night);background:var(--pc,var(--coral));box-shadow:0 8px 0 rgba(0,0,0,.35);touch-action:none;user-select:none;-webkit-user-select:none}
+.bigtap.on{transform:translateY(5px);box-shadow:0 3px 0 rgba(0,0,0,.35);filter:brightness(1.25)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <canvas id="fx"></canvas>
+
+<!-- HOST LOGIN -->
+<main id="gate" hidden>
+  <form class="gatebox" id="gateForm">
+    <div class="eyebrow">Ноутбук ведущего</div>
+    <h2>Вход для ведущего</h2>
+    <input id="gatePass" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Пароль" aria-label="Пароль ведущего">
+    <button class="btn gold">Войти</button>
+    <p class="status err" id="gateErr"></p>
+  </form>
+</main>
 
 <!-- HOST LOBBY -->
 <main id="lobby" hidden>
@@ -132,6 +229,7 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
       <li><b>1</b><span>Гости сканируют QR-код камерой телефона и нажимают своё имя.</span></li>
       <li><b>2</b><span>Нажмите «Пробный вопрос»: у всех на телефонах должны появиться кнопки.</span></li>
       <li><b>3</b><span>Нажмите «Начать шоу». Вопросы на телефонах появляются сами, очки считаются сами.</span></li>
+      <li><b>4</b><span>«Мини-игры» — живые раунды с голосованием за следующую игру. Егор Н управляет всем с телефона.</span></li>
     </ol>
     <div class="panel">
       <div class="row" style="justify-content:space-between"><b>В игре: <span id="pcount">0</span></b><span class="status" id="netStatus">Подключаюсь…</span></div>
@@ -144,6 +242,8 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
     <div class="row" style="margin-top:18px">
       <button class="btn ghost" id="testQ">Пробный вопрос</button>
       <button class="btn gold" id="start" disabled>Начать шоу</button>
+      <button class="btn ghost" id="startOver" hidden>Начать сначала</button>
+      <button class="btn ghost" id="miniBtn">Мини-игры</button>
       <button class="btn ghost" id="resetScores">Обнулить очки</button>
     </div>
     <div class="row" id="resetConfirm" hidden style="margin-top:10px"><span class="muted">Точно обнулить очки всех игроков?</span><button class="btn" id="resetYes">Да</button><button class="btn ghost" id="resetNo">Нет</button></div>
@@ -164,18 +264,37 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
     <div class="board" id="board" hidden></div>
   </div></div>
   <div class="ctrl">
-    <button id="cPlay">Пауза</button><button id="cBack">−10 с</button><button id="cFwd">+10 с</button><button id="cFull">Во весь экран</button><button id="cLobby">В лобби</button>
+    <button id="cPlay">Пауза</button><button id="cBack">−10 с</button><button id="cFwd">+10 с</button><button id="cFull">Во весь экран</button><button id="cMini">Мини-игры</button><button id="cLobby">В лобби</button>
   </div>
   <div id="podium" hidden></div>
+</div>
+
+<!-- HOST MINI-GAMES -->
+<div id="arena" hidden>
+  <canvas id="aCanvas" hidden></canvas>
+  <span class="lab" id="aLab"></span>
+  <h2 id="aTitle"></h2>
+  <span class="acount" id="aCount"></span>
+  <div class="atimer" id="aTimerBox" hidden><i id="aTimer"></i></div>
+  <div id="aBody"></div>
+  <div class="anote" id="aNote"></div>
+  <div id="aCtl"><button id="aVote">Голосование за игру</button><button id="aNext">Дальше</button><button id="aStop">Прервать игру</button><button id="aClose">Закрыть мини-игры</button></div>
 </div>
 
 <!-- PLAYER -->
 <main id="player" hidden>
   <div class="ptop"><span class="me"><span class="conn" id="conn"></span><span id="meName">Шоу Артёма и Егора</span></span><span class="score" id="meScore"></span></div>
+  <section class="adm" id="adm" hidden>
+    <div class="admhead" id="admHead"><b>Пульт ведущего</b><span class="muted" id="admMode"></span><button class="admtog" id="admTog" type="button">открыть ▾</button></div>
+    <form class="other" id="admLock" hidden><input id="admPass" type="password" inputmode="numeric" placeholder="Пароль ведущего" aria-label="Пароль ведущего"><button class="btn">OK</button></form>
+    <div class="admbtns" id="admBtns"></div>
+    <div class="note" id="admNote"></div>
+  </section>
   <section class="pscreen" id="pName">
     <h2>Как тебя зовут?</h2>
     <div class="names" id="nameGrid"></div>
     <div class="other"><input id="otherName" maxlength="20" placeholder="Другое имя"><button class="btn" id="otherGo">Войти</button></div>
+    <p class="note warn" id="nameNote" role="alert"></p>
   </section>
   <section class="pscreen" id="pWait" hidden>
     <h2 id="waitTitle">Ты в игре!</h2>
@@ -187,6 +306,21 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
     <div class="timer"><i id="qTimer"></i></div>
     <div class="opts" id="opts"></div>
   </section>
+  <section class="pscreen" id="pTap" hidden>
+    <h2 id="tapTitle">Быстрый палец</h2>
+    <button class="tapbtn" id="tapBtn">ЖДИ…</button>
+    <p class="muted" id="tapText"></p>
+  </section>
+  <section class="pscreen" id="pPad" hidden>
+    <div class="padhead"><i id="padColor"></i><div><b id="padTitle"></b><span id="padRules"></span></div></div>
+    <div class="padmsg" id="padMsg"></div>
+    <div class="padst" id="padSt" hidden></div><i id="padTint"></i>
+    <div class="padzone" id="padZone">
+      <div class="stickarea" id="stickArea"><div class="stickbase" id="stickBase"><i class="knob" id="knob"></i></div></div>
+      <button class="actbtn" id="actBtn">Жми</button>
+      <button class="bigtap" id="bigTap">ЖМИ!</button>
+    </div>
+  </section>
   <section class="pscreen" id="pRes" hidden>
     <div class="big" id="resBig"></div>
     <div class="gain" id="resGain"></div>
@@ -196,9 +330,29 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- action mini-games: one file each, see docs/action-games-spec.md -->
+<script src="games/sumo.js"></script>
+<script src="games/bomb.js"></script>
+<script src="games/coins.js"></script>
+<script src="games/meteors.js"></script>
+<script src="games/taprace.js"></script>
+<script src="games/tiles.js"></script>
 <script>
 const TL={"total": 762.6, "finalStart": 744.6, "questions": [{"id": 0, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 1, "n": 8, "open": 31.4, "close": 41.4, "end": 45.2, "options": ["Пираты Карибского моря", "Титаник", "Аватар", "Перл-Харбор"], "correct": 1, "answer": "Титаник"}, {"id": 1, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 2, "n": 8, "open": 47.6, "close": 57.6, "end": 61.4, "options": ["Зверополис", "Книга джунглей", "Мадагаскар", "Король Лев"], "correct": 3, "answer": "Король Лев"}, {"id": 2, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 3, "n": 8, "open": 63.8, "close": 73.8, "end": 77.6, "options": ["Человек-паук", "Мстители", "Бэтмен", "Железный человек"], "correct": 0, "answer": "Человек-паук"}, {"id": 3, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 4, "n": 8, "open": 80.0, "close": 90.0, "end": 93.8, "options": ["Властелин колец", "Гарри Поттер", "Хроники Нарнии", "Перси Джексон"], "correct": 1, "answer": "Гарри Поттер"}, {"id": 4, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 5, "n": 8, "open": 96.2, "close": 106.2, "end": 110.0, "options": ["Золушка", "Хроники Нарнии", "Рапунцель", "Холодное сердце"], "correct": 3, "answer": "Холодное сердце"}, {"id": 5, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 6, "n": 8, "open": 112.4, "close": 122.4, "end": 126.2, "options": ["Джентльмены удачи", "Ирония судьбы", "Ёлки", "Иван Васильевич меняет профессию"], "correct": 1, "answer": "Ирония судьбы, или С лёгким паром!"}, {"id": 6, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 7, "n": 8, "open": 128.6, "close": 138.6, "end": 142.4, "options": ["Матрица", "Бойцовский клуб", "Начало", "Терминатор"], "correct": 0, "answer": "Матрица"}, {"id": 7, "kind": "emoji", "label": "Эмодзи-кино", "round": 1, "i": 8, "n": 8, "open": 144.8, "close": 154.8, "end": 158.6, "options": ["Такси", "Форсаж", "Назад в будущее", "Интерстеллар"], "correct": 2, "answer": "Назад в будущее"}, {"id": 8, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 1, "n": 8, "open": 167.0, "close": 175.0, "end": 179.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 9, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 2, "n": 8, "open": 182.0, "close": 190.0, "end": 194.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 10, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 3, "n": 8, "open": 197.0, "close": 205.0, "end": 209.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 11, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 4, "n": 8, "open": 212.0, "close": 220.0, "end": 224.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 12, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 5, "n": 8, "open": 227.0, "close": 235.0, "end": 239.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 13, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 6, "n": 8, "open": 242.0, "close": 250.0, "end": 254.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 14, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 7, "n": 8, "open": 257.0, "close": 265.0, "end": 269.6, "options": ["Правда", "Ложь"], "correct": 1, "answer": "Ложь"}, {"id": 15, "kind": "tf", "label": "Правда или ложь", "round": 2, "i": 8, "n": 8, "open": 272.0, "close": 280.0, "end": 284.6, "options": ["Правда", "Ложь"], "correct": 0, "answer": "Правда"}, {"id": 16, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 1, "n": 8, "open": 293.0, "close": 308.0, "end": 312.1, "options": ["Симпсоны", "В поисках Немо", "Губка Боб", "Гриффины"], "correct": 2, "answer": "Губка Боб Квадратные Штаны"}, {"id": 17, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 2, "n": 8, "open": 314.5, "close": 329.5, "end": 333.6, "options": ["Ну, погоди!", "Жил-был пёс", "Простоквашино", "Том и Джерри"], "correct": 0, "answer": "Ну, погоди!"}, {"id": 18, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 3, "n": 8, "open": 336.0, "close": 351.0, "end": 355.1, "options": ["Покемон", "Тетрис", "Тамагочи", "Бейблэйд"], "correct": 2, "answer": "Тамагочи"}, {"id": 19, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 4, "n": 8, "open": 357.5, "close": 372.5, "end": 376.6, "options": ["Как я встретил вашу маму", "Друзья", "Теория большого взрыва", "Универ"], "correct": 1, "answer": "Друзья"}, {"id": 20, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 5, "n": 8, "open": 379.0, "close": 394.0, "end": 398.1, "options": ["The Sims", "Terraria", "Minecraft", "Roblox"], "correct": 2, "answer": "Minecraft"}, {"id": 21, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 6, "n": 8, "open": 400.5, "close": 415.5, "end": 419.6, "options": ["Счастливы вместе", "Папины дочки", "Воронины", "Моя прекрасная няня"], "correct": 1, "answer": "Папины дочки"}, {"id": 22, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 7, "n": 8, "open": 422.0, "close": 437.0, "end": 441.1, "options": ["Лунтик", "Фиксики", "Смешарики", "Маша и Медведь"], "correct": 2, "answer": "Смешарики"}, {"id": 23, "kind": "clues", "label": "Три подсказки", "round": 3, "i": 8, "n": 8, "open": 443.5, "close": 458.5, "end": 462.6, "options": ["Властелин колец", "Ведьмак", "Викинги", "Игра престолов"], "correct": 3, "answer": "Игра престолов"}, {"id": 24, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 1, "n": 6, "open": 471.0, "close": 478.0, "end": 482.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 25, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 2, "n": 6, "open": 484.5, "close": 491.5, "end": 495.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 26, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 3, "n": 6, "open": 498.0, "close": 505.0, "end": 509.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 27, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 4, "n": 6, "open": 511.5, "close": 518.5, "end": 522.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 28, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 5, "n": 6, "open": 525.0, "close": 532.0, "end": 536.1, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 29, "kind": "who", "label": "Кто скорее?", "round": 4, "i": 6, "n": 6, "open": 538.5, "close": 545.5, "end": 549.6, "options": ["Артём", "Егор"], "correct": null, "answer": null}, {"id": 30, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 1, "n": 8, "open": 558.0, "close": 573.0, "end": 577.1, "options": ["Мадагаскар", "Шрек", "Рапунцель", "Красавица и чудовище"], "correct": 1, "answer": "Шрек"}, {"id": 31, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 2, "n": 8, "open": 579.5, "close": 594.5, "end": 598.6, "options": ["Чарли и шоколадная фабрика", "Один дома", "Маска", "Ёлки"], "correct": 1, "answer": "Один дома"}, {"id": 32, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 3, "n": 8, "open": 601.0, "close": 616.0, "end": 620.1, "options": ["Пираты Карибского моря", "Остров сокровищ", "Ван Хельсинг", "Хроники Нарнии"], "correct": 0, "answer": "Пираты Карибского моря"}, {"id": 33, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 4, "n": 8, "open": 622.5, "close": 637.5, "end": 641.6, "options": ["Перевозчик", "Форсаж", "Такси", "Бумер"], "correct": 1, "answer": "Форсаж"}, {"id": 34, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 5, "n": 8, "open": 644.0, "close": 659.0, "end": 663.1, "options": ["Американский пирог", "Ёлки", "Мы — Миллеры", "Мальчишник в Вегасе"], "correct": 3, "answer": "Мальчишник в Вегасе"}, {"id": 35, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 6, "n": 8, "open": 665.5, "close": 680.5, "end": 684.6, "options": ["Аватар", "Звёздные войны", "Трансформеры", "Интерстеллар"], "correct": 0, "answer": "Аватар"}, {"id": 36, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 7, "n": 8, "open": 687.0, "close": 702.0, "end": 706.1, "options": ["Жмурки", "Бригада", "Бумер", "Брат 2"], "correct": 3, "answer": "Брат 2"}, {"id": 37, "kind": "story", "label": "Ужасный пересказ", "round": 5, "i": 8, "n": 8, "open": 708.5, "close": 723.5, "end": 727.6, "options": ["Сумерки", "Голодные игры", "Дивергент", "Дневники вампира"], "correct": 0, "answer": "Сумерки"}], "cards": [{"start": 23.0, "end": 29.0, "round": 1, "title": "Эмодзи-кино"}, {"start": 158.6, "end": 164.6, "round": 2, "title": "Правда или ложь"}, {"start": 284.6, "end": 290.6, "round": 3, "title": "Три подсказки"}, {"start": 462.6, "end": 468.6, "round": 4, "title": "Кто скорее?"}, {"start": 549.6, "end": 555.6, "round": 5, "title": "Ужасный пересказ"}]};
 const GUESTS=["Артём","Егор Н","Егор П","Паша","Катя","Аня","Рома","Никита","Илья","Клим"];
+const ADMIN="Егор Н"; // this guest gets the remote control on their phone (after entering the host password)
+const PASS_HASH="b6e4c34afe9e1aeda8cb003ad6480dbd0f8973c837ffcd3566b11c24b802bf61"; // SHA-256 of "aeshow:" + host password
+async function passHash(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("aeshow:"+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+/* Mini-games played live after (or between) the video. */
+const GAMES=[
+  {id:"maj",title:"Кто из нас?",kind:"maj",n:5,dur:15,pool:[
+    {q:"Кто первым уснёт на вечеринке?"},{q:"Кто опоздает даже на собственную свадьбу?"},{q:"Кто станет миллионером?"},
+    {q:"Кто дольше всех собирается выйти из дома?"},{q:"Кто выживет на необитаемом острове?"},{q:"Кто съест последний кусок торта?"},
+    {q:"Кто чаще всех сидит в телефоне?"},{q:"Кто станет знаменитым?"},{q:"Кто громче всех смеётся?"},{q:"Кто заблудится даже с навигатором?"}]},
+  {id:"tap",title:"Быстрый палец",kind:"tap",rounds:3}
+];
+/* real-time action games from games/*.js join the vote too */
+(window.ACTION_GAMES||[]).forEach(m=>{if(m&&m.id&&!GAMES.some(g=>g.id===m.id))GAMES.push({id:m.id,title:m.title,kind:"action",mod:m})});
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 /* ---------- network: MQTT over WebSocket ----------
@@ -221,7 +375,7 @@ function mqttBus(subTopic,onData,onStatus){
     return c});
   return{
     connected:()=>clients.filter(c=>c.connected).length,
-    pub(topic,w){w.i=me+"."+(++seq);const s=JSON.stringify(w);clients.forEach(c=>{if(c.connected)c.publish(topic,s,{qos:1})})}
+    pub(topic,w,qos=1){w.i=me+"."+(++seq);const s=JSON.stringify(w);clients.forEach(c=>{if(c.connected)c.publish(topic,s,{qos})})}
   }
 }
 const hashJoin=(location.hash.match(/join=([\w-]+)/)||[])[1];
@@ -248,7 +402,7 @@ function host(){
   const save=()=>{const o={};players.forEach(p=>o[p.name]={score:p.score,answers:p.answers});store.set("aeshow-scores",JSON.stringify(o))};
   const scored=new Set(JSON.parse(store.get("aeshow-scored")||"[]"));
   const saveScored=()=>store.set("aeshow-scored",JSON.stringify([...scored]));
-  let open=null; // {q, test?}
+  let open=null; // {q, test?, live?} live = timed by the clock (test question, mini-games), not by the video
   const video=$("video");
 
   /* --- network --- */
@@ -279,22 +433,36 @@ function host(){
     if(m.t==="join"){
       const name=String(m.name||"").trim().slice(0,20);if(!name)return;
       let p=players.get(name);
+      // the name is held by another phone that is still on the line: refuse, do not steal it
+      if(p&&p.conn&&p.conn!==conn&&p.conn.open&&p.conn._name===name){conn.send({t:"taken",name});return}
+      if(conn._name&&conn._name!==name)detach(conn); // this phone switches to another name
       if(!p){p={name,conn:null,score:0,answers:{}};players.set(name,p)}
-      if(p.conn&&p.conn!==conn){try{p.conn.close()}catch(e){}}
+      if(p.conn&&p.conn!==conn){const old=p.conn;old._name=null;old._admin=false;try{old.close()}catch(e){}} // stale holder: take over; it gets "taken" if it comes back
       p.conn=conn;conn._name=name;save();renderChips();
-      send(p,{t:"welcome",name,score:p.score,rank:rankOf(name),total:players.size});
+      send(p,{t:"welcome",name,score:p.score,rank:rankOf(name),total:players.size,active:activeFor(p)});
       if(open)sendQ(p,open);
+      if(arena&&arena.tap&&arena.tap.ph!=="done")send(p,{t:"tap",ph:arena.tap.ph,r:arena.tap.r});
+      if(arena&&arena.act)actRejoin(arena.act,p);
+      if(name===ADMIN)lastAdm="";
       return}
     const p=players.get(conn._name);if(!p)return;
     if(m.t==="answer"&&open&&m.qid===open.q.id&&!(open.q.id in p.answers)){
       const opt=+m.opt;if(!(opt>=0&&opt<open.q.options.length))return;
-      const el=open.test?(performance.now()-open.t0)/1000:Math.max(0,video.currentTime-open.q.open);
+      const el=open.live?(performance.now()-open.t0)/1000:Math.max(0,video.currentTime-open.q.open);
       p.answers[open.q.id]={opt,el};if(!open.test)save();
-      send(p,{t:"got",qid:open.q.id,opt});updatePill()}
-    if(m.t==="leave"){players.delete(p.name);save();renderChips()}
+      send(p,{t:"got",qid:open.q.id,opt});updatePill();arenaCount()}
+    if(m.t==="in"){actInput(p,m);return}
+    if(m.t==="tapped")onTapped(p,m);
+    if(m.t==="auth"&&p.name===ADMIN&&m.h===PASS_HASH){conn._admin=true;lastAdm=""}
+    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c])CMDS[m.c](m);
+    if(m.t==="leave"){detach(conn);renderChips()} // keep the score: picking the same name again restores it
   }
-  function sendQ(p,o){const q=o.q,left=o.test?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
-    send(p,{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.test&&video.paused,mine:p.answers[q.id]?p.answers[q.id].opt:null})}
+  // a phone loses its name (leave / takeover / switch): the player and their score stay
+  function detach(conn){const p=players.get(conn._name);if(p&&p.conn===conn)p.conn=null;conn._name=null;conn._admin=false}
+  // is something running that this player will be sent right after "welcome"? if not, the phone drops stale screens
+  function activeFor(p){return !!(open||arena&&arena.tap&&arena.tap.ph!=="done"||arena&&arena.act&&arena.act.byName.has(p.name))}
+  function sendQ(p,o){const q=o.q,left=o.live?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
+    send(p,{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.live&&video.paused,mine:p.answers[q.id]?p.answers[q.id].opt:null})}
 
   function renderChips(){
     $("pcount").textContent=players.size;
@@ -315,12 +483,19 @@ function host(){
       const tally=[0,0];players.forEach(p=>{const a=p.answers[q.id];if(a)tally[a.opt]++});showBars(q,tally);
       players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:"who",opt:a?a.opt:null,tally,options:q.options,score:p.score,rank:rankOf(p.name),total:players.size})});
       return}
-    let fastest=null,okN=0,ansN=0;
-    if(!scored.has(q.id)){
+    if(q.kind==="vote"||q.kind==="maj"){
+      const tally=q.options.map(()=>0);players.forEach(p=>{const a=p.answers[q.id];if(a)tally[a.opt]++});
+      const max=Math.max(0,...tally);q.top=max?tally.map((v,i)=>v===max?i:-1).filter(i=>i>=0):[];
+      const first=!scored.has(q.id),gainOf=a=>first&&q.kind==="maj"&&a&&q.top.includes(a.opt)?300:0; // gain actually added now
+      if(first){players.forEach(p=>p.score+=gainOf(p.answers[q.id]));scored.add(q.id);saveScored();save()}
+      players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,opt:a?a.opt:null,options:q.options,top:q.top,win:q.win,gain:gainOf(a),score:p.score,rank:rankOf(p.name),total:players.size})});
+      renderChips();return}
+    let fastest=null,okN=0,ansN=0;const first=!scored.has(q.id); // rewound into a scored question: late answers add nothing
+    if(first){
       players.forEach(p=>{const a=p.answers[q.id];const g=points(q,a);p.score+=g;if(a)p._last=g})
       scored.add(q.id);saveScored();save()}
     players.forEach(p=>{const a=p.answers[q.id];if(a){ansN++;if(a.opt===q.correct){okN++;if(!fastest||a.el<fastest.el)fastest={name:p.name,el:a.el}}}});
-    players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:points(q,a),score:p.score,rank:rankOf(p.name),total:players.size})});
+    players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:first?points(q,a):0,score:p.score,rank:rankOf(p.name),total:players.size})});
     renderChips();
     const st=$("strip");st.innerHTML="";
     const s1=document.createElement("span");s1.className="ok";s1.textContent=`Правильно ответили ${okN} из ${players.size}`;st.append(s1);
@@ -335,8 +510,8 @@ function host(){
   function updatePill(){if(!open){$("pill").hidden=true;return}const n=countAns(open.q),tot=players.size,pill=$("pill");
     pill.innerHTML="";const t=document.createElement("span");t.textContent=`Ответили ${n} из ${tot}`;const d=document.createElement("span");d.className="dots";
     for(let i=0;i<tot;i++){const x=document.createElement("span");if(i<n)x.className="on";d.append(x)}pill.append(t,d);pill.hidden=!$("show").hidden?false:true}
-  function openQ(q,test=false,dur=10){
-    open={q,test,t0:performance.now(),dur};$("strip").hidden=true;$("bars").hidden=true;
+  function openQ(q,mode,dur=10){ // mode: undefined (video), "test" or "live"
+    open={q,test:mode==="test",live:!!mode,t0:performance.now(),dur};$("strip").hidden=true;$("bars").hidden=true;
     players.forEach(p=>sendQ(p,open));updatePill()}
 
   /* --- test question from lobby --- */
@@ -344,7 +519,7 @@ function host(){
   function endTest(){if(testIv){clearInterval(testIv);testIv=null}if(open&&open.test)closeQ(true);$("testQ").disabled=false;$("testQ").textContent="Пробный вопрос"}
   $("testQ").onclick=()=>{
     if(open)return;const q={id:"test"+Date.now(),kind:"tf",label:"Пробный вопрос",i:1,n:1,text:"Сегодня лучший вечер в году",options:["Правда","Ложь"],correct:0,open:0,close:10};
-    openQ(q,true,10);$("testQ").disabled=true;$("testQ").textContent="Ждём ответы… 10 с";
+    openQ(q,"test",10);$("testQ").disabled=true;$("testQ").textContent="Ждём ответы… 10 с";
     let s=10;testIv=setInterval(()=>{s--;$("testQ").textContent=`Ждём ответы… ${s} с`;if(s<=0){clearInterval(testIv);testIv=null;const n=countAns(q);closeQ(true);
       $("testQ").disabled=false;$("testQ").textContent="Пробный вопрос";setNet(`Проверка: ответили ${n} из ${players.size}`,n===players.size&&n>0?"ok":"err")}},1000)};
 
@@ -360,29 +535,38 @@ function host(){
   $("resetScores").onclick=()=>$("resetConfirm").hidden=false;
   $("resetNo").onclick=()=>$("resetConfirm").hidden=true;
   $("resetYes").onclick=()=>{players.forEach(p=>{p.score=0;p.answers={}});scored.clear();saveScored();save();renderChips();$("resetConfirm").hidden=true;
-    players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:rankOf(p.name),total:players.size}))};
+    players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:rankOf(p.name),total:players.size,active:activeFor(p)}))};
 
   /* --- show --- */
+  // the video position survives a laptop reload (saved every 2 s): «Начать шоу» then offers to continue from there
+  let resumeAt=+store.get("aeshow-vpos")||0,vposAt=0;
+  const mmss=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,"0")}`;
+  function startLabel(){if(!(resumeAt>5&&resumeAt<TL.total-1))resumeAt=0;$("start").textContent=resumeAt?`Продолжить шоу с ${mmss(resumeAt)}`:"Начать шоу";$("startOver").hidden=!resumeAt}
+  startLabel();
+  video.addEventListener("timeupdate",()=>{const now=performance.now();if(now-vposAt<2000||$("show").hidden)return;vposAt=now;store.set("aeshow-vpos",video.currentTime.toFixed(1))});
+  $("startOver").onclick=()=>{resumeAt=0;store.del("aeshow-vpos");video.currentTime=0;startLabel();$("start").click()};
   $("start").onclick=async()=>{
     endTest();
     $("lobby").hidden=true;$("show").hidden=false;$("podium").hidden=true;
     if(video.ended||video.currentTime>TL.total-1)video.currentTime=0;
-    try{await $("show").requestFullscreen()}catch(e){}
+    else if(resumeAt&&Math.abs(video.currentTime-resumeAt)>1)video.currentTime=resumeAt;
+    try{await document.documentElement.requestFullscreen()}catch(e){}
     try{await video.play()}catch(e){}
-    bcast({t:"idle",text:"Шоу началось! Смотри на экран."})};
+    if(!open)bcast({t:"idle",text:"Шоу началось! Смотри на экран."})}; // resuming may land inside a question that tick() already opened
   $("cPlay").onclick=()=>video.paused?video.play():video.pause();
   $("cBack").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
   $("cFwd").onclick=()=>video.currentTime=Math.min(video.duration||TL.total,video.currentTime+10);
-  $("cFull").onclick=()=>{document.fullscreenElement?document.exitFullscreen():$("show").requestFullscreen().catch(()=>{})};
-  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}renderChips()};
-  addEventListener("keydown",e=>{if($("show").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
-  video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";if(open)players.forEach(p=>sendQ(p,open))});
+  $("cFull").onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})};
+  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}
+    resumeAt=video.currentTime;store.set("aeshow-vpos",resumeAt.toFixed(1));startLabel();renderChips()};
+  addEventListener("keydown",e=>{if($("show").hidden||!$("arena").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
+  video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";adminNote="";if(open)players.forEach(p=>sendQ(p,open))});
   video.addEventListener("pause",()=>{$("cPlay").textContent="Играть";if(open)players.forEach(p=>sendQ(p,open))});
-  video.addEventListener("ended",showPodium);
+  video.addEventListener("ended",()=>{store.del("aeshow-vpos");resumeAt=0;startLabel();showPodium()});
 
   let boardShownFor=null;
   function tick(){
-    if(!$("show").hidden&&!(open&&open.test)){
+    if(!$("show").hidden&&$("arena").hidden&&!(open&&open.live)){
       const t=video.currentTime;
       const act=TL.questions.find(q=>t>=q.open&&t<q.close);
       if(open&&(!act||act.id!==open.q.id)){closeQ(t>=open.q.close)}
@@ -408,6 +592,288 @@ function host(){
     pd.hidden=false;setTimeout(()=>{burst(260,.3,.4);burst(260,.7,.35)},1300);setTimeout(()=>burst(300,.5,.25),1900);
     players.forEach(p=>send(p,{t:"final",rank:rankOf(p.name),total:players.size,score:p.score}))}
 
+  /* --- mini-games: live rounds outside the video --- */
+  const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+  const played=new Set();
+  let arena=null; // {phase:"idle"|"vote"|"q"|"tap"|"res", game, qs, idx, q, tap, to}
+  const aShown=()=>!$("arena").hidden;
+  function clearArenaTimer(){if(arena&&arena.to){clearTimeout(arena.to);arena.to=null}}
+  function openArena(){
+    if(open&&open.test)endTest();
+    if(!$("show").hidden){video.pause();if(open&&!open.live)closeQ(false)}
+    $("arena").hidden=false;$("pill").hidden=true}
+  function aSet(lab,title){$("aCanvas").hidden=true;$("arena").classList.remove("actmode");$("aLab").textContent=lab;$("aTitle").textContent=title;$("aCount").textContent="";$("aTimerBox").hidden=true;$("aNote").textContent="";$("aBody").innerHTML=""}
+  /* every arena phase change gets a new token; "Дальше" is ignored for 1 s after a change and when it carries an old token
+     (a double tap on the admin phone or the laptop must not skip the next round) */
+  let phTok=0,phAt=0;const phMark=()=>{phTok++;phAt=performance.now()};
+  function userNext(tok){if(tok!=null&&tok!==phTok||performance.now()-phAt<1000)return;arenaNext()}
+  function aCtl(){phMark();const ph=arena?arena.phase:"idle";$("aVote").hidden=ph!=="idle";$("aNext").hidden=ph==="idle";$("aStop").hidden=ph==="idle"}
+  function arenaIdle(doneTitle){
+    openArena();clearArenaTimer();if(open&&open.live)closeQ(false);
+    arena={phase:"idle"};
+    aSet(doneTitle?`Игра «${doneTitle}» окончена`:"Мини-игры","Таблица лидеров");
+    const list=document.createElement("div");list.className="alist";
+    ranked().slice(0,8).forEach((p,i)=>{const d=document.createElement("div");d.style.animationDelay=(i*.06)+"s";
+      d.innerHTML=`<span><b>${i+1}</b><span class="n"></span></span><span class="s">${p.score}</span>`;d.querySelector(".n").textContent=p.name;list.append(d)});
+    if(!players.size)list.innerHTML='<span class="muted">Пока никого нет</span>';
+    $("aBody").append(list);
+    $("aNote").textContent=`Дальше — голосование за следующую игру (кнопка внизу или с телефона: ${ADMIN})`;
+    bcast({t:"idle",text:"Мини-игры! Скоро голосование за следующую игру."});aCtl()}
+  function closeArena(){
+    clearArenaTimer();if(open&&open.live)closeQ(false);arena=null;$("arena").hidden=true;$("aCanvas").hidden=true;
+    bcast({t:"idle",text:"Смотри на экран"});renderChips();
+    if(!$("show").hidden&&!$("podium").hidden)showPodium()}
+  function startVote(){
+    openArena();clearArenaTimer();if(open)closeQ(false);
+    let pool=GAMES.filter(g=>!played.has(g.id));if(pool.length<2){played.clear();pool=GAMES.slice()}
+    const pick=shuffle(pool).slice(0,3);
+    const q={id:"vote"+Date.now(),kind:"vote",label:"Голосование",i:1,n:1,text:"Во что играем дальше?",options:pick.map(g=>g.title),games:pick.map(g=>g.id),open:0,close:15};
+    arena={phase:"vote"};liveQ(q,15)}
+  function startGame(g){
+    played.add(g.id);const stamp=Date.now();
+    arena={phase:"q",game:g,idx:0,stamp};
+    if(g.kind==="tap"){tapRound(1);return}
+    if(g.kind==="action"){actStart(g);return}
+    const names=[...players.keys()],who=names.length>=2?names:GUESTS;
+    arena.qs=shuffle(g.pool).slice(0,g.n).map((it,k)=>{
+      const q={id:`${g.id}${stamp}_${k}`,kind:g.kind,label:g.title,i:k+1,n:g.n,text:it.q,open:0,close:g.dur};
+      if(g.kind==="maj")q.options=shuffle(who).slice(0,10);
+      else{q.options=shuffle(it.a);q.correct=q.options.indexOf(it.a[0]);q.answer=it.a[0]}
+      return q});
+    liveQ(arena.qs[0],g.dur)}
+  function liveQ(q,dur){
+    openQ(q,"live",dur);arena.q=q;
+    aSet(q.kind==="vote"?"Голосование за следующую игру":`${arena.game.title} · ${q.i} из ${q.n}`,q.text);$("aTimerBox").hidden=false;
+    const o=document.createElement("div");o.className="aopts"+(q.options.length>4?" many":"");
+    q.options.forEach((t,i)=>{const d=document.createElement("div");d.className="o"+(i%4);d.innerHTML='<span></span><span class="cnt"></span>';d.firstChild.textContent=t;o.append(d)});
+    $("aBody").append(o);arenaCount();aCtl();
+    const tm=$("aTimer"),f=()=>{if(!open||open.q!==q)return;const left=Math.max(0,dur-(performance.now()-open.t0)/1000);
+      tm.style.transform=`scaleX(${left/dur})`;tm.style.background=left<=3?"var(--coral)":"var(--mint)";requestAnimationFrame(f)};f();
+    arena.to=setTimeout(finishLive,dur*1000)}
+  function arenaCount(){if(aShown()&&open&&open.live&&arena)$("aCount").textContent=`Ответили ${countAns(open.q)} из ${players.size}`}
+  function tallyOf(q){const t=q.options.map(()=>0);players.forEach(p=>{const a=p.answers[q.id];if(a&&t[a.opt]!=null)t[a.opt]++});return t}
+  function finishLive(){
+    if(!open||!open.live||!arena)return;clearArenaTimer();const q=open.q;
+    if(q.kind==="vote"){const t=tallyOf(q),max=Math.max(...t),top=t.map((v,i)=>v===max?i:-1).filter(i=>i>=0);q.win=top[Math.random()*top.length|0]}
+    closeQ(true);$("strip").hidden=true;$("aTimerBox").hidden=true;
+    const tally=tallyOf(q),tot=tally.reduce((a,b)=>a+b,0)||1;
+    const right=q.kind==="vote"?[q.win]:q.kind==="maj"?q.top:[q.correct];
+    const o=$("aBody").querySelector(".aopts");o.classList.add("done");
+    [...o.children].forEach((d,i)=>{d.querySelector(".cnt").textContent=`${tally[i]} · ${Math.round(tally[i]/tot*100)}%`;d.classList.toggle("right",right.includes(i))});
+    let note;
+    if(q.kind==="vote")note=`Играем: ${q.options[q.win]}!`;
+    else if(q.kind==="maj")note=q.top.length?`Большинство: ${q.top.map(i=>q.options[i]).join(", ")} · +300 угадавшим`:"Никто не проголосовал";
+    else{const ok=[...players.values()].filter(p=>{const a=p.answers[q.id];return a&&a.opt===q.correct}).sort((a,b)=>a.answers[q.id].el-b.answers[q.id].el);
+      note=`Правильно: ${ok.length} из ${players.size}`+(ok[0]?` · Быстрее всех: ${ok[0].name}, ${ok[0].answers[q.id].el.toFixed(1)} с`:"")}
+    $("aNote").textContent=note;$("aCount").textContent="";
+    arena.phase="res";aCtl();
+    if(q.kind==="vote")burst(160,.5,.3);
+    arena.to=setTimeout(arenaNext,q.kind==="vote"?4000:6000)}
+  function arenaNext(){
+    if(!arena)return;clearArenaTimer();
+    const ph=arena.phase,g=arena.game;
+    if(ph==="action"){actNext();return}
+    if(ph==="vote"||ph==="q"){finishLive();return}
+    if(ph==="tap"){tapClose();return}
+    if(ph!=="res")return;
+    if(!g){const q=arena.q;startGame(GAMES.find(x=>x.id===q.games[q.win]));return}
+    if(g.kind==="tap"){if(arena.tap.r<g.rounds)tapRound(arena.tap.r+1);else arenaIdle(g.title);return}
+    if(arena.idx+1<arena.qs.length){arena.idx++;arena.phase="q";liveQ(arena.qs[arena.idx],g.dur);return}
+    arenaIdle(g.title)}
+  /* "Быстрый палец": phones measure their own reaction time from the moment "go" reaches them, so network lag does not matter */
+  function tapRound(r){
+    const g=arena.game;arena.phase="tap";arena.tap={r,ph:"ready",taps:new Map()};
+    aSet(`${g.title} · раунд ${r} из ${g.rounds}`,"Жми, когда станет зелёным!");
+    $("aBody").innerHTML='<div class="tapcirc" id="tapCirc">ЖДИ…</div>';aCtl();
+    bcast({t:"tap",ph:"ready",r});
+    arena.to=setTimeout(()=>{arena.tap.ph="go";const c=$("tapCirc");c.className="tapcirc go";c.textContent="ЖМИ!";bcast({t:"tap",ph:"go",r});
+      arena.to=setTimeout(tapClose,5000)},2500+Math.random()*3000)}
+  function onTapped(p,m){
+    const tp=arena&&arena.tap;if(!tp||m.r!==tp.r||tp.ph==="done"||tp.taps.has(p.name))return;
+    if(m.early)tp.taps.set(p.name,{early:true});
+    else if(tp.ph==="go"){const ms=Math.round(+m.ms);if(ms>=0&&ms<10000)tp.taps.set(p.name,{ms})}
+    $("aCount").textContent=`Нажали ${tp.taps.size} из ${players.size}`}
+  function tapClose(){
+    const tp=arena&&arena.tap;if(!tp||tp.ph==="done")return;clearArenaTimer();tp.ph="done";
+    const ok=[...tp.taps].filter(([,v])=>v.ms!=null).sort((a,b)=>a[1].ms-b[1].ms),PR=[500,300,150];
+    const sid=`tap${arena.stamp}_${tp.r}`,first=!scored.has(sid);
+    ok.forEach(([n,v],i)=>{v.place=i+1;v.gain=PR[i]||0;const p=players.get(n);if(p&&first)p.score+=v.gain});
+    if(first){scored.add(sid);saveScored();save()}
+    players.forEach(p=>{const v=tp.taps.get(p.name)||{};send(p,{t:"tap",ph:"res",r:tp.r,ms:v.ms,early:!!v.early,place:v.place,gain:v.gain||0,score:p.score})});
+    aSet(`${arena.game.title} · раунд ${tp.r} из ${arena.game.rounds}`,ok.length?`Быстрее всех: ${ok[0][0]}!`:"Никто не успел");
+    const list=document.createElement("div");list.className="alist";
+    ok.slice(0,8).forEach(([n,v],i)=>{const d=document.createElement("div");d.style.animationDelay=(i*.06)+"s";
+      d.innerHTML=`<span><b>${i+1}</b><span class="n"></span></span><span class="s">${v.ms} мс${v.gain?" · +"+v.gain:""}</span>`;d.querySelector(".n").textContent=n;list.append(d)});
+    $("aBody").append(list);
+    const early=[...tp.taps].filter(([,v])=>v.early).map(([n])=>n);
+    if(early.length)$("aNote").textContent="Фальстарт: "+early.join(", ");
+    if(ok.length)burst(140,.5,.3);
+    arena.phase="res";aCtl();arena.to=setTimeout(arenaNext,6000)}
+  /* --- action games (games/*.js, contract in docs/action-games-spec.md) ---
+     The host owns the simulation: fixed 60 Hz steps, rendered on #aCanvas scaled to a 1600x900 world.
+     Phones are controllers (screen pPad) and only send {t:"in"} input messages. */
+  const AW=1600,AH=900,INTRO=5,APR=[500,300,150],ASTEP=1/60,STALE_IN=1500;
+  const ACOL=["#ff5d73","#ffc94a","#5ce1c6","#7aa8ff","#c792ff","#ff9f43","#9be15d","#ff7ad9","#3fd7ff","#f4f4f4"];
+  const AFONT='"Unbounded","Arial Black",system-ui,sans-serif',BFONT='"Manrope",system-ui,sans-serif';
+  const cv=$("aCanvas"),cg=cv.getContext("2d");
+  function sizeCv(){const w=Math.round(innerWidth*devicePixelRatio),h=Math.round(innerHeight*devicePixelRatio);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}}
+  function drawPlayer(g,p,x,y,r){
+    g.save();if(!p.alive)g.globalAlpha*=.45;
+    g.fillStyle="rgba(0,0,0,.28)";g.beginPath();g.ellipse(x+r*.1,y+r*.25,r,r*.86,0,0,Math.PI*2);g.fill();
+    g.fillStyle=p.color;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
+    g.lineWidth=Math.max(3,r*.12);g.strokeStyle="rgba(23,12,43,.75)";g.stroke();
+    g.fillStyle="rgba(255,255,255,.35)";g.beginPath();g.ellipse(x-r*.35,y-r*.42,r*.34,r*.2,-.6,0,Math.PI*2);g.fill();
+    const ix=(p.input&&p.input.x)||0,iy=(p.input&&p.input.y)||0;
+    for(const s of[-1,1]){const ex=x+s*r*.32+ix*r*.12,ey=y-r*.08+iy*r*.12;
+      g.fillStyle="#fff";g.beginPath();g.arc(ex,ey,r*.22,0,Math.PI*2);g.fill();
+      g.fillStyle="#170c2b";g.beginPath();g.arc(ex+ix*r*.1,ey+iy*r*.1,r*.11,0,Math.PI*2);g.fill()}
+    const fs=Math.round(Math.max(20,r*.7));g.font=`800 ${fs}px ${BFONT}`;g.textAlign="center";g.textBaseline="bottom";
+    g.lineJoin="round";g.lineWidth=6;g.strokeStyle="rgba(23,12,43,.9)";g.strokeText(p.name,x,y-r-6);g.fillStyle="#fff";g.fillText(p.name,x,y-r-6);
+    g.restore()}
+  function actStart(g){
+    const mod=g.mod,list=[...players.values()].filter(p=>p.conn&&p.conn.open);
+    arena.phase="action";arena.act=null;
+    if(!list.length){aSet(g.title,"Нет игроков на связи");aCtl();arena.to=setTimeout(()=>arenaIdle(),3000);return}
+    const A={g,mod,ph:"intro",t0:performance.now(),last:performance.now(),acc:0,elim:[],banners:[],order:null,byName:new Map()};
+    const ctx=A.ctx={W:AW,H:AH,t:0,rand:Math.random,drawPlayer,
+      players:list.map((p,i)=>({name:p.name,color:ACOL[i%ACOL.length],idx:i,input:{x:0,y:0,btn:false,taps:0},alive:true,data:{},_k:0,_in:0,_st:{text:"",color:null},_sent:null,_vib:0,_stAt:0})),
+      eliminate(ap){if(!ap||!ap.alive||A.ph==="res")return;ap.alive=false;A.elim.push(ap);ap._st={text:"",color:null};padSend(A,ap)},
+      finish(order){actFinish(A,order)},
+      banner(text,sec=1.5){A.banners.push({text:String(text),t:performance.now(),dur:sec*1000})},
+      status(ap,text,o){actStatus(A,ap,text,o)}};
+    ctx.players.forEach(ap=>A.byName.set(ap.name,ap));
+    arena.act=A;
+    try{mod.init(ctx)}catch(e){console.error("action game init",e)}
+    aSet("","");cv.hidden=false;$("arena").classList.add("actmode");sizeCv();aCtl();
+    players.forEach(p=>{if(!A.byName.has(p.name))send(p,{t:"idle",text:`Идёт «${g.title}» — смотри на экран. Сыграешь в следующем раунде!`})});
+    padAll(A);A.iv=setInterval(()=>{if(document.hidden)actStep(A)},250);requestAnimationFrame(()=>actLoop(A))}
+  /* game-driven status line on one phone: stored per player, flushed by actLoop only when it changed (≥250 ms apart) */
+  const ST_GAP=250,STC=["red","green","gold"];
+  function actStatus(A,ap,text,o){
+    if(!ap||A.byName.get(ap.name)!==ap||(A.ph!=="intro"&&A.ph!=="play"))return; // robots / ended rounds: ignore
+    o=o||{};const t=text==null?"":String(text).slice(0,60),c=STC.includes(o.color)?o.color:null;
+    const cc=t?c:null;if(t===ap._st.text&&cc===ap._st.color)return; // unchanged: no message, no repeated vibration
+    if(o.vibrate>0&&t)ap._vib=Math.max(ap._vib,Math.min(1500,o.vibrate|0));
+    ap._st={text:t,color:cc}}
+  function actFlush(A,now){A.ctx.players.forEach(ap=>{
+    if(now-ap._stAt<ST_GAP||(!ap._vib&&ap._sent&&ap._sent.text===ap._st.text&&ap._sent.color===ap._st.color))return;
+    padSend(A,ap)})}
+  function actPlay(A){if(A.ph!=="intro")return;A.ph="play";phMark();A.ctx.t=0;A.acc=0;A.last=performance.now();A.ctx.banner("Старт!",.9);padAll(A)}
+  function actDefaultOrder(A,rest){const alive=rest.filter(p=>p.alive),out=A.elim.filter(p=>rest.includes(p)).reverse();
+    return alive.concat(out,rest.filter(p=>!alive.includes(p)&&!out.includes(p)))}
+  function actStandings(A){let o=null;if(A.mod.standings){try{o=A.mod.standings(A.ctx)}catch(e){console.error(e)}}return o}
+  function actFinish(A,order){
+    if(A.ph!=="play"&&A.ph!=="intro")return;
+    const all=A.ctx.players,seen=new Set(),o=[];
+    (Array.isArray(order)?order:[]).forEach(p=>{if(all.includes(p)&&!seen.has(p)){seen.add(p);o.push(p)}});
+    A.order=o.concat(actDefaultOrder(A,all.filter(p=>!seen.has(p))));
+    A.ph="done";phMark();A.doneAt=performance.now();A.banners=[];A.ctx.banner("Финиш!",1.8);
+    all.forEach(ap=>{ap._st={text:"",color:null};ap._vib=0})}
+  function actNext(){const A=arena&&arena.act;if(!A){arenaIdle();return}
+    if(A.ph==="intro")actPlay(A);else if(A.ph==="play")actFinish(A,actStandings(A));else if(A.ph==="done")actResults(A);else arenaIdle(A.g.title)}
+  // drawing follows requestAnimationFrame; while the tab is hidden (rAF paused) a timer keeps the simulation going
+  function actLoop(A){if(!actStep(A))return;actDraw(A,performance.now());requestAnimationFrame(()=>actLoop(A))}
+  function actStep(A){
+    if(!arena||arena.act!==A||A.ph==="res"){clearInterval(A.iv);return false}
+    const now=performance.now(),bg=document.hidden,dt=Math.min(bg?3:.25,(now-A.last)/1000),lim=bg?200:8;A.last=now;
+    if(A.ph==="intro"&&now-A.t0>=INTRO*1000)actPlay(A);
+    if(A.ph==="play"){
+      A.ctx.players.forEach(ap=>{if(now-ap._in>STALE_IN){ap.input.x=0;ap.input.y=0;ap.input.btn=false}});
+      A.acc+=dt;let n=0;
+      while(A.acc>=ASTEP&&A.ph==="play"&&n<lim){A.acc-=ASTEP;n++;A.ctx.t+=ASTEP;
+        try{A.mod.update(A.ctx,ASTEP)}catch(e){console.error("action game update",e);actFinish(A,actStandings(A))}
+        if(A.ph==="play"&&A.ctx.t>=(A.mod.duration||60))actFinish(A,actStandings(A))}
+      if(n>=lim)A.acc=0}
+    if(A.ph==="done"&&now-A.doneAt>1800){actResults(A);clearInterval(A.iv);return false}
+    actFlush(A,now);return true}
+  function actDraw(A,now){
+    sizeCv();const g=cg,cw=cv.width,ch=cv.height,s=Math.min(cw/AW,ch/AH),ox=(cw-AW*s)/2,oy=(ch-AH*s)/2;
+    g.setTransform(1,0,0,1,0,0);g.fillStyle="#0d0619";g.fillRect(0,0,cw,ch);
+    g.setTransform(s,0,0,s,ox,oy);g.save();g.beginPath();g.rect(0,0,AW,AH);g.clip();
+    g.save();try{A.mod.draw(A.ctx,g)}catch(e){console.error("action game draw",e)}g.restore();
+    g.textAlign="center";g.textBaseline="middle";g.lineJoin="round";
+    const label=(t,x,y,font,fill,lw=10)=>{g.font=font;g.lineWidth=lw;g.strokeStyle="rgba(23,12,43,.92)";g.strokeText(t,x,y);g.fillStyle=fill;g.fillText(t,x,y)};
+    if(A.ph==="play"||A.ph==="done"){const left=Math.max(0,Math.ceil((A.mod.duration||60)-A.ctx.t));
+      g.fillStyle="rgba(23,12,43,.8)";g.beginPath();g.roundRect(AW/2-70,14,140,58,29);g.fill();
+      label(String(left),AW/2,45,`900 36px ${AFONT}`,left<=10?"#ff5d73":"#fbf4ff",0)}
+    A.banners=A.banners.filter(b=>now-b.t<b.dur);const b=A.banners[A.banners.length-1];
+    if(b){const k=(now-b.t)/b.dur,sc=k<.12?.6+.4*(k/.12):1;g.save();g.globalAlpha=k>.8?(1-k)/.2:1;g.translate(AW/2,AH*.2);g.scale(sc,sc);
+      label(b.text,0,0,`900 ${b.text.length>22?54:76}px ${AFONT}`,"#ffc94a",14);g.restore()}
+    if(A.ph==="intro"){
+      const el=(now-A.t0)/1000,left=INTRO-el;
+      g.fillStyle="rgba(23,12,43,.97)";g.fillRect(0,0,AW,AH);
+      const wrap=(t,font,maxW)=>{g.font=font;const out=[];let line="";
+        for(const w of String(t).split(/\s+/).filter(Boolean)){const tr=line?line+" "+w:w;if(line&&g.measureText(tr).width>maxW){out.push(line);line=w}else line=tr}
+        if(line)out.push(line);return out};
+      const tf=`900 ${A.g.title.length>18?70:92}px ${AFONT}`,rf=`800 40px ${BFONT}`,hf=`700 30px ${BFONT}`;
+      label(A.g.title,AW/2,130,tf,"#ffc94a",0);
+      let y=220;const rl=wrap(A.mod.rules||"",rf,1400).slice(0,3);
+      rl.forEach(l=>{label(l,AW/2,y,rf,"#fbf4ff",0);y+=50});
+      const c=A.mod.controls,hint=c==="tap"?"На телефоне: жми большую кнопку":c==="stick+btn"?`На телефоне: джойстик — двигаться, кнопка «${A.mod.btnLabel||"Жми"}»`:"На телефоне: джойстик — двигаться";
+      y+=10;wrap(hint,hf,1400).slice(0,2).forEach(l=>{label(l,AW/2,y,hf,"#5ce1c6",0);y+=40});
+      const ps=A.ctx.players,per=Math.min(ps.length,5),rows=Math.ceil(ps.length/5),py=Math.max(450,y+120),gap=rows>1?Math.min(140,(AH-py-150)/(rows-1)):140;
+      ps.forEach((p,i)=>{const row=i/5|0,inRow=row<rows-1?per:ps.length-row*5,col=i%5;
+        drawPlayer(g,p,AW/2+(col-(inRow-1)/2)*250,py+row*gap,38)});
+      const n=Math.ceil(left),cy=Math.min(AH-70,py+(rows-1)*gap+120);
+      if(n<=3&&n>=1){const f=n-left;g.save();g.globalAlpha=1-f*.6;g.translate(AW/2,cy);g.scale(1.4-f*.4,1.4-f*.4);
+        label(String(n),0,0,`900 130px ${AFONT}`,"#ff5d73",14);g.restore()}
+      else label("Приготовьтесь!",AW/2,cy-20,`900 52px ${AFONT}`,"#fbf4ff",0)}
+    g.restore()}
+  function actResults(A){
+    if(A.ph==="res")return;A.ph="res";
+    const sid="act"+arena.stamp,first=!scored.has(sid);
+    A.order.forEach((ap,i)=>{ap.place=i+1;ap.gain=APR[i]||50;const p=players.get(ap.name);if(p&&first)p.score+=ap.gain});
+    if(first){scored.add(sid);saveScored();save()}
+    renderChips();
+    aSet(`«${A.g.title}» · итоги`,`Победитель: ${A.order[0].name}!`);
+    const list=document.createElement("div");list.className="alist"+(A.order.length>5?" two":"");
+    A.order.slice(0,10).forEach((ap,i)=>{const d=document.createElement("div");d.style.animationDelay=(i*.06)+"s";
+      d.innerHTML=`<span><b>${i+1}</b><i class="sw"></i><span class="n"></span></span><span class="s">+${ap.gain}</span>`;
+      d.querySelector(".sw").style.background=ap.color;d.querySelector(".n").textContent=ap.name;list.append(d)});
+    $("aBody").append(list);aCtl();padAll(A);burst(180,.5,.3);
+    arena.to=setTimeout(()=>{if(arena&&arena.act===A)arenaIdle(A.g.title)},8000)}
+  function padMsg(A,ap){const p=players.get(ap.name),ph=A.ph==="res"?"res":A.ph==="intro"?"intro":ap.alive?"play":"out";
+    return{t:"pad",ph,round:arena.stamp,game:A.g.id,title:A.g.title,rules:A.mod.rules||"",controls:A.mod.controls||"stick",btnLabel:A.mod.btnLabel||"",color:ap.color,
+      left:ph==="intro"?Math.max(0,INTRO-(performance.now()-A.t0)/1000):0,place:ap.place||0,gain:ap.gain||0,score:p?p.score:0,n:A.ctx.players.length,
+      st:ph==="res"?"":ap._st.text,sc:ph==="res"?null:ap._st.color}}
+  function padSend(A,ap){const p=players.get(ap.name);if(!p)return;const m=padMsg(A,ap);
+    if(ap._vib){m.vib=ap._vib;ap._vib=0}ap._sent={text:m.st,color:m.sc};ap._stAt=performance.now();send(p,m)}
+  function padAll(A){A.ctx.players.forEach(ap=>padSend(A,ap))}
+  function actRejoin(A,p){const ap=A.byName.get(p.name);if(ap)padSend(A,ap);else send(p,{t:"idle",text:`Идёт «${A.g.title}» — смотри на экран. Сыграешь в следующем раунде!`})}
+  function actInput(p,m){const A=arena&&arena.act;if(!A)return;const ap=A.byName.get(p.name);if(!ap)return;
+    let x=+m.x||0,y=+m.y||0;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
+    ap.input.x=x;ap.input.y=y;ap.input.btn=!!m.b;
+    const k=Math.max(0,m.k|0);if(k>ap._k)ap.input.taps+=k-ap._k;else if(k<ap._k)ap.input.taps+=k; // k restarts when the phone reloads
+    ap._k=k;ap._in=performance.now()}
+  // during action rounds the host buttons stay hidden over the canvas and appear while the mouse moves
+  let ctlHide=0;const ctlShow=()=>{const a=$("arena");a.classList.add("mouse");clearTimeout(ctlHide);
+    ctlHide=setTimeout(function h(){if($("aCtl").matches(":hover")){ctlHide=setTimeout(h,800);return}a.classList.remove("mouse")},2500)};
+  $("arena").addEventListener("mousemove",ctlShow);$("arena").addEventListener("mousedown",ctlShow);
+  $("miniBtn").onclick=()=>arenaIdle();$("cMini").onclick=()=>arenaIdle();
+  $("aVote").onclick=startVote;$("aNext").onclick=()=>userNext();$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
+
+  /* --- remote control from the admin's phone --- */
+  let adminNote="",lastAdm="",lastAdmAt=0;
+  const playFail="Ноутбук не дал запустить видео: браузеру нужен хотя бы один клик по странице на ноутбуке.";
+  const CMDS={
+    play:()=>{if($("show").hidden||aShown())return;if(video.paused)video.play().then(()=>adminNote="").catch(()=>adminNote=playFail);else video.pause()},
+    back:()=>{if(!$("show").hidden&&!aShown())$("cBack").click()},
+    fwd:()=>{if(!$("show").hidden&&!aShown())$("cFwd").click()},
+    startOver:()=>{if(!$("start").disabled&&$("show").hidden&&!aShown()&&resumeAt)$("startOver").click()},
+    start:()=>{if($("start").disabled||!$("show").hidden||aShown())return;$("start").click();setTimeout(()=>{if(video.paused)adminNote=playFail},1500)},
+    lobby:()=>{if(aShown())closeArena();if(!$("show").hidden)$("cLobby").click()},
+    test:()=>{if($("show").hidden&&!aShown()&&!$("testQ").disabled)$("testQ").click()},
+    vote:startVote,next:m=>userNext(m.tok),endgame:()=>arenaIdle(),close:closeArena,
+    kick:()=>{ // drop every player except the admin and zero all scores; phones go back to the name screen
+      if(open)closeQ(false);
+      players.forEach(p=>{if(p.name===ADMIN){p.score=0;p.answers={};return}send(p,{t:"kicked"});if(p.conn)detach(p.conn);players.delete(p.name)});
+      scored.clear();saveScored();save();renderChips();
+      players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:1,total:players.size,active:activeFor(p)}));
+      if(aShown()&&arena&&arena.phase==="idle")arenaIdle()}};
+  function adminState(){return{mode:aShown()?"arena":!$("show").hidden?"show":"lobby",paused:video.paused,phase:arena?arena.phase:null,tok:phTok,canStart:!$("start").disabled,startLabel:$("start").textContent,resume:!!resumeAt,testing:!!testIv,note:adminNote}}
+  setInterval(()=>{const p=players.get(ADMIN);if(!p||!p.conn||!p.conn.open||!p.conn._admin)return;const st=adminState(),s=JSON.stringify(st);
+    if(s!==lastAdm||performance.now()-lastAdmAt>5000){lastAdm=s;lastAdmAt=performance.now();send(p,{t:"admin",st})}},700);
+
   renderChips();startNet();requestAnimationFrame(tick);
 }
 
@@ -417,20 +883,21 @@ function host(){
 function player(){
   $("player").hidden=false;
   const hostId=hashJoin;let myName=store.get("aeshow-name"),cur=null,timerRaf=null;
-  const scr=id=>["pName","pWait","pQ","pRes"].forEach(s=>$(s).hidden=s!==id);
+  const scr=id=>{["pName","pWait","pQ","pTap","pPad","pRes"].forEach(s=>$(s).hidden=s!==id);document.documentElement.classList.toggle("padmode",id==="pPad")};
   // name grid
   GUESTS.forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>join(n);$("nameGrid").append(b)});
   $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
   $("otherName").onkeydown=e=>{if(e.key==="Enter")$("otherGo").click()};
-  $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});store.del("aeshow-name");myName=null;$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")};
-  function join(n){myName=n;store.set("aeshow-name",n);$("meName").textContent=n;
+  $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});forget()};
+  function forget(){pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+  function join(n){myName=n;$("nameNote").textContent="";store.set("aeshow-name",n);$("meName").textContent=n;
     $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
     if(conn&&conn.open)conn.send({t:"join",name:n})}
   function setConn(on){$("conn").className="conn"+(on?" on":"")}
   const T="aeshow/"+hostId;
   let cid=store.get("aeshow-cid");if(!cid){cid=rid(10);store.set("aeshow-cid",cid)}
   let hostSeen=-1e9,knocks=0;
-  const conn={get open(){return performance.now()-hostSeen<STALE},send(m){bus.pub(T+"/h",{f:cid,m})}};
+  const conn={get open(){return performance.now()-hostSeen<STALE},send(m,qos){bus.pub(T+"/h",{f:cid,m},qos)}};
   const bus=mqttBus(T+"/p/"+cid,w=>{const m=w.m;if(!m)return;const was=conn.open;hostSeen=performance.now();knocks=0;
     if((!was&&m.t!=="welcome"||m.who)&&myName)conn.send({t:"join",name:myName}); // host does not know us (e.g. it reloaded)
     if(!was)setConn(true);
@@ -443,20 +910,26 @@ function player(){
     conn.send({t:"join",name:myName});
     if(++knocks>=2&&!$("pWait").hidden){$("waitTitle").textContent=bus.connected()?"Ведущий пока не на связи":"Нет интернета";$("waitText").textContent="Пробую снова…"}}
   function onMsg(m){
-    if(m.t==="welcome"){myName=m.name;$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";
-      if(!cur){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
-    if(m.t==="idle"){cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
+    if(m.t==="welcome"){myName=m.name;$("nameNote").textContent="";$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN)$("adm").hidden=true;else adminAuth();
+      if(!m.active){pad=null;cur=null;tap=null;stopTimer()} // the host has nothing open (e.g. it reloaded): drop a stale question / pad
+      if(!cur&&!pad){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
+    if(m.t==="idle"){pad=null;cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
     if(m.t==="q")showQ(m);
     if(m.t==="got"&&cur&&cur.qid===m.qid)markChosen(m.opt);
     if(m.t==="res")showRes(m);
+    if(m.t==="tap")onTap(m);
+    if(m.t==="pad")onPad(m);
+    if(m.t==="admin")renderAdmin(m.st);
+    if(m.t==="taken"&&myName===m.name){forget();$("nameNote").textContent=`Имя «${m.name}» уже занято на другом телефоне. Выбери своё имя.`}
+    if(m.t==="kicked")forget();
     if(m.t==="final"){cur=null;stopTimer();$("resBig").className="big ok";$("resBig").textContent=m.rank===1?"Победа!":`${m.rank}-е место`;
       $("resGain").textContent=m.score+" очков";$("resText").textContent=m.rank===1?"Ты лучший игрок вечера! Забирай приз.":`из ${m.total} игроков. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
   }
   function showQ(m){
-    const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
+    pad=null;const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
     $("qLab").textContent=`${m.label} · ${m.i} из ${m.n}`;$("qText").textContent=m.text||(m.kind==="who"?"Артём или Егор?":m.kind==="tf"?"Правда или ложь?":"Что это?");
-    const o=$("opts");if(fresh){o.innerHTML="";o.className="opts"+(m.options.length===2?" two":"")+(m.kind==="tf"?" tf":"");
-      m.options.forEach((t,i)=>{const b=document.createElement("button");b.className="o"+i;b.textContent=t;b.onclick=()=>pick(i);o.append(b)});
+    const o=$("opts");if(fresh){o.innerHTML="";o.className="opts"+(m.options.length===2?" two":"")+(m.options.length>4?" many":"")+(m.kind==="tf"?" tf":"");
+      m.options.forEach((t,i)=>{const b=document.createElement("button");b.className="o"+(i%4);b.textContent=t;b.onclick=()=>pick(i);o.append(b)});
       if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}}
     if(m.mine!=null)markChosen(m.mine);
     scr("pQ");startTimer()}
@@ -469,16 +942,113 @@ function player(){
     if(m.kind==="test"){big.className="big ok";big.textContent="Работает!";g.textContent="";t.textContent="Связь есть. Ждём начала шоу.";}
     else if(m.kind==="who"){big.className="big ok";big.textContent=m.opt==null?"Без голоса":"Голос учтён";g.textContent="";
       t.textContent=`${m.options[0]}: ${m.tally[0]} · ${m.options[1]}: ${m.tally[1]}`}
+    else if(m.kind==="vote"){big.className="big ok";big.textContent=m.opt==null?"Без голоса":"Голос учтён";g.textContent="";t.textContent=`Играем: ${m.options[m.win]}`}
+    else if(m.kind==="maj"){const top=m.top.map(i=>m.options[i]).join(", ")||"—";
+      if(m.gain){big.className="big ok";big.textContent="Угадал!";g.textContent="+"+m.gain;burst(100,.5,.35)}else{big.className="big no";big.textContent=m.opt==null?"Без голоса":"Мимо";g.textContent=""}
+      t.textContent=`Большинство выбрало: ${top}`}
     else if(m.opt==null){big.className="big no";big.textContent="Не успел";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
-    else if(m.ok){big.className="big ok";big.textContent="Верно!";g.textContent="+"+m.gain;t.textContent=`Ты на ${m.rank}-м месте из ${m.total}.`;burst(120,.5,.35)}
+    else if(m.ok){big.className="big ok";big.textContent="Верно!";g.textContent=m.gain?"+"+m.gain:"";t.textContent=(m.gain?"":"Очки за этот вопрос уже начислены. ")+`Ты на ${m.rank}-м месте из ${m.total}.`;if(m.gain)burst(120,.5,.35)}
     else{big.className="big no";big.textContent="Мимо";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
     scr("pRes")}
+  /* "Быстрый палец" */
+  let tap=null;
+  function onTap(m){
+    const b=$("tapBtn");
+    if(m.ph==="ready"||(m.ph==="go"&&(!tap||tap.r!==m.r))){pad=null;cur=null;stopTimer();tap={r:m.r,go:0,done:false};b.className="tapbtn";b.textContent="ЖДИ…";
+      $("tapTitle").textContent=`Быстрый палец · раунд ${m.r}`;$("tapText").textContent="Жми, как только кнопка станет зелёной. Раньше — фальстарт!";scr("pTap")}
+    if(m.ph==="go"&&!tap.done&&!tap.go){tap.go=performance.now();b.className="tapbtn go";b.textContent="ЖМИ!";$("tapText").textContent="";if(navigator.vibrate)try{navigator.vibrate(80)}catch(e){}}
+    if(m.ph==="res"){tap=null;$("meScore").textContent=m.score+" очк.";const big=$("resBig"),g=$("resGain"),t=$("resText");
+      if(m.early){big.className="big no";big.textContent="Фальстарт";g.textContent="";t.textContent="Нажал раньше времени."}
+      else if(m.ms==null){big.className="big no";big.textContent="Не нажал";g.textContent="";t.textContent=""}
+      else{big.className="big "+(m.gain?"ok":"no");big.textContent=`${m.place}-е место`;g.textContent=m.gain?"+"+m.gain:"";t.textContent=`Реакция: ${m.ms} мс`;if(m.place===1)burst(120,.5,.35)}
+      scr("pRes")}}
+  $("tapBtn").onpointerdown=e=>{e.preventDefault();if(!tap||tap.done||!conn.open)return;tap.done=true;const b=$("tapBtn");b.className="tapbtn done";
+    if(!tap.go){conn.send({t:"tapped",r:tap.r,early:true});b.textContent="Фальстарт!"}
+    else{const ms=Math.round(performance.now()-tap.go);conn.send({t:"tapped",r:tap.r,ms});b.textContent=ms+" мс"}};
+  /* action-game controller: joystick (+ button) or one big tap button; sends {t:"in",x,y,b,k} with QoS 0 */
+  let pad=null,padEnd=0,padB=false,padK=0,padSent="",padAt=0,padForce=0;
+  const stk={id:null,ox:0,oy:0,x:0,y:0},SR=60,SA=$("stickArea"),sBase=$("stickBase"),knob=$("knob"),actBtn=$("actBtn"),bigTap=$("bigTap");
+  function stickReset(){stk.id=null;stk.x=stk.y=0;sBase.style.left="50%";sBase.style.top="50%";knob.style.transform="";padB=false;actBtn.classList.remove("on")}
+  function onPad(m){
+    cur=null;stopTimer();tap=null;
+    if(!pad||pad.round!==m.round){stickReset();padK=0;padSent=""}
+    const was=pad&&pad.round===m.round?pad.ph:null;pad=m;
+    if(m.score!=null)$("meScore").textContent=m.score+" очк.";
+    if(m.ph==="res"){stickReset();const big=$("resBig");big.className="big "+(m.place<=3?"ok":"no");big.textContent=m.place===1?"Победа!":`${m.place}-е место`;
+      $("resGain").textContent="+"+m.gain;$("resText").textContent=`«${m.title}» · ${m.place} из ${m.n}`;scr("pRes");if(m.place===1)burst(160,.5,.35);return}
+    $("padTitle").textContent=m.title;$("padRules").textContent=m.rules;$("padColor").style.background=m.color;$("pPad").style.setProperty("--pc",m.color);
+    SA.hidden=m.controls==="tap";actBtn.hidden=m.controls!=="stick+btn";actBtn.textContent=m.btnLabel||"Жми";bigTap.hidden=m.controls!=="tap";
+    $("padZone").classList.toggle("off",m.ph==="out");
+    if(m.ph==="intro")padEnd=performance.now()+m.left*1000;
+    $("padMsg").textContent=m.ph==="out"?"Ты выбыл — смотри на экран":m.ph==="play"?"Играй! Смотри на экран":"";
+    const st=m.st&&m.ph!=="res"?String(m.st):"",sc=st&&["red","green","gold"].includes(m.sc)?m.sc:"";
+    if(st&&m.ph==="play")$("padMsg").textContent=""; // the status line replaces the generic hint
+    $("padSt").hidden=!st;$("padSt").textContent=st;$("padSt").className="padst "+sc;$("padTint").className=sc;
+    if(m.vib>0&&navigator.vibrate)try{navigator.vibrate(Math.min(1500,m.vib|0))}catch(e){}
+    if(m.ph==="out"){stickReset();if(was!=="out"&&navigator.vibrate)try{navigator.vibrate([80,60,80])}catch(e){}}
+    if(m.ph==="play"&&was==="intro"&&navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
+    scr("pPad")}
+  const padLive=()=>pad&&pad.ph==="play"&&!$("pPad").hidden&&conn.open;
+  function padSend(force){const x=Math.round(stk.x*100)/100,y=Math.round(stk.y*100)/100,key=`${x},${y},${padB?1:0},${padK}`,now=performance.now();
+    if(!force&&key===padSent&&now>padForce&&!((stk.id!=null||padB)&&now-padAt>400))return;
+    conn.send({t:"in",x,y,b:padB?1:0,k:padK},0);padSent=key;padAt=now}
+  function padNow(){if(!padLive())return;padForce=performance.now()+300;padSend(true)} // + a few repeats: QoS 0 may drop one
+  setInterval(()=>{if(!pad||$("pPad").hidden)return;
+    if(pad.ph==="intro"){const s=Math.ceil((padEnd-performance.now())/1000);$("padMsg").textContent=s>0?`Старт через ${s}…`:"Старт!"}
+    if(padLive())padSend(false)},80);
+  function stickMove(e){const r=SA.getBoundingClientRect();let dx=e.clientX-r.left-stk.ox,dy=e.clientY-r.top-stk.oy;const d=Math.hypot(dx,dy),lim=SR*1.5;
+    if(d>lim){const k=(d-lim)/d;stk.ox+=dx*k;stk.oy+=dy*k;dx-=dx*k;dy-=dy*k;sBase.style.left=stk.ox+"px";sBase.style.top=stk.oy+"px"} // the base follows the finger
+    let x=dx/SR,y=dy/SR;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}if(l<.15){x=0;y=0}
+    stk.x=x;stk.y=y;knob.style.transform=`translate(${x*SR}px,${y*SR}px)`}
+  SA.addEventListener("pointerdown",e=>{e.preventDefault();if(stk.id!=null)return;stk.id=e.pointerId;try{SA.setPointerCapture(e.pointerId)}catch(_){}
+    const r=SA.getBoundingClientRect();stk.ox=e.clientX-r.left;stk.oy=e.clientY-r.top;sBase.style.left=stk.ox+"px";sBase.style.top=stk.oy+"px";stickMove(e);padNow()});
+  SA.addEventListener("pointermove",e=>{if(e.pointerId!==stk.id)return;e.preventDefault();stickMove(e)});
+  const stickUp=e=>{if(e.pointerId!==stk.id)return;stk.id=null;stk.x=stk.y=0;sBase.style.left="50%";sBase.style.top="50%";knob.style.transform="";padNow()};
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>SA.addEventListener(t,stickUp));
+  actBtn.addEventListener("pointerdown",e=>{e.preventDefault();try{actBtn.setPointerCapture(e.pointerId)}catch(_){}padB=true;padK++;actBtn.classList.add("on");padNow();if(navigator.vibrate)try{navigator.vibrate(25)}catch(_){}});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>actBtn.addEventListener(t,()=>{if(!padB)return;padB=false;actBtn.classList.remove("on");padNow()}));
+  bigTap.addEventListener("pointerdown",e=>{e.preventDefault();padK++;bigTap.classList.add("on");setTimeout(()=>bigTap.classList.remove("on"),90);padNow()});
+  [SA,actBtn,bigTap,$("pPad")].forEach(el=>el.addEventListener("contextmenu",e=>e.preventDefault()));
+  /* remote control, shown only to ADMIN; the host decides what is allowed */
+  let admKey="",admOk=false,admTok=null;
+  function adminAuth(){
+    const h=store.get("aeshow-auth");
+    if(h===PASS_HASH){conn.send({t:"auth",h});return}
+    if(admOk)return;
+    $("admMode").textContent="";$("admNote").textContent="";$("admBtns").innerHTML="";admKey="";$("admLock").hidden=false;$("adm").hidden=false}
+  $("admHead").onclick=()=>{const o=$("adm").classList.toggle("open");$("admTog").textContent=o?"скрыть ▴":"открыть ▾"};
+  $("admLock").onsubmit=async e=>{e.preventDefault();const h=await passHash($("admPass").value.trim());
+    if(h!==PASS_HASH){$("admNote").textContent="Неверный пароль";return}
+    store.set("aeshow-auth",h);$("admPass").value="";$("admNote").textContent="";conn.send({t:"auth",h})};
+  function renderAdmin(st){
+    if(myName!==ADMIN){$("adm").hidden=true;return}
+    admOk=true;$("admLock").hidden=true;admTok=st.tok;
+    const B=[],b=(c,t,o={})=>B.push({c,t,...o});
+    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start",st.startLabel||"Начать шоу",{dis:!st.canStart,main:1});if(st.resume)b("startOver","Начать сначала",{dis:!st.canStart,confirm:1});b("vote","Мини-игры");b("kick","Выкинуть всех игроков",{confirm:1})}
+    else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра");b("lobby","В лобби")}
+    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{confirm:1})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{confirm:1})}b("close","Закрыть мини-игры",{confirm:1})}
+    const mode={lobby:"Лобби",show:st.paused?"Видео на паузе":"Идёт видео",arena:"Мини-игры"}[st.mode];
+    const key=JSON.stringify([B,mode,st.note]);$("adm").hidden=false;if(key===admKey)return;admKey=key;
+    $("admMode").textContent=mode;$("admNote").textContent=st.note||"";
+    const box=$("admBtns");box.innerHTML="";
+    B.forEach(x=>{const e=document.createElement("button");e.textContent=x.t;if(x.main)e.className="main";e.disabled=!!x.dis;
+      e.onclick=()=>{if(!conn.open)return;
+        if(x.confirm&&!e.dataset.arm){e.dataset.arm=1;e.textContent="Точно? Нажми ещё раз";setTimeout(()=>{delete e.dataset.arm;e.textContent=x.t},4000);return}
+        if(x.confirm){delete e.dataset.arm;e.textContent=x.t} // confirmed: disarm right away
+        conn.send(x.c==="next"?{t:"cmd",c:x.c,tok:admTok}:{t:"cmd",c:x.c})};
+      box.append(e)})}
   if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
   setConn(false);setInterval(tickNet,4000);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)tickNet()});
 }
 
-hashJoin?player():host();
+function gate(){
+  if(store.get("aeshow-auth")===PASS_HASH){host();return}
+  $("gate").hidden=false;$("gatePass").focus();
+  $("gateForm").onsubmit=async e=>{e.preventDefault();const h=await passHash($("gatePass").value.trim());
+    if(h!==PASS_HASH){$("gateErr").textContent="Неверный пароль";$("gatePass").select();return}
+    store.set("aeshow-auth",h);$("gate").hidden=true;host()}}
+hashJoin?player():gate();
 </script>
 </body>
 </html>
