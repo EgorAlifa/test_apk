@@ -552,7 +552,7 @@ function host(){
     else if(resumeAt&&Math.abs(video.currentTime-resumeAt)>1)video.currentTime=resumeAt;
     try{await document.documentElement.requestFullscreen()}catch(e){}
     try{await video.play()}catch(e){}
-    bcast({t:"idle",text:"Шоу началось! Смотри на экран."})};
+    if(!open)bcast({t:"idle",text:"Шоу началось! Смотри на экран."})}; // resuming may land inside a question that tick() already opened
   $("cPlay").onclick=()=>video.paused?video.play():video.pause();
   $("cBack").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
   $("cFwd").onclick=()=>video.currentTime=Math.min(video.duration||TL.total,video.currentTime+10);
