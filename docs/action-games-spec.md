@@ -68,6 +68,9 @@ Notes (as implemented in `index.html`):
 - `ctx.drawPlayer(g, p, x, y, r)` — standard avatar: filled circle in `p.color` with the name label; use it so all games look consistent.
 
 Scoring (engine): place 1 → 500, 2 → 300, 3 → 150, everyone else who played → 50. Added to the shared leaderboard.
+For balance, the other sources of points: video quiz 125–250 per correct answer (125 + 125 × speed), «Быстрый палец»
+200/100/50 per round (3 rounds), «Кто из нас?» +300 to the majority. Equal scores on places 1–3 of a podium are settled by a
+«Перестрелка» (one tap-reaction round for the tied players), which only orders them and adds no points.
 
 ## Network protocol (engine)
 - phone → host: `{t:"in", x, y, b, k}` (k = press counter), QoS 0 (`mqttBus().pub(topic, w, qos)` takes an optional QoS).
