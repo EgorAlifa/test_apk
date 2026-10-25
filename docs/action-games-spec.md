@@ -100,3 +100,4 @@ Scoring (engine): place 1 → 500, 2 → 300, 3 → 150, everyone else who playe
 - The intro wraps long rules/hint lines (max 3 / 2 lines).
 - During an action round the host buttons (`#aCtl`) are hidden over the canvas and appear while the mouse moves
   (or a button has keyboard focus); the admin phone's remote works as always.
+- Drawing follows `requestAnimationFrame`; while the host tab is hidden (rAF paused) a timer keeps calling `update`, so a round still ends on time.

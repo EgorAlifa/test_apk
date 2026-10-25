@@ -163,7 +163,19 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 .admbtns button.main{background:var(--gold);color:var(--night)}
 .admbtns button:disabled{opacity:.4}
 .adm .note{text-align:left;color:var(--coral)}
+.note.warn{color:var(--coral);font-weight:800;font-size:15px}.note.warn:empty{display:none}
 html.padmode,html.padmode body{overflow:hidden;overscroll-behavior:none;touch-action:none}
+/* pad mode: the page cannot scroll, so everything shrinks to fit; the admin remote folds into one line (tap it to open) */
+html.padmode #player{height:100%;min-height:0;gap:10px;padding-block:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-bottom,0px))}
+.admtog{display:none;font:800 13px var(--body);background:none;border:0;color:var(--gold);padding:0}
+html.padmode .admtog{display:inline}
+html.padmode .adm{padding:6px 10px;gap:6px}
+html.padmode .adm:not(.open) .admbtns,html.padmode .adm:not(.open) #admLock,html.padmode .adm:not(.open) .note{display:none}
+html.padmode .admbtns button{font-size:13px;padding:7px 8px}
+html.padmode #pPad{min-height:0;gap:8px}
+html.padmode .padzone{min-height:150px}
+html.padmode .padst{font-size:clamp(20px,6.5vw,32px);padding:8px 12px}
+html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:12px}
 #pPad{justify-content:flex-start;gap:12px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .padhead{display:flex;gap:12px;align-items:center}
 .padhead i{width:46px;height:46px;border-radius:50%;flex:none;border:3px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.35)}
@@ -230,6 +242,7 @@ html.padmode,html.padmode body{overflow:hidden;overscroll-behavior:none;touch-ac
     <div class="row" style="margin-top:18px">
       <button class="btn ghost" id="testQ">Пробный вопрос</button>
       <button class="btn gold" id="start" disabled>Начать шоу</button>
+      <button class="btn ghost" id="startOver" hidden>Начать сначала</button>
       <button class="btn ghost" id="miniBtn">Мини-игры</button>
       <button class="btn ghost" id="resetScores">Обнулить очки</button>
     </div>
@@ -272,7 +285,7 @@ html.padmode,html.padmode body{overflow:hidden;overscroll-behavior:none;touch-ac
 <main id="player" hidden>
   <div class="ptop"><span class="me"><span class="conn" id="conn"></span><span id="meName">Шоу Артёма и Егора</span></span><span class="score" id="meScore"></span></div>
   <section class="adm" id="adm" hidden>
-    <div class="admhead"><b>Пульт ведущего</b><span class="muted" id="admMode"></span></div>
+    <div class="admhead" id="admHead"><b>Пульт ведущего</b><span class="muted" id="admMode"></span><button class="admtog" id="admTog" type="button">открыть ▾</button></div>
     <form class="other" id="admLock" hidden><input id="admPass" type="password" inputmode="numeric" placeholder="Пароль ведущего" aria-label="Пароль ведущего"><button class="btn">OK</button></form>
     <div class="admbtns" id="admBtns"></div>
     <div class="note" id="admNote"></div>
@@ -281,6 +294,7 @@ html.padmode,html.padmode body{overflow:hidden;overscroll-behavior:none;touch-ac
     <h2>Как тебя зовут?</h2>
     <div class="names" id="nameGrid"></div>
     <div class="other"><input id="otherName" maxlength="20" placeholder="Другое имя"><button class="btn" id="otherGo">Войти</button></div>
+    <p class="note warn" id="nameNote" role="alert"></p>
   </section>
   <section class="pscreen" id="pWait" hidden>
     <h2 id="waitTitle">Ты в игре!</h2>
@@ -419,10 +433,13 @@ function host(){
     if(m.t==="join"){
       const name=String(m.name||"").trim().slice(0,20);if(!name)return;
       let p=players.get(name);
+      // the name is held by another phone that is still on the line: refuse, do not steal it
+      if(p&&p.conn&&p.conn!==conn&&p.conn.open&&p.conn._name===name){conn.send({t:"taken",name});return}
+      if(conn._name&&conn._name!==name)detach(conn); // this phone switches to another name
       if(!p){p={name,conn:null,score:0,answers:{}};players.set(name,p)}
-      if(p.conn&&p.conn!==conn){try{p.conn.close()}catch(e){}}
+      if(p.conn&&p.conn!==conn){const old=p.conn;old._name=null;old._admin=false;try{old.close()}catch(e){}} // stale holder: take over; it gets "taken" if it comes back
       p.conn=conn;conn._name=name;save();renderChips();
-      send(p,{t:"welcome",name,score:p.score,rank:rankOf(name),total:players.size});
+      send(p,{t:"welcome",name,score:p.score,rank:rankOf(name),total:players.size,active:activeFor(p)});
       if(open)sendQ(p,open);
       if(arena&&arena.tap&&arena.tap.ph!=="done")send(p,{t:"tap",ph:arena.tap.ph,r:arena.tap.r});
       if(arena&&arena.act)actRejoin(arena.act,p);
@@ -437,9 +454,13 @@ function host(){
     if(m.t==="in"){actInput(p,m);return}
     if(m.t==="tapped")onTapped(p,m);
     if(m.t==="auth"&&p.name===ADMIN&&m.h===PASS_HASH){conn._admin=true;lastAdm=""}
-    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c])CMDS[m.c]();
-    if(m.t==="leave"){players.delete(p.name);save();renderChips()}
+    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c])CMDS[m.c](m);
+    if(m.t==="leave"){detach(conn);renderChips()} // keep the score: picking the same name again restores it
   }
+  // a phone loses its name (leave / takeover / switch): the player and their score stay
+  function detach(conn){const p=players.get(conn._name);if(p&&p.conn===conn)p.conn=null;conn._name=null;conn._admin=false}
+  // is something running that this player will be sent right after "welcome"? if not, the phone drops stale screens
+  function activeFor(p){return !!(open||arena&&arena.tap&&arena.tap.ph!=="done"||arena&&arena.act&&arena.act.byName.has(p.name))}
   function sendQ(p,o){const q=o.q,left=o.live?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
     send(p,{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.live&&video.paused,mine:p.answers[q.id]?p.answers[q.id].opt:null})}
 
@@ -465,16 +486,16 @@ function host(){
     if(q.kind==="vote"||q.kind==="maj"){
       const tally=q.options.map(()=>0);players.forEach(p=>{const a=p.answers[q.id];if(a)tally[a.opt]++});
       const max=Math.max(0,...tally);q.top=max?tally.map((v,i)=>v===max?i:-1).filter(i=>i>=0):[];
-      const gainOf=a=>q.kind==="maj"&&a&&q.top.includes(a.opt)?300:0;
-      if(!scored.has(q.id)){players.forEach(p=>p.score+=gainOf(p.answers[q.id]));scored.add(q.id);saveScored();save()}
+      const first=!scored.has(q.id),gainOf=a=>first&&q.kind==="maj"&&a&&q.top.includes(a.opt)?300:0; // gain actually added now
+      if(first){players.forEach(p=>p.score+=gainOf(p.answers[q.id]));scored.add(q.id);saveScored();save()}
       players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,opt:a?a.opt:null,options:q.options,top:q.top,win:q.win,gain:gainOf(a),score:p.score,rank:rankOf(p.name),total:players.size})});
       renderChips();return}
-    let fastest=null,okN=0,ansN=0;
-    if(!scored.has(q.id)){
+    let fastest=null,okN=0,ansN=0;const first=!scored.has(q.id); // rewound into a scored question: late answers add nothing
+    if(first){
       players.forEach(p=>{const a=p.answers[q.id];const g=points(q,a);p.score+=g;if(a)p._last=g})
       scored.add(q.id);saveScored();save()}
     players.forEach(p=>{const a=p.answers[q.id];if(a){ansN++;if(a.opt===q.correct){okN++;if(!fastest||a.el<fastest.el)fastest={name:p.name,el:a.el}}}});
-    players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:points(q,a),score:p.score,rank:rankOf(p.name),total:players.size})});
+    players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:first?points(q,a):0,score:p.score,rank:rankOf(p.name),total:players.size})});
     renderChips();
     const st=$("strip");st.innerHTML="";
     const s1=document.createElement("span");s1.className="ok";s1.textContent=`Правильно ответили ${okN} из ${players.size}`;st.append(s1);
@@ -514,13 +535,21 @@ function host(){
   $("resetScores").onclick=()=>$("resetConfirm").hidden=false;
   $("resetNo").onclick=()=>$("resetConfirm").hidden=true;
   $("resetYes").onclick=()=>{players.forEach(p=>{p.score=0;p.answers={}});scored.clear();saveScored();save();renderChips();$("resetConfirm").hidden=true;
-    players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:rankOf(p.name),total:players.size}))};
+    players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:rankOf(p.name),total:players.size,active:activeFor(p)}))};
 
   /* --- show --- */
+  // the video position survives a laptop reload (saved every 2 s): «Начать шоу» then offers to continue from there
+  let resumeAt=+store.get("aeshow-vpos")||0,vposAt=0;
+  const mmss=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,"0")}`;
+  function startLabel(){if(!(resumeAt>5&&resumeAt<TL.total-1))resumeAt=0;$("start").textContent=resumeAt?`Продолжить шоу с ${mmss(resumeAt)}`:"Начать шоу";$("startOver").hidden=!resumeAt}
+  startLabel();
+  video.addEventListener("timeupdate",()=>{const now=performance.now();if(now-vposAt<2000||$("show").hidden)return;vposAt=now;store.set("aeshow-vpos",video.currentTime.toFixed(1))});
+  $("startOver").onclick=()=>{resumeAt=0;store.del("aeshow-vpos");video.currentTime=0;startLabel();$("start").click()};
   $("start").onclick=async()=>{
     endTest();
     $("lobby").hidden=true;$("show").hidden=false;$("podium").hidden=true;
     if(video.ended||video.currentTime>TL.total-1)video.currentTime=0;
+    else if(resumeAt&&Math.abs(video.currentTime-resumeAt)>1)video.currentTime=resumeAt;
     try{await document.documentElement.requestFullscreen()}catch(e){}
     try{await video.play()}catch(e){}
     bcast({t:"idle",text:"Шоу началось! Смотри на экран."})};
@@ -528,11 +557,12 @@ function host(){
   $("cBack").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
   $("cFwd").onclick=()=>video.currentTime=Math.min(video.duration||TL.total,video.currentTime+10);
   $("cFull").onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})};
-  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}renderChips()};
+  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}
+    resumeAt=video.currentTime;store.set("aeshow-vpos",resumeAt.toFixed(1));startLabel();renderChips()};
   addEventListener("keydown",e=>{if($("show").hidden||!$("arena").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
   video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";adminNote="";if(open)players.forEach(p=>sendQ(p,open))});
   video.addEventListener("pause",()=>{$("cPlay").textContent="Играть";if(open)players.forEach(p=>sendQ(p,open))});
-  video.addEventListener("ended",showPodium);
+  video.addEventListener("ended",()=>{store.del("aeshow-vpos");resumeAt=0;startLabel();showPodium()});
 
   let boardShownFor=null;
   function tick(){
@@ -573,7 +603,11 @@ function host(){
     if(!$("show").hidden){video.pause();if(open&&!open.live)closeQ(false)}
     $("arena").hidden=false;$("pill").hidden=true}
   function aSet(lab,title){$("aCanvas").hidden=true;$("arena").classList.remove("actmode");$("aLab").textContent=lab;$("aTitle").textContent=title;$("aCount").textContent="";$("aTimerBox").hidden=true;$("aNote").textContent="";$("aBody").innerHTML=""}
-  function aCtl(){const ph=arena?arena.phase:"idle";$("aVote").hidden=ph!=="idle";$("aNext").hidden=ph==="idle";$("aStop").hidden=ph==="idle"}
+  /* every arena phase change gets a new token; "Дальше" is ignored for 1 s after a change and when it carries an old token
+     (a double tap on the admin phone or the laptop must not skip the next round) */
+  let phTok=0,phAt=0;const phMark=()=>{phTok++;phAt=performance.now()};
+  function userNext(tok){if(tok!=null&&tok!==phTok||performance.now()-phAt<1000)return;arenaNext()}
+  function aCtl(){phMark();const ph=arena?arena.phase:"idle";$("aVote").hidden=ph!=="idle";$("aNext").hidden=ph==="idle";$("aStop").hidden=ph==="idle"}
   function arenaIdle(doneTitle){
     openArena();clearArenaTimer();if(open&&open.live)closeQ(false);
     arena={phase:"idle"};
@@ -712,7 +746,7 @@ function host(){
     try{mod.init(ctx)}catch(e){console.error("action game init",e)}
     aSet("","");cv.hidden=false;$("arena").classList.add("actmode");sizeCv();aCtl();
     players.forEach(p=>{if(!A.byName.has(p.name))send(p,{t:"idle",text:`Идёт «${g.title}» — смотри на экран. Сыграешь в следующем раунде!`})});
-    padAll(A);requestAnimationFrame(()=>actLoop(A))}
+    padAll(A);A.iv=setInterval(()=>{if(document.hidden)actStep(A)},250);requestAnimationFrame(()=>actLoop(A))}
   /* game-driven status line on one phone: stored per player, flushed by actLoop only when it changed (≥250 ms apart) */
   const ST_GAP=250,STC=["red","green","gold"];
   function actStatus(A,ap,text,o){
@@ -724,7 +758,7 @@ function host(){
   function actFlush(A,now){A.ctx.players.forEach(ap=>{
     if(now-ap._stAt<ST_GAP||(!ap._vib&&ap._sent&&ap._sent.text===ap._st.text&&ap._sent.color===ap._st.color))return;
     padSend(A,ap)})}
-  function actPlay(A){if(A.ph!=="intro")return;A.ph="play";A.ctx.t=0;A.acc=0;A.last=performance.now();A.ctx.banner("Старт!",.9);padAll(A)}
+  function actPlay(A){if(A.ph!=="intro")return;A.ph="play";phMark();A.ctx.t=0;A.acc=0;A.last=performance.now();A.ctx.banner("Старт!",.9);padAll(A)}
   function actDefaultOrder(A,rest){const alive=rest.filter(p=>p.alive),out=A.elim.filter(p=>rest.includes(p)).reverse();
     return alive.concat(out,rest.filter(p=>!alive.includes(p)&&!out.includes(p)))}
   function actStandings(A){let o=null;if(A.mod.standings){try{o=A.mod.standings(A.ctx)}catch(e){console.error(e)}}return o}
@@ -733,24 +767,25 @@ function host(){
     const all=A.ctx.players,seen=new Set(),o=[];
     (Array.isArray(order)?order:[]).forEach(p=>{if(all.includes(p)&&!seen.has(p)){seen.add(p);o.push(p)}});
     A.order=o.concat(actDefaultOrder(A,all.filter(p=>!seen.has(p))));
-    A.ph="done";A.doneAt=performance.now();A.banners=[];A.ctx.banner("Финиш!",1.8);
+    A.ph="done";phMark();A.doneAt=performance.now();A.banners=[];A.ctx.banner("Финиш!",1.8);
     all.forEach(ap=>{ap._st={text:"",color:null};ap._vib=0})}
   function actNext(){const A=arena&&arena.act;if(!A){arenaIdle();return}
     if(A.ph==="intro")actPlay(A);else if(A.ph==="play")actFinish(A,actStandings(A));else if(A.ph==="done")actResults(A);else arenaIdle(A.g.title)}
-  function actLoop(A){
-    if(!arena||arena.act!==A||A.ph==="res")return;
-    const now=performance.now(),dt=Math.min(.25,(now-A.last)/1000);A.last=now;
+  // drawing follows requestAnimationFrame; while the tab is hidden (rAF paused) a timer keeps the simulation going
+  function actLoop(A){if(!actStep(A))return;actDraw(A,performance.now());requestAnimationFrame(()=>actLoop(A))}
+  function actStep(A){
+    if(!arena||arena.act!==A||A.ph==="res"){clearInterval(A.iv);return false}
+    const now=performance.now(),bg=document.hidden,dt=Math.min(bg?3:.25,(now-A.last)/1000),lim=bg?200:8;A.last=now;
     if(A.ph==="intro"&&now-A.t0>=INTRO*1000)actPlay(A);
     if(A.ph==="play"){
       A.ctx.players.forEach(ap=>{if(now-ap._in>STALE_IN){ap.input.x=0;ap.input.y=0;ap.input.btn=false}});
       A.acc+=dt;let n=0;
-      while(A.acc>=ASTEP&&A.ph==="play"&&n<8){A.acc-=ASTEP;n++;A.ctx.t+=ASTEP;
+      while(A.acc>=ASTEP&&A.ph==="play"&&n<lim){A.acc-=ASTEP;n++;A.ctx.t+=ASTEP;
         try{A.mod.update(A.ctx,ASTEP)}catch(e){console.error("action game update",e);actFinish(A,actStandings(A))}
         if(A.ph==="play"&&A.ctx.t>=(A.mod.duration||60))actFinish(A,actStandings(A))}
-      if(n>=8)A.acc=0}
-    if(A.ph==="done"&&now-A.doneAt>1800){actResults(A);return}
-    actFlush(A,now);
-    actDraw(A,now);requestAnimationFrame(()=>actLoop(A))}
+      if(n>=lim)A.acc=0}
+    if(A.ph==="done"&&now-A.doneAt>1800){actResults(A);clearInterval(A.iv);return false}
+    actFlush(A,now);return true}
   function actDraw(A,now){
     sizeCv();const g=cg,cw=cv.width,ch=cv.height,s=Math.min(cw/AW,ch/AH),ox=(cw-AW*s)/2,oy=(ch-AH*s)/2;
     g.setTransform(1,0,0,1,0,0);g.fillStyle="#0d0619";g.fillRect(0,0,cw,ch);
@@ -815,7 +850,7 @@ function host(){
     ctlHide=setTimeout(function h(){if($("aCtl").matches(":hover")){ctlHide=setTimeout(h,800);return}a.classList.remove("mouse")},2500)};
   $("arena").addEventListener("mousemove",ctlShow);$("arena").addEventListener("mousedown",ctlShow);
   $("miniBtn").onclick=()=>arenaIdle();$("cMini").onclick=()=>arenaIdle();
-  $("aVote").onclick=startVote;$("aNext").onclick=arenaNext;$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
+  $("aVote").onclick=startVote;$("aNext").onclick=()=>userNext();$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
 
   /* --- remote control from the admin's phone --- */
   let adminNote="",lastAdm="",lastAdmAt=0;
@@ -824,17 +859,18 @@ function host(){
     play:()=>{if($("show").hidden||aShown())return;if(video.paused)video.play().then(()=>adminNote="").catch(()=>adminNote=playFail);else video.pause()},
     back:()=>{if(!$("show").hidden&&!aShown())$("cBack").click()},
     fwd:()=>{if(!$("show").hidden&&!aShown())$("cFwd").click()},
+    startOver:()=>{if(!$("start").disabled&&$("show").hidden&&!aShown()&&resumeAt)$("startOver").click()},
     start:()=>{if($("start").disabled||!$("show").hidden||aShown())return;$("start").click();setTimeout(()=>{if(video.paused)adminNote=playFail},1500)},
     lobby:()=>{if(aShown())closeArena();if(!$("show").hidden)$("cLobby").click()},
     test:()=>{if($("show").hidden&&!aShown()&&!$("testQ").disabled)$("testQ").click()},
-    vote:startVote,next:arenaNext,endgame:()=>arenaIdle(),close:closeArena,
+    vote:startVote,next:m=>userNext(m.tok),endgame:()=>arenaIdle(),close:closeArena,
     kick:()=>{ // drop every player except the admin and zero all scores; phones go back to the name screen
       if(open)closeQ(false);
-      players.forEach(p=>{if(p.name===ADMIN){p.score=0;p.answers={};return}send(p,{t:"kicked"});if(p.conn)p.conn._name=null;players.delete(p.name)});
+      players.forEach(p=>{if(p.name===ADMIN){p.score=0;p.answers={};return}send(p,{t:"kicked"});if(p.conn)detach(p.conn);players.delete(p.name)});
       scored.clear();saveScored();save();renderChips();
-      players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:1,total:players.size}));
+      players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:1,total:players.size,active:activeFor(p)}));
       if(aShown()&&arena&&arena.phase==="idle")arenaIdle()}};
-  function adminState(){return{mode:aShown()?"arena":!$("show").hidden?"show":"lobby",paused:video.paused,phase:arena?arena.phase:null,canStart:!$("start").disabled,testing:!!testIv,note:adminNote}}
+  function adminState(){return{mode:aShown()?"arena":!$("show").hidden?"show":"lobby",paused:video.paused,phase:arena?arena.phase:null,tok:phTok,canStart:!$("start").disabled,startLabel:$("start").textContent,resume:!!resumeAt,testing:!!testIv,note:adminNote}}
   setInterval(()=>{const p=players.get(ADMIN);if(!p||!p.conn||!p.conn.open||!p.conn._admin)return;const st=adminState(),s=JSON.stringify(st);
     if(s!==lastAdm||performance.now()-lastAdmAt>5000){lastAdm=s;lastAdmAt=performance.now();send(p,{t:"admin",st})}},700);
 
@@ -852,8 +888,9 @@ function player(){
   GUESTS.forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>join(n);$("nameGrid").append(b)});
   $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
   $("otherName").onkeydown=e=>{if(e.key==="Enter")$("otherGo").click()};
-  $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")};
-  function join(n){myName=n;store.set("aeshow-name",n);$("meName").textContent=n;
+  $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});forget()};
+  function forget(){pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+  function join(n){myName=n;$("nameNote").textContent="";store.set("aeshow-name",n);$("meName").textContent=n;
     $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
     if(conn&&conn.open)conn.send({t:"join",name:n})}
   function setConn(on){$("conn").className="conn"+(on?" on":"")}
@@ -873,7 +910,8 @@ function player(){
     conn.send({t:"join",name:myName});
     if(++knocks>=2&&!$("pWait").hidden){$("waitTitle").textContent=bus.connected()?"Ведущий пока не на связи":"Нет интернета";$("waitText").textContent="Пробую снова…"}}
   function onMsg(m){
-    if(m.t==="welcome"){myName=m.name;$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN)$("adm").hidden=true;else adminAuth();
+    if(m.t==="welcome"){myName=m.name;$("nameNote").textContent="";$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN)$("adm").hidden=true;else adminAuth();
+      if(!m.active){pad=null;cur=null;tap=null;stopTimer()} // the host has nothing open (e.g. it reloaded): drop a stale question / pad
       if(!cur&&!pad){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
     if(m.t==="idle"){pad=null;cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
     if(m.t==="q")showQ(m);
@@ -882,7 +920,8 @@ function player(){
     if(m.t==="tap")onTap(m);
     if(m.t==="pad")onPad(m);
     if(m.t==="admin")renderAdmin(m.st);
-    if(m.t==="kicked"){pad=null;myName=null;store.del("aeshow-name");cur=null;tap=null;stopTimer();$("adm").hidden=true;admKey="";$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+    if(m.t==="taken"&&myName===m.name){forget();$("nameNote").textContent=`Имя «${m.name}» уже занято на другом телефоне. Выбери своё имя.`}
+    if(m.t==="kicked")forget();
     if(m.t==="final"){cur=null;stopTimer();$("resBig").className="big ok";$("resBig").textContent=m.rank===1?"Победа!":`${m.rank}-е место`;
       $("resGain").textContent=m.score+" очков";$("resText").textContent=m.rank===1?"Ты лучший игрок вечера! Забирай приз.":`из ${m.total} игроков. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
   }
@@ -908,7 +947,7 @@ function player(){
       if(m.gain){big.className="big ok";big.textContent="Угадал!";g.textContent="+"+m.gain;burst(100,.5,.35)}else{big.className="big no";big.textContent=m.opt==null?"Без голоса":"Мимо";g.textContent=""}
       t.textContent=`Большинство выбрало: ${top}`}
     else if(m.opt==null){big.className="big no";big.textContent="Не успел";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
-    else if(m.ok){big.className="big ok";big.textContent="Верно!";g.textContent="+"+m.gain;t.textContent=`Ты на ${m.rank}-м месте из ${m.total}.`;burst(120,.5,.35)}
+    else if(m.ok){big.className="big ok";big.textContent="Верно!";g.textContent=m.gain?"+"+m.gain:"";t.textContent=(m.gain?"":"Очки за этот вопрос уже начислены. ")+`Ты на ${m.rank}-м месте из ${m.total}.`;if(m.gain)burst(120,.5,.35)}
     else{big.className="big no";big.textContent="Мимо";g.textContent="";t.textContent=`Правильный ответ: ${m.answer}. Ты на ${m.rank}-м месте из ${m.total}.`}
     scr("pRes")}
   /* "Быстрый палец" */
@@ -971,22 +1010,23 @@ function player(){
   bigTap.addEventListener("pointerdown",e=>{e.preventDefault();padK++;bigTap.classList.add("on");setTimeout(()=>bigTap.classList.remove("on"),90);padNow()});
   [SA,actBtn,bigTap,$("pPad")].forEach(el=>el.addEventListener("contextmenu",e=>e.preventDefault()));
   /* remote control, shown only to ADMIN; the host decides what is allowed */
-  let admKey="",admOk=false;
+  let admKey="",admOk=false,admTok=null;
   function adminAuth(){
     const h=store.get("aeshow-auth");
     if(h===PASS_HASH){conn.send({t:"auth",h});return}
     if(admOk)return;
     $("admMode").textContent="";$("admNote").textContent="";$("admBtns").innerHTML="";admKey="";$("admLock").hidden=false;$("adm").hidden=false}
+  $("admHead").onclick=()=>{const o=$("adm").classList.toggle("open");$("admTog").textContent=o?"скрыть ▴":"открыть ▾"};
   $("admLock").onsubmit=async e=>{e.preventDefault();const h=await passHash($("admPass").value.trim());
     if(h!==PASS_HASH){$("admNote").textContent="Неверный пароль";return}
     store.set("aeshow-auth",h);$("admPass").value="";$("admNote").textContent="";conn.send({t:"auth",h})};
   function renderAdmin(st){
     if(myName!==ADMIN){$("adm").hidden=true;return}
-    admOk=true;$("admLock").hidden=true;
+    admOk=true;$("admLock").hidden=true;admTok=st.tok;
     const B=[],b=(c,t,o={})=>B.push({c,t,...o});
-    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start","Начать шоу",{dis:!st.canStart,main:1});b("vote","Мини-игры");b("kick","Выкинуть всех игроков",{confirm:1})}
+    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start",st.startLabel||"Начать шоу",{dis:!st.canStart,main:1});if(st.resume)b("startOver","Начать сначала",{dis:!st.canStart,confirm:1});b("vote","Мини-игры");b("kick","Выкинуть всех игроков",{confirm:1})}
     else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра");b("lobby","В лобби")}
-    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{confirm:1})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру")}b("close","Закрыть мини-игры")}
+    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{confirm:1})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{confirm:1})}b("close","Закрыть мини-игры",{confirm:1})}
     const mode={lobby:"Лобби",show:st.paused?"Видео на паузе":"Идёт видео",arena:"Мини-игры"}[st.mode];
     const key=JSON.stringify([B,mode,st.note]);$("adm").hidden=false;if(key===admKey)return;admKey=key;
     $("admMode").textContent=mode;$("admNote").textContent=st.note||"";
@@ -994,7 +1034,8 @@ function player(){
     B.forEach(x=>{const e=document.createElement("button");e.textContent=x.t;if(x.main)e.className="main";e.disabled=!!x.dis;
       e.onclick=()=>{if(!conn.open)return;
         if(x.confirm&&!e.dataset.arm){e.dataset.arm=1;e.textContent="Точно? Нажми ещё раз";setTimeout(()=>{delete e.dataset.arm;e.textContent=x.t},4000);return}
-        conn.send({t:"cmd",c:x.c})};
+        if(x.confirm){delete e.dataset.arm;e.textContent=x.t} // confirmed: disarm right away
+        conn.send(x.c==="next"?{t:"cmd",c:x.c,tok:admTok}:{t:"cmd",c:x.c})};
       box.append(e)})}
   if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
   setConn(false);setInterval(tickNet,4000);

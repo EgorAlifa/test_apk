@@ -31,6 +31,7 @@ jobs:
           echo "video.mp4 size: $size"
           test "$size" -eq 97240930
           cp index.html _site/
+          cp -r games _site/
           cp apk.html *.apk _site/ 2>/dev/null || true
           touch _site/.nojekyll
 
