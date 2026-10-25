@@ -67,6 +67,7 @@ function botThink(e,t){
   controls:"stick+btn",
   btnLabel:"Рывок",
   duration:75,
+  hud:"alive",
 
   init(ctx){
     const hs=ctx.players,bots=[];
@@ -94,11 +95,11 @@ function botThink(e,t){
     const live=es.filter(e=>e.alive);
     for(const e of live){const d=e.data;if(e.bot)botThink(e,t);const inp=e.input;
       const pressed=inp.taps>d.taps||(inp.btn&&!d.pb);d.taps=inp.taps;d.pb=inp.btn;
-      if(pressed&&d.cd<=0&&Math.hypot(inp.x,inp.y)>.2){d.spr=SPRINT_T;d.cd=SPRINT_CD;puff(d.x,d.y,9,"s",240,.35)}
+      if(pressed&&d.cd<=0&&Math.hypot(inp.x,inp.y)>.2){d.spr=SPRINT_T;d.cd=SPRINT_CD;puff(d.x,d.y,9,"s",240,.35);ctx.ack(e)}
       const carrier=S.bomb&&S.bomb.holder===e,vm=d.spr>0?VSPRINT:carrier?VBOMB:VRUN;
       const k=1-Math.exp(-(d.spr>0?9:RESP)*dt);
       d.vx+=(inp.x*vm-d.vx)*k;d.vy+=(inp.y*vm-d.vy)*k;
-      d.spr-=dt;d.cd-=dt;d.imm-=dt;d.grace-=dt;
+      d.spr-=dt;d.cd-=dt;ctx.cooldown(e,d.cd,SPRINT_CD);d.imm-=dt;d.grace-=dt;
       d.x+=d.vx*dt;d.y+=d.vy*dt;
       // walls
       if(d.x<AX0+PR){d.x=AX0+PR;d.vx=Math.abs(d.vx)*.5}if(d.x>AX1-PR){d.x=AX1-PR;d.vx=-Math.abs(d.vx)*.5}

@@ -58,6 +58,7 @@ function makeGround(){ // pre-rendered plateau: rock gradient, old craters, pebb
   rules:"Беги от красных кругов! Последний живой побеждает.",
   controls:"stick",
   duration:70,
+  hud:"alive",
 
   init(ctx){
     S={met:[],fx:[],scars:[],shake:0,acc:0,nextBig:10,storm:false,ending:-1,lastBanner:-9,ground:null,

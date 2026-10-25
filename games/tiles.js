@@ -29,6 +29,7 @@ function chips(x,y,n,col){for(let i=0;i<n;i++){const a=Math.random()*TAU,v=60+Ma
   controls:"stick+btn",
   btnLabel:"Прыжок",
   duration:75,
+  hud:"alive",
 
   init(ctx){
     S={tiles:[],map:new Map(),fx:[],shake:0,warned:false,ending:-1,
@@ -58,13 +59,13 @@ function chips(x,y,n,col){for(let i=0;i<n;i++){const a=Math.random()*TAU,v=60+Ma
       const pressed=inp.taps>d.taps||(inp.btn&&!d.pb);d.taps=inp.taps;d.pb=inp.btn;
       if(pressed&&d.cd<=0&&d.air<=0){let dx=inp.x,dy=inp.y,l=Math.hypot(dx,dy);
         if(l<.2){dx=d.vx;dy=d.vy;l=Math.hypot(dx,dy)}if(l<20&&Math.hypot(inp.x,inp.y)<.2){dx=Math.cos(d.face);dy=Math.sin(d.face);l=1}
-        const sp=Math.max(JUMP_V,Math.hypot(d.vx,d.vy));d.vx=dx/l*sp;d.vy=dy/l*sp;d.air=JUMP_T;d.cd=JUMP_CD;chips(d.x,d.y+PR*.6,8,"d")}
+        const sp=Math.max(JUMP_V,Math.hypot(d.vx,d.vy));d.vx=dx/l*sp;d.vy=dy/l*sp;d.air=JUMP_T;d.cd=JUMP_CD;chips(d.x,d.y+PR*.6,8,"d");ctx.ack(p)}
       const ctl=d.air>0?.35:1; // a little air control
       d.vx+=inp.x*ACC*ctl*dt;d.vy+=inp.y*ACC*ctl*dt;
       if(d.air<=0){const k=Math.exp(-DRAG*dt);d.vx*=k;d.vy*=k}
       const sp=Math.hypot(d.vx,d.vy);if(sp>VMAX&&d.air<=0){const ns=VMAX+(sp-VMAX)*Math.exp(-6*dt);d.vx*=ns/sp;d.vy*=ns/sp}
       if(sp>30)d.face=Math.atan2(d.vy,d.vx);
-      d.cd-=dt;if(d.air>0){d.air-=dt;const k=1-Math.max(0,d.air)/JUMP_T;d.z=Math.sin(k*Math.PI)*46;if(d.air<=0){d.z=0;chips(d.x,d.y+PR*.6,6,"d")}}}
+      d.cd-=dt;ctx.cooldown(p,Math.max(d.cd,d.air),JUMP_CD);if(d.air>0){d.air-=dt;const k=1-Math.max(0,d.air)/JUMP_T;d.z=Math.sin(k*Math.PI)*46;if(d.air<=0){d.z=0;chips(d.x,d.y+PR*.6,6,"d")}}}
     // soft bumps: you can shove people towards holes, but not knock them across the screen
     for(let i=0;i<live.length;i++)for(let j=i+1;j<live.length;j++){const a=live[i].data,b=live[j].data;
       if((a.air>0)!==(b.air>0))continue;
