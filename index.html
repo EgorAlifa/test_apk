@@ -73,8 +73,18 @@ label.file input{position:absolute;opacity:0;width:1px;height:1px}
 .ctrl{position:absolute;left:0;right:0;top:0;display:flex;gap:8px;justify-content:center;padding:12px;opacity:0;transition:opacity .25s;pointer-events:auto}
 #show:hover .ctrl,.ctrl:focus-within{opacity:1}
 .ctrl button{font:800 14px var(--body);background:rgba(23,12,43,.85);color:var(--ink);border:1.5px solid var(--plum2);border-radius:10px;padding:8px 12px}
-#podium{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%,var(--plum) 0%,var(--night) 62%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;pointer-events:auto}
+/* podium overlay: the video-end one sits over the video (under the arena); the on-demand final one covers everything */
+#podium{position:fixed;inset:0;z-index:6;background:radial-gradient(120% 90% at 50% 0%,var(--plum) 0%,var(--night) 62%);color:var(--ink)}
+#podium.fin{z-index:15}
+#podBody{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:4vh 4vw 9vh;text-align:center}
 #podium h2{font-size:clamp(28px,4.5vw,80px)}
+#podium .lab{font:800 clamp(13px,1.4vw,24px) var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--coral)}
+#podium .anote{min-height:1.4em}
+#podCtl{position:absolute;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px;opacity:.3;transition:opacity .25s}
+#podCtl:hover,#podCtl:focus-within{opacity:1}
+#podCtl button{font:800 14px var(--body);background:rgba(23,12,43,.85);color:var(--ink);border:1.5px solid var(--plum2);border-radius:10px;padding:8px 12px}
+#podium .nw{white-space:nowrap}
+#podium .tapcirc{width:min(34vh,50vw);font-size:clamp(22px,3.6vw,64px)}
 .pod{display:flex;align-items:flex-end;gap:1.5vw;width:min(900px,90vw)}
 .pod .st{flex:1;display:flex;flex-direction:column;align-items:center;gap:1vh;min-width:0;animation:rise .8s cubic-bezier(.2,1.4,.4,1) both}
 .pod .nm{font:900 clamp(18px,2.6vw,46px) var(--display);overflow-wrap:anywhere;text-align:center}
@@ -260,6 +270,7 @@ html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:
       <button class="btn gold" id="start" disabled>Начать шоу</button>
       <button class="btn ghost" id="startOver" hidden>Начать сначала</button>
       <button class="btn ghost" id="miniBtn">Мини-игры</button>
+      <button class="btn ghost" id="podBtn">Финальный подиум</button>
       <button class="btn ghost" id="resetScores">Обнулить очки</button>
     </div>
     <div class="row" id="resetConfirm" hidden style="margin-top:10px"><span class="muted">Точно обнулить очки всех игроков?</span><button class="btn" id="resetYes">Да</button><button class="btn ghost" id="resetNo">Нет</button></div>
@@ -280,9 +291,8 @@ html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:
     <div class="board" id="board" hidden></div>
   </div></div>
   <div class="ctrl">
-    <button id="cPlay">Пауза</button><button id="cBack">−10 с</button><button id="cFwd">+10 с</button><button id="cFull">Во весь экран</button><button id="cMini">Мини-игры</button><button id="cLobby">В лобби</button>
+    <button id="cPlay">Пауза</button><button id="cBack">−10 с</button><button id="cFwd">+10 с</button><button id="cFull">Во весь экран</button><button id="cMini">Мини-игры</button><button id="cPod">Финальный подиум</button><button id="cLobby">В лобби</button>
   </div>
-  <div id="podium" hidden></div>
 </div>
 
 <!-- HOST MINI-GAMES -->
@@ -294,7 +304,13 @@ html.padmode .actbtn{width:min(128px,30vw);height:min(128px,30vw);margin-bottom:
   <div class="atimer" id="aTimerBox" hidden><i id="aTimer"></i></div>
   <div id="aBody"></div>
   <div class="anote" id="aNote"></div>
-  <div id="aCtl"><button id="aVote">Голосование за игру</button><button id="aNext">Дальше</button><button id="aStop">Прервать игру</button><button id="aClose">Закрыть мини-игры</button></div>
+  <div id="aCtl"><button id="aVote">Голосование за игру</button><button id="aNext">Дальше</button><button id="aStop">Прервать игру</button><button id="aPod">Финальный подиум</button><button id="aClose">Закрыть мини-игры</button></div>
+</div>
+
+<!-- HOST PODIUM (video-end results / on-demand final podium, with the tie-break shoot-out) -->
+<div id="podium" hidden>
+  <div id="podBody"></div>
+  <div id="podCtl"><button id="pdNext">Дальше</button><button id="pdStop">Прервать перестрелку</button><button id="pdFinal">Финальный подиум</button><button id="pdMini">Мини-игры</button><button id="pdLobby">В лобби</button><button id="pdHide">Скрыть подиум</button></div>
 </div>
 
 <!-- PLAYER -->
@@ -445,7 +461,9 @@ function host(){
   function drawQR(){$("qr").innerHTML="";new QRCode($("qr"),{text:joinUrl(),width:640,height:640,colorDark:"#170c2b",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});$("joinLink").textContent=joinUrl()}
   function send(p,m){if(p.conn&&p.conn.open){try{p.conn.send(m)}catch(e){}}}
   function bcast(m){players.forEach(p=>send(p,m))}
-  function ranked(){return [...players.values()].sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name))}
+  // order: score, then the stored tie-break («Перестрелка») rank among equal scores, then join order
+  function ranked(){const tb=tbMap(),ord=new Map([...players.keys()].map((n,i)=>[n,i])),tr=n=>tb.has(n)?tb.get(n):1e9;
+    return [...players.values()].sort((a,b)=>b.score-a.score||tr(a.name)-tr(b.name)||ord.get(a.name)-ord.get(b.name))}
   function rankOf(name){return ranked().findIndex(p=>p.name===name)+1}
 
   function onMsg(conn,m){
@@ -463,6 +481,7 @@ function host(){
       if(open)sendQ(p,open);
       if(arena&&arena.tap&&arena.tap.ph!=="done")send(p,{t:"tap",ph:arena.tap.ph,r:arena.tap.r});
       if(arena&&arena.act)actRejoin(arena.act,p);
+      podRejoin(p);
       if(name===ADMIN)lastAdm="";
       return}
     const p=players.get(conn._name);if(!p)return;
@@ -480,7 +499,7 @@ function host(){
   // a phone loses its name (leave / takeover / switch): the player and their score stay
   function detach(conn){const p=players.get(conn._name);if(p&&p.conn===conn)p.conn=null;conn._name=null;conn._admin=false}
   // is something running that this player will be sent right after "welcome"? if not, the phone drops stale screens
-  function activeFor(p){return !!(open||arena&&arena.tap&&arena.tap.ph!=="done"||arena&&arena.act&&arena.act.byName.has(p.name))}
+  function activeFor(p){return !!(open||sd&&sd.bucket&&sd.bucket.includes(p.name)||arena&&arena.tap&&arena.tap.ph!=="done"||arena&&arena.act&&arena.act.byName.has(p.name))}
   function sendQ(p,o){const q=o.q,left=o.live?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
     send(p,{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.live&&video.paused,mine:p.answers[q.id]?p.answers[q.id].opt:null})}
 
@@ -491,7 +510,7 @@ function host(){
     ranked().forEach(p=>{const s=document.createElement("span");s.className="chip"+(p.conn&&p.conn.open?"":" off");s.innerHTML="<i></i>";s.append(p.name+(p.score?" · "+p.score:""));c.append(s)})}
 
   /* --- scoring --- */
-  function points(q,a){if(!a||q.correct==null||a.opt!==q.correct)return 0;const d=q.close-q.open;return Math.round(500+500*Math.max(0,1-a.el/d))}
+  function points(q,a){if(!a||q.correct==null||a.opt!==q.correct)return 0;const d=q.close-q.open;return Math.round(125+125*Math.max(0,1-a.el/d))} // 125 (last second) … 250 (instant)
   function closeQ(final){
     const o=open;open=null;$("pill").hidden=true;if(!o)return;
     const q=o.q;
@@ -554,7 +573,7 @@ function host(){
   /* --- reset --- */
   $("resetScores").onclick=()=>$("resetConfirm").hidden=false;
   $("resetNo").onclick=()=>$("resetConfirm").hidden=true;
-  $("resetYes").onclick=()=>{players.forEach(p=>{p.score=0;p.answers={}});scored.clear();saveScored();save();renderChips();$("resetConfirm").hidden=true;
+  $("resetYes").onclick=()=>{players.forEach(p=>{p.score=0;p.answers={}});scored.clear();saveScored();tbClear();save();renderChips();$("resetConfirm").hidden=true;
     players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:rankOf(p.name),total:players.size,active:activeFor(p)}))};
 
   /* --- show --- */
@@ -567,7 +586,7 @@ function host(){
   $("startOver").onclick=()=>{resumeAt=0;store.del("aeshow-vpos");video.currentTime=0;startLabel();$("start").click()};
   $("start").onclick=async()=>{
     endTest();
-    $("lobby").hidden=true;$("show").hidden=false;$("podium").hidden=true;
+    $("lobby").hidden=true;$("show").hidden=false;podHide();
     if(video.ended||video.currentTime>TL.total-1)video.currentTime=0;
     else if(resumeAt&&Math.abs(video.currentTime-resumeAt)>1)video.currentTime=resumeAt;
     try{await document.documentElement.requestFullscreen()}catch(e){}
@@ -577,16 +596,16 @@ function host(){
   $("cBack").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
   $("cFwd").onclick=()=>video.currentTime=Math.min(video.duration||TL.total,video.currentTime+10);
   $("cFull").onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})};
-  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}
+  $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);podHide();$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}
     resumeAt=video.currentTime;store.set("aeshow-vpos",resumeAt.toFixed(1));startLabel();renderChips()};
-  addEventListener("keydown",e=>{if($("show").hidden||!$("arena").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
+  addEventListener("keydown",e=>{if($("show").hidden||!$("arena").hidden||!$("podium").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
   video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";adminNote="";if(open)players.forEach(p=>sendQ(p,open))});
   video.addEventListener("pause",()=>{$("cPlay").textContent="Играть";if(open)players.forEach(p=>sendQ(p,open))});
-  video.addEventListener("ended",()=>{store.del("aeshow-vpos");resumeAt=0;startLabel();showPodium()});
+  video.addEventListener("ended",()=>{store.del("aeshow-vpos");resumeAt=0;startLabel();podShow("video")});
 
   let boardShownFor=null;
   function tick(){
-    if(!$("show").hidden&&$("arena").hidden&&!(open&&open.live)){
+    if(!$("show").hidden&&$("arena").hidden&&!(open&&open.live)&&!(pod&&pod.kind==="final")){
       const t=video.currentTime;
       const act=TL.questions.find(q=>t>=q.open&&t<q.close);
       if(open&&(!act||act.id!==open.q.id)){closeQ(t>=open.q.close)}
@@ -596,21 +615,108 @@ function host(){
       const card=TL.cards.find(c=>t>=c.start&&t<c.end&&c.round>1);
       if(card&&boardShownFor!==card.round){boardShownFor=card.round;showBoard()}
       if(!card&&boardShownFor!==null){boardShownFor=null;$("board").hidden=true}
-      if(t<TL.finalStart&&!$("podium").hidden)$("podium").hidden=true;
+      if(t<TL.finalStart&&pod&&pod.kind==="video")podHide();
     }
     requestAnimationFrame(tick)}
   function showBoard(){const b=$("board");b.innerHTML="";ranked().slice(0,5).forEach((p,i)=>{const d=document.createElement("div");d.className="b";d.style.animationDelay=(i*.08)+"s";
     d.innerHTML=`<span class="p">${i+1}</span><span class="n"></span><span class="s">${p.score}</span>`;d.querySelector(".n").textContent=p.name;b.append(d)});b.hidden=!players.size}
-  function showPodium(){
-    const r=ranked(),pd=$("podium");pd.innerHTML="";
-    const h=document.createElement("h2");h.textContent=r.length?"Победитель шоу — "+r[0].name+"!":"Шоу окончено!";pd.append(h);
-    const pod=document.createElement("div");pod.className="pod";
+  /* --- podium: «Итоги видео-викторины» at the end of the video, «Финальный подиум» on demand ---
+     Before the reveal, equal scores on places 1–3 are settled by a «Перестрелка»: a one-round «Быстрый палец» for the tied
+     players only (phones measure their own reaction, early tap = false start). The result only orders the tied players
+     (no points), is saved and reused while exactly those players keep exactly that score. */
+  let pod=null,podBack=null,sd=null; // pod {kind:"video"|"final",shown,abort}; sd = the shoot-out in progress
+  let tb=[];try{tb=JSON.parse(store.get("aeshow-tb")||"[]");if(!Array.isArray(tb))tb=[]}catch(e){tb=[]}
+  function tbValid(g){const now=[...players.values()].filter(p=>p.score===g.score).map(p=>p.name);return now.length===g.names.length&&now.every(n=>g.names.includes(n))}
+  function tbMap(){const m=new Map();tb.forEach(g=>{if(tbValid(g))g.names.forEach((n,i)=>m.set(n,i))});return m}
+  function tbSave(g){tb=tb.filter(x=>x.score!==g.score&&tbValid(x));tb.push(g);store.set("aeshow-tb",JSON.stringify(tb))}
+  function tbClear(){tb=[];store.del("aeshow-tb")}
+  // the first tie touching places 1–3 that has no valid saved order: {score, names (join order), start (0-based place)}
+  function sdFind(){const r=ranked(),m=tbMap();
+    for(let i=0;i<Math.min(3,r.length);i++){const s=r[i].score,g=r.filter(p=>p.score===s);
+      if(g.length>1&&!g.every(p=>m.has(p.name)))return{score:s,names:g.map(p=>p.name),start:r.indexOf(g[0])}}
+    return null}
+  function podShow(kind){
+    if(sd)sdCancel();
+    pod={kind,shown:false,abort:false};const pd=$("podium");pd.classList.toggle("fin",kind==="final");pd.hidden=false;$("podBody").innerHTML="";
+    sdNextGroup()}
+  function podHide(){if(sd)sdCancel();pod=null;const pd=$("podium");pd.hidden=true;pd.classList.remove("fin");$("podBody").innerHTML=""}
+  // «Финальный подиум» (laptop or admin phone): closes whatever is open, then shows the podium over everything
+  function podFinal(){
+    if(pod&&pod.kind==="final")return;
+    podBack=pod&&pod.kind==="video"&&!aShown()?"video":null;
+    if(open&&open.test)endTest();
+    if(!$("show").hidden){video.pause();if(open&&!open.live)closeQ(false)} // the question opens again (paused) when the podium is closed
+    if(aShown()){if(arena&&arena.phase!=="idle")arenaIdle();else clearArenaTimer()} // a running round stops without points, like «Прервать игру»
+    podShow("final")}
+  function podDismiss(){
+    if(!pod||pod.kind!=="final")return;podHide();const back=podBack;podBack=null;renderChips();
+    if(aShown()){arenaIdle();return}
+    bcast({t:"idle",text:"Смотри на экран"});
+    if(back==="video"&&!$("show").hidden)podShow("video")}
+  function podCtl(){const f=pod&&pod.kind==="final";$("pdNext").hidden=$("pdStop").hidden=!sd;$("pdHide").hidden=!f||!!sd;$("pdFinal").hidden=$("pdMini").hidden=$("pdLobby").hidden=f||!!sd}
+  function podScreen(lab,title,body,note){const pd=$("podBody");pd.innerHTML="";
+    const l=document.createElement("span");l.className="lab";l.textContent=lab;const h=document.createElement("h2");
+    [].concat(title).forEach((t,i)=>{if(i)h.append(" ");const x=document.createElement("span");x.textContent=t;if(!i&&Array.isArray(title))x.className="nw";h.append(x)});pd.append(l,h);
+    if(body)pd.append(body);const n=document.createElement("div");n.className="anote";n.textContent=note||"";pd.append(n)}
+  function podReveal(){
+    if(!pod)return;pod.shown=true;sd=null;phMark();podCtl();
+    const fin=pod.kind==="final",r=ranked(),pd=$("podBody");pd.innerHTML="";
+    const l=document.createElement("span");l.className="lab";l.textContent=fin?"Финальный подиум":"Итоги видео-викторины";pd.append(l);
+    const h=document.createElement("h2");h.textContent=!r.length?(fin?"Пока никого нет":"Шоу окончено!"):fin?"Победитель шоу — "+r[0].name+"!":"Лидер после видео — "+r[0].name+"!";pd.append(h);
+    const pdm=document.createElement("div");pdm.className="pod";
     [[r[1],"p2",2,.5],[r[0],"p1",1,1.1],[r[2],"p3",3,0]].forEach(([p,c,n,dl])=>{if(!p)return;const s=document.createElement("div");s.className="st "+c;s.style.animationDelay=dl+"s";
-      s.innerHTML=`<div class="nm"></div><div class="sc">${p.score} очков</div><div class="blk">${n}</div>`;s.querySelector(".nm").textContent=p.name;pod.append(s)});
-    pd.append(pod);
+      s.innerHTML=`<div class="nm"></div><div class="sc">${p.score} очков</div><div class="blk">${n}</div>`;s.querySelector(".nm").textContent=p.name;pdm.append(s)});
+    pd.append(pdm);
     if(r.length>3){const rest=document.createElement("div");rest.className="rest";r.slice(3).forEach((p,i)=>{const x=document.createElement("span");x.textContent=`${i+4}. ${p.name} · ${p.score}`;rest.append(x)});pd.append(rest)}
-    pd.hidden=false;setTimeout(()=>{burst(260,.3,.4);burst(260,.7,.35)},1300);setTimeout(()=>burst(300,.5,.25),1900);
-    players.forEach(p=>send(p,{t:"final",rank:rankOf(p.name),total:players.size,score:p.score}))}
+    if(r.length){setTimeout(()=>{burst(260,.3,.4);burst(260,.7,.35)},1300);setTimeout(()=>burst(300,.5,.25),1900)}
+    renderChips();players.forEach(podSendFinal)}
+  function podSendFinal(p){send(p,{t:"final",kind:pod.kind,rank:rankOf(p.name),total:players.size,score:p.score})}
+  function podRejoin(p){if(!pod||pod.kind==="video"&&aShown())return;
+    if(sd){if(sd.bucket&&sd.bucket.includes(p.name)&&sd.ph!=="res")send(p,{t:"tap",ph:sd.ph,r:sd.r,sd:1,title:sd.title});else send(p,{t:"idle",text:"Перестрелка: смотри на экран"})}
+    else if(pod.shown)podSendFinal(p)}
+  /* «Перестрелка»: sd.buckets splits the tied group into still-tied sub-groups in order; a round is played by the first
+     sub-group of 2+ that still decides a place 1–3. Max 3 rounds per tie, then (or on «Прервать») the rest goes random. */
+  function sdNextGroup(){const c=sdFind();if(!c){podReveal();return}
+    sd={...c,buckets:[c.names.slice()],rounds:0,abort:!!(pod&&pod.abort)};sdStep()}
+  function sdBucket(){let at=sd.start;for(let i=0;i<sd.buckets.length;i++){const b=sd.buckets[i];if(b.length>1&&at<=2)return{i,at};at+=b.length}return null}
+  function sdStep(){
+    if(!sd)return;clearTimeout(sd.to);
+    const k=sdBucket(),live=k&&sd.buckets[k.i].some(n=>{const p=players.get(n);return p&&p.conn&&p.conn.open});
+    if(!k||sd.rounds>=3||sd.abort||!live){
+      let at=sd.start;const names=[];sd.buckets.forEach(b=>{names.push(...(b.length>1&&at<=2?shuffle(b):b));at+=b.length});
+      tbSave({score:sd.score,names});sd=null;sdNextGroup();return}
+    sd.bi=k.i;sd.bucket=sd.buckets[k.i];sd.place=k.at+1;sd.r=Date.now();sd.ph="ready";sd.taps=new Map();sd.rounds++;phMark();
+    const vs=sd.bucket.join(" vs ");sd.title=`Перестрелка за ${sd.place}-е место`;
+    const c=document.createElement("div");c.className="tapcirc";c.id="sdCirc";c.textContent="ЖДИ…";
+    podScreen((pod.kind==="final"?"Финальный подиум":"Итоги видео-викторины")+(sd.rounds>1?` · раунд ${sd.rounds} из 3`:" · ничья!"),[`${sd.title}:`,vs],c,"Жмите на телефоне, когда станет зелёным! Раньше — фальстарт");
+    players.forEach(p=>{if(sd.bucket.includes(p.name))send(p,{t:"tap",ph:"ready",r:sd.r,sd:1,title:sd.title});else send(p,{t:"idle",text:`Перестрелка: смотри на экран (${vs})`})});
+    podCtl();sd.to=setTimeout(sdGo,2500+Math.random()*3000)}
+  function sdGo(){if(!sd||sd.ph!=="ready")return;sd.ph="go";phMark();const c=$("sdCirc");if(c){c.className="tapcirc go";c.textContent="ЖМИ!"}
+    sd.bucket.forEach(n=>{const p=players.get(n);if(p)send(p,{t:"tap",ph:"go",r:sd.r,sd:1,title:sd.title})});sd.to=setTimeout(sdClose,5000)}
+  function sdTapped(p,m){if(!sd||m.r!==sd.r)return false; // not ours: an arena «Быстрый палец» tap
+    if(sd.ph==="res"||!sd.bucket.includes(p.name)||sd.taps.has(p.name))return true;
+    if(m.early)sd.taps.set(p.name,{early:true});else if(sd.ph==="go"){const ms=Math.round(+m.ms);if(ms>=0&&ms<10000)sd.taps.set(p.name,{ms})}
+    if(sd.taps.size>=sd.bucket.length){clearTimeout(sd.to);sd.to=setTimeout(sdClose,400)} // everyone tapped (or all false-started): no need to wait
+    return true}
+  function sdClose(){
+    if(!sd||sd.ph==="res")return;clearTimeout(sd.to);sd.ph="res";phMark();
+    const b=sd.bucket,T=n=>sd.taps.get(n)||{},ok=b.filter(n=>T(n).ms!=null).sort((x,y)=>T(x).ms-T(y).ms),bad=b.filter(n=>!ok.includes(n));
+    const parts=[];ok.forEach(n=>{const last=parts[parts.length-1];if(last&&T(last[0]).ms===T(n).ms)last.push(n);else parts.push([n])}); // equal ms stay tied
+    if(ok.length){if(bad.length)parts.push(bad);sd.buckets.splice(sd.bi,1,...parts)} // nobody valid: the same players go again
+    const won=parts.length&&parts[0].length===1?parts[0][0]:null,more=sdBucket();
+    const note=won?`${won} забирает ${sd.place}-е место!`+(more&&sd.rounds<3?" Дальше — ещё перестрелка.":""):sd.rounds>=3?"Ничья после 3 раундов — места решит жребий":ok.length?"Одинаковое время — ещё раунд!":"Никто не нажал вовремя — ещё раунд!";
+    const list=document.createElement("div");list.className="alist";
+    ok.concat(bad).forEach((n,i)=>{const v=T(n),d=document.createElement("div");d.innerHTML='<span class="n"></span><span class="s"></span>';d.firstChild.textContent=n;
+      d.lastChild.textContent=v.ms!=null?v.ms+" мс":v.early?"фальстарт":"не нажал";list.append(d)});
+    podScreen(`${sd.title} · раунд ${sd.rounds}`,won?`Быстрее всех: ${won}!`:"Ничья!",list,note);
+    b.forEach(n=>{const p=players.get(n),v=T(n);if(p)send(p,{t:"tap",ph:"res",sd:1,r:sd.r,title:sd.title,ms:v.ms,early:!!v.early,win:n===won,score:p.score})});
+    if(won)burst(120,.5,.3);
+    sd.to=setTimeout(sdStep,3500)}
+  // «Дальше» never decides a place by itself: waiting for «go» it does nothing, during «go» it ends the round now, on the result it moves on
+  function sdNext(){if(!sd)return;if(sd.ph==="go")sdClose();else if(sd.ph==="res")sdStep()}
+  function sdAbort(){if(!sd)return;clearTimeout(sd.to);sd.abort=true;if(pod)pod.abort=true;sdStep()} // «Прервать»: random order for whatever is still tied
+  function sdCancel(){if(!sd)return;clearTimeout(sd.to);const b=sd.bucket||[];sd=null;
+    b.forEach(n=>{const p=players.get(n);if(p)send(p,{t:"idle",text:"Смотри на экран"})})}
 
   /* --- mini-games: live rounds outside the video --- */
   const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -619,14 +725,14 @@ function host(){
   const aShown=()=>!$("arena").hidden;
   function clearArenaTimer(){if(arena&&arena.to){clearTimeout(arena.to);arena.to=null}}
   function openArena(){
-    if(open&&open.test)endTest();
+    if(open&&open.test)endTest();if(sd)sdCancel(); // a shoot-out under the arena would be unfair: it runs again when the podium is shown again
     if(!$("show").hidden){video.pause();if(open&&!open.live)closeQ(false)}
     $("arena").hidden=false;$("pill").hidden=true}
   function aSet(lab,title){$("aCanvas").hidden=true;$("arena").classList.remove("actmode");$("aLab").textContent=lab;$("aTitle").textContent=title;$("aCount").textContent="";$("aTimerBox").hidden=true;$("aNote").textContent="";$("aBody").innerHTML=""}
   /* every arena phase change gets a new token; "Дальше" is ignored for 1 s after a change and when it carries an old token
      (a double tap on the admin phone or the laptop must not skip the next round) */
   let phTok=0,phAt=0;const phMark=()=>{phTok++;phAt=performance.now()};
-  function userNext(tok){if(tok!=null&&tok!==phTok||performance.now()-phAt<1000)return;arenaNext()}
+  function userNext(tok){if(tok!=null&&tok!==phTok||performance.now()-phAt<1000)return;if(sd){sdNext();return}if(pod&&pod.kind==="final")return;arenaNext()}
   function aCtl(){phMark();const ph=arena?arena.phase:"idle";$("aVote").hidden=ph!=="idle";$("aNext").hidden=ph==="idle";$("aStop").hidden=ph==="idle"}
   function arenaIdle(doneTitle){
     openArena();clearArenaTimer();if(open&&open.live)closeQ(false);
@@ -642,7 +748,7 @@ function host(){
   function closeArena(){
     clearArenaTimer();if(open&&open.live)closeQ(false);arena=null;$("arena").hidden=true;$("aCanvas").hidden=true;
     bcast({t:"idle",text:"Смотри на экран"});renderChips();
-    if(!$("show").hidden&&!$("podium").hidden)showPodium()}
+    if(!$("show").hidden&&pod&&pod.kind==="video")podShow("video")}
   function startVote(){
     openArena();clearArenaTimer();if(open)closeQ(false);
     let pool=GAMES.filter(g=>!played.has(g.id));if(pool.length<2){played.clear();pool=GAMES.slice()}
@@ -709,13 +815,14 @@ function host(){
     arena.to=setTimeout(()=>{arena.tap.ph="go";const c=$("tapCirc");c.className="tapcirc go";c.textContent="ЖМИ!";bcast({t:"tap",ph:"go",r});
       arena.to=setTimeout(tapClose,5000)},2500+Math.random()*3000)}
   function onTapped(p,m){
+    if(sdTapped(p,m))return;
     const tp=arena&&arena.tap;if(!tp||m.r!==tp.r||tp.ph==="done"||tp.taps.has(p.name))return;
     if(m.early)tp.taps.set(p.name,{early:true});
     else if(tp.ph==="go"){const ms=Math.round(+m.ms);if(ms>=0&&ms<10000)tp.taps.set(p.name,{ms})}
     $("aCount").textContent=`Нажали ${tp.taps.size} из ${players.size}`}
   function tapClose(){
     const tp=arena&&arena.tap;if(!tp||tp.ph==="done")return;clearArenaTimer();tp.ph="done";
-    const ok=[...tp.taps].filter(([,v])=>v.ms!=null).sort((a,b)=>a[1].ms-b[1].ms),PR=[500,300,150];
+    const ok=[...tp.taps].filter(([,v])=>v.ms!=null).sort((a,b)=>a[1].ms-b[1].ms),PR=[200,100,50]; // 3 rounds ≈ one action game at most
     const sid=`tap${arena.stamp}_${tp.r}`,first=!scored.has(sid);
     ok.forEach(([n,v],i)=>{v.place=i+1;v.gain=PR[i]||0;const p=players.get(n);if(p&&first)p.score+=v.gain});
     if(first){scored.add(sid);saveScored();save()}
@@ -870,6 +977,9 @@ function host(){
     ctlHide=setTimeout(function h(){if($("aCtl").matches(":hover")){ctlHide=setTimeout(h,800);return}a.classList.remove("mouse")},2500)};
   $("arena").addEventListener("mousemove",ctlShow);$("arena").addEventListener("mousedown",ctlShow);
   $("miniBtn").onclick=()=>arenaIdle();$("cMini").onclick=()=>arenaIdle();
+  $("podBtn").onclick=$("cPod").onclick=$("aPod").onclick=$("pdFinal").onclick=()=>podFinal();
+  $("pdHide").onclick=()=>podDismiss();$("pdStop").onclick=()=>sdAbort();$("pdNext").onclick=()=>userNext();
+  $("pdMini").onclick=()=>arenaIdle();$("pdLobby").onclick=()=>$("cLobby").click();
   $("aVote").onclick=startVote;$("aNext").onclick=()=>userNext();$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
 
   /* --- remote control from the admin's phone --- */
@@ -888,10 +998,13 @@ function host(){
     kick:()=>{ // drop every player except the admin and zero all scores; phones go back to the name screen
       if(open)closeQ(false);
       players.forEach(p=>{if(p.name===ADMIN){p.score=0;p.answers={};return}send(p,{t:"kicked"});if(p.conn)detach(p.conn);players.delete(p.name)});
-      scored.clear();saveScored();save();renderChips();
+      scored.clear();saveScored();tbClear();save();renderChips();
       players.forEach(p=>send(p,{t:"welcome",name:p.name,score:0,rank:1,total:players.size,active:activeFor(p)}));
       if(aShown()&&arena&&arena.phase==="idle")arenaIdle()}};
-  function adminState(){return{mode:aShown()?"arena":!$("show").hidden?"show":"lobby",paused:video.paused,phase:arena?arena.phase:null,tok:phTok,canStart:!$("start").disabled,startLabel:$("start").textContent,resume:!!resumeAt,testing:!!testIv,note:adminNote}}
+  Object.assign(CMDS,{podium:()=>podFinal(),podHide:()=>podDismiss(),podStop:()=>sdAbort()});
+  // while the final podium is up only its own commands work; during a shoot-out nothing may start the video or a game
+  for(const k of Object.keys(CMDS)){if(["podium","podHide","podStop","next"].includes(k))continue;const f=CMDS[k];CMDS[k]=m=>{if(pod&&pod.kind==="final"||sd)return;f(m)}}
+  function adminState(){return{mode:pod&&pod.kind==="final"?"podium":aShown()?"arena":pod?"podium":!$("show").hidden?"show":"lobby",pod:pod?pod.kind:null,sd:!!sd,paused:video.paused,phase:arena?arena.phase:null,tok:phTok,canStart:!$("start").disabled,startLabel:$("start").textContent,resume:!!resumeAt,testing:!!testIv,note:adminNote}}
   setInterval(()=>{const p=players.get(ADMIN);if(!p||!p.conn||!p.conn.open||!p.conn._admin)return;const st=adminState(),s=JSON.stringify(st);
     if(s!==lastAdm||performance.now()-lastAdmAt>5000){lastAdm=s;lastAdmAt=performance.now();send(p,{t:"admin",st})}},700);
 
@@ -947,8 +1060,8 @@ function player(){
     if(m.t==="admin")renderAdmin(m.st);
     if(m.t==="taken"&&myName===m.name){forget();$("nameNote").textContent=`Имя «${m.name}» уже занято на другом телефоне. Выбери своё имя.`}
     if(m.t==="kicked")forget();
-    if(m.t==="final"){cur=null;stopTimer();$("resBig").className="big ok";$("resBig").textContent=m.rank===1?"Победа!":`${m.rank}-е место`;
-      $("resGain").textContent=m.score+" очков";$("resText").textContent=m.rank===1?"Ты лучший игрок вечера! Забирай приз.":`из ${m.total} игроков. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
+    if(m.t==="final"){cur=null;tap=null;pad=null;stopTimer();const vid=m.kind==="video";$("resBig").className="big ok";$("resBig").textContent=m.rank===1&&!vid?"Победа!":`${m.rank}-е место`;$("meScore").textContent=m.score+" очк.";
+      $("resGain").textContent=m.score+" очков";$("resText").textContent=vid?`Итоги видео-викторины: ${m.rank}-е место из ${m.total}.`:m.rank===1?"Финальный подиум: ты лучший игрок вечера! Забирай приз.":`Финальный подиум: ${m.rank}-е место из ${m.total}. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
   }
   function showQ(m){
     pad=null;const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
@@ -980,10 +1093,11 @@ function player(){
   function onTap(m){
     const b=$("tapBtn");
     if(m.ph==="ready"||(m.ph==="go"&&(!tap||tap.r!==m.r))){pad=null;cur=null;stopTimer();tap={r:m.r,go:0,done:false};b.className="tapbtn";b.textContent="ЖДИ…";
-      $("tapTitle").textContent=`Быстрый палец · раунд ${m.r}`;$("tapText").textContent="Жми, как только кнопка станет зелёной. Раньше — фальстарт!";scr("pTap")}
+      $("tapTitle").textContent=m.title||`Быстрый палец · раунд ${m.r}`;$("tapText").textContent=(m.sd?"Ничья! ":"")+"Жми, как только кнопка станет зелёной. Раньше — фальстарт!";scr("pTap")}
     if(m.ph==="go"&&!tap.done&&!tap.go){tap.go=performance.now();b.className="tapbtn go";b.textContent="ЖМИ!";$("tapText").textContent="";if(navigator.vibrate)try{navigator.vibrate(80)}catch(e){}}
     if(m.ph==="res"){tap=null;$("meScore").textContent=m.score+" очк.";const big=$("resBig"),g=$("resGain"),t=$("resText");
-      if(m.early){big.className="big no";big.textContent="Фальстарт";g.textContent="";t.textContent="Нажал раньше времени."}
+      if(m.sd){big.className="big "+(m.ms!=null?"ok":"no");big.textContent=m.early?"Фальстарт":m.ms==null?"Не нажал":`${m.ms} мс`;g.textContent=m.win?"Быстрее всех!":"";t.textContent=(m.title||"Перестрелка")+": смотри на экран";if(m.win)burst(120,.5,.35)} // places come with the podium
+      else if(m.early){big.className="big no";big.textContent="Фальстарт";g.textContent="";t.textContent="Нажал раньше времени."}
       else if(m.ms==null){big.className="big no";big.textContent="Не нажал";g.textContent="";t.textContent=""}
       else{big.className="big "+(m.gain?"ok":"no");big.textContent=`${m.place}-е место`;g.textContent=m.gain?"+"+m.gain:"";t.textContent=`Реакция: ${m.ms} мс`;if(m.place===1)burst(120,.5,.35)}
       scr("pRes")}}
@@ -1055,10 +1169,12 @@ function player(){
     if(admPend)st={...st,paused:admWant}; // keep the instant label until then
     admSt=st;
     const B=[],b=(c,t,o={})=>B.push({c,t,...o});
-    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start",st.startLabel||"Начать шоу",{dis:!st.canStart,main:1});if(st.resume)b("startOver","Начать сначала",{dis:!st.canStart,ask:"Начать шоу с самого начала?"});b("vote","Мини-игры");b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}
-    else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра",{ask:"Поставить видео на паузу и открыть мини-игры?"});b("lobby","В лобби",{ask:"Остановить шоу и вернуться в лобби?"})}
-    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{ask:"Прервать игру без очков?"})}b("close","Закрыть мини-игры",{ask:"Закрыть мини-игры?"})}
-    const mode={lobby:"Лобби",show:st.paused?"Видео на паузе":"Идёт видео",arena:"Мини-игры"}[st.mode];
+    if(st.mode==="lobby"){b("test",st.testing?"Пробный вопрос идёт…":"Пробный вопрос",{dis:st.testing});b("start",st.startLabel||"Начать шоу",{dis:!st.canStart,main:1});if(st.resume)b("startOver","Начать сначала",{dis:!st.canStart,ask:"Начать шоу с самого начала?"});b("vote","Мини-игры");b("podium","Финальный подиум",{ask:"Показать финальный подиум? Открытый вопрос или раунд закроется."});b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}
+    else if(st.mode==="podium"){if(st.sd){b("next","Дальше ⏭",{main:1});b("podStop","Прервать перестрелку",{ask:"Прервать перестрелку? Места среди равных решит жребий."})}
+      else if(st.pod==="final")b("podHide","Скрыть подиум",{main:1});else{b("podium","Финальный подиум",{ask:"Показать финальный подиум? Открытый вопрос или раунд закроется."});b("vote","Мини-игры");b("lobby","В лобби",{ask:"Закрыть итоги и вернуться в лобби?"})}}
+    else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра",{ask:"Поставить видео на паузу и открыть мини-игры?"});b("podium","Финальный подиум",{ask:"Показать финальный подиум? Открытый вопрос или раунд закроется."});b("lobby","В лобби",{ask:"Остановить шоу и вернуться в лобби?"})}
+    else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{ask:"Прервать игру без очков?"})}b("podium","Финальный подиум",{ask:"Показать финальный подиум? Открытый вопрос или раунд закроется."});b("close","Закрыть мини-игры",{ask:"Закрыть мини-игры?"})}
+    const mode={lobby:"Лобби",show:st.paused?"Видео на паузе":"Идёт видео",arena:"Мини-игры",podium:st.sd?"Перестрелка":st.pod==="final"?"Финальный подиум":"Итоги видео"}[st.mode];
     const key=JSON.stringify([B,mode,st.note]);$("adm").hidden=false;if(key===admKey)return;admKey=key;
     $("admMode").textContent=mode;$("admNote").textContent=st.note||"";
     // the buttons are created only when the set of commands changes; otherwise they are updated in place,
