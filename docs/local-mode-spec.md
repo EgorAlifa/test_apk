@@ -52,3 +52,20 @@ server → client:
 - Connection diagnostics: tapping the connection dot on a phone (and a small link on the host lobby) opens a
   panel listing each transport (local / emqx / hivemq / mosquitto): state, last error, reconnect count,
   round-trip time to the host.
+
+### Page networking rules (implemented)
+- Topics: phone → host `aeshow/<id>/h`, host → one phone `aeshow/<id>/p/<cid>`, host → every phone `aeshow/<id>/all`
+  (phones act on `/all` only after the host has welcomed them). The relay and the brokers carry the same topics.
+- Rate budget per client: token bucket of 8 msgs/s (burst 4: ~12 in any 1 s window, room for network bunching); QoS 0 extras are dropped, QoS 1 waits in order.
+  QoS 1 only for game-critical messages (join, welcome, q, got, res, tap, pad phase changes, final, kicked, cmd/ack,
+  admin state changes); QoS 0 for ping/pong, HUD, inputs, admin state refreshes.
+- Reconnects: mqtt.js reconnects by itself (backoff 2 → 12 s, jittered); the local transport retries 1 → 10 s.
+  A transport that has been quiet for 24 s, or when the page suspects trouble (phone woke up, host silent, command not
+  acked, «нет связи»), gets a probe (MQTT: QoS 1 publish to `aeshow/probe/…`, answered by the broker's PUBACK; relay:
+  `{op:"ping"}`). Only a transport that leaves the probe unanswered for 6 s is rebuilt (a brand-new mqtt client with a
+  new clientId; never `end()+reconnect()` on the same client), at most once per 30 s per transport.
+- Diagnostics: phone — tap the connection dot left of the name (in a game: the RTT dot top right; on the waiting screen
+  also the «Диагностика связи» button); host — «Диагностика связи» under the QR code. Per transport: state, how long it
+  has been up, messages in/out per second, round trip to the host (phone) / to the laptop (local), connects /
+  disconnects / rebuilds, last packet, last error. «Скопировать отчёт» copies all of it as text to send to the
+  developers; «Переподключить» rebuilds every transport once.

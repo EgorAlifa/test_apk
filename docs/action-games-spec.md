@@ -84,26 +84,27 @@ For balance, the other sources of points: video quiz 125–250 per correct answe
 «Перестрелка» (one tap-reaction round for the tied players), which only orders them and adds no points.
 
 ## Network protocol (engine)
-- phone → host: `{t:"in", x, y, b, k, s}` (k = press counter, s = optional message sequence number, echoed in the HUD), QoS 0 (`mqttBus().pub(topic, w, qos)` takes an optional QoS).
-  Sent immediately on touch/press/release (then repeated for 300 ms in case one is dropped), every ~80 ms (~12 Hz)
-  while the value changes, and as a 400 ms heartbeat while the stick or button is held still.
-- host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score, st, sc, vib}`
-  with `ph` ∈ `"intro"` (rules + countdown), `"play"`, `"out"` (eliminated, still watching), `"res"` (round result).
-  Extra fields: `round` (round id, changes every round), `left` (seconds until start, intro only), `n` (players in round),
-  `st`/`sc` (current `ctx.status` text/colour, also in the state re-sent on rejoin), `vib` (ms, only on the message that
-  carries a fresh status change).
-  Also `dur` (round length), `hm` (`"place"`|`"alive"`), `hl` (alive label) and `hud` (the current HUD object below,
-  during play/out) so a rejoining phone has everything at once.
-- host → phone during play: `{t:"hud", round, tl, tx, pl, al, n, k, ok, s, sd, cd, cdT}`, QoS 0, only when something
-  changed: `tl`/`tx` seconds left (whole / 0.1 s), `pl` live place from `standings()` (place games), `al`/`n` alive /
-  players, `k` last press counter the engine processed, `ok` count of `ctx.ack` for this player, `s` last input sequence
-  received and `sd` ms it was held before this HUD (phone RTT = now − send time of `s` − `sd`), `cd`/`cdT` cooldown from
-  `ctx.cooldown`. Press-related changes (k/ok/cooldown restart) go out at most every 60 ms ("stick+btn" games only),
-  everything else at most every 300 ms, so a phone gets ~1 HUD/s idle and ~3–4/s while playing actively
-  (measured: 4 phones, coins, everybody moving and pressing: ~3.7 HUD/s per phone, ~4.9 msgs/s per phone in total).
-  Old phones ignore `hud`; phones that do not send `s` simply get no RTT.
+Budget: public brokers drop clients that publish tens of messages per second, so every client stays under ~8 msgs/s
+(the bus has a token bucket: QoS 0 extras are dropped, QoS 1 waits). Topics: phone → host `aeshow/<id>/h`; host → one
+phone `aeshow/<id>/p/<cid>`; host → every phone `aeshow/<id>/all` (phones act on it only after the host welcomed them).
+- phone → host: `{t:"in", x, y, b, k, s}` (k = press counter, s = message sequence number, echoed in the HUD), QoS 0.
+  Only when something changed (stick quantised to 24 directions × 4 steps), at most 8/s; a held stick/button is repeated
+  every 1 s, an unconfirmed press every 0.4 s, and the last change once more after 0.3 s. The host zeroes an input that
+  has not been refreshed for 2.5 s.
+- host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score, st, sc, ix, vb}`, QoS 1,
+  only on phase changes: `ph` ∈ `"intro"` (rules + countdown), `"play"`, `"out"` (eliminated, still watching), `"res"`
+  (round result), and the full state again when a phone rejoins mid-round.
+  Extra fields: `round` (round id), `left` (seconds until start, intro only), `n` (players in round), `st`/`sc` (current
+  `ctx.status`), `ix` (this player's index in the HUD array), `vb` (vibration counter, see below), `dur` (round length),
+  `hm` (`"place"`|`"alive"`), `hl` (alive label) and `hud` (this player's current HUD, during play/out).
+- host → all phones during play: ONE `{t:"hud", round, tx, al, n, P:[…]}` message on the shared topic, QoS 0.
+  `tx` seconds left (phones count down locally), `al`/`n` alive / players; `P[ix]` per player: `k` last press counter the
+  engine processed, `ok` count of `ctx.ack`, `s` last input sequence received and `sd` ms it was held before this HUD
+  (phone RTT = now − send time of `s` − `sd`), `pl` live place (place games), `cd`/`cdT` cooldown from `ctx.cooldown`,
+  `st`/`sc` the `ctx.status` line, `vb`/`vm` vibration counter and length (the phone buzzes when `vb` grows).
+  Sent only when something changed: press-related changes and status lines at most every 333 ms, anything else at most
+  every 1 s, plus a 1.5 s heartbeat — at most 3 msgs/s for the whole room, whatever the number of players.
   Players not in the round get `{t:"idle"}` ("сыграешь в следующем раунде").
-  A phone that rejoins mid-round must get the current `pad` state again.
 
 ## Engine responsibilities (host)
 - Integrates with the existing arena/vote: action games appear in the "Во что играем дальше?" vote like other games.
@@ -127,8 +128,8 @@ For balance, the other sources of points: video quiz 125–250 per correct answe
   RTT (green < 250 ms, yellow < 600 ms, red otherwise), score. The admin remote collapses to a 44 px ☰ button in the
   strip and opens as a sheet over a dimmed backdrop; it never overlaps the hit areas.
 - Press feedback: instant local press animation; the flash + vibration only when the host confirms (`ok`/`k` echo); a
-  press that reached the host during cooldown gets a small shake. No echo within ~700 ms (or no HUD for 2.5 s) →
-  «нет связи» chip, and the reconnect knock runs immediately. The knob glows while the host is acknowledging recent
+  press that reached the host during cooldown gets a small shake. No echo within 2 s (or no HUD for 4 s) →
+  «нет связи» chip; the phone then probes its transports (a dead one is rebuilt) and knocks at the host. The knob glows while the host is acknowledging recent
   stick input and turns grey when that is stale for > 1 s.
 - Screen edge glows in the player's colour; the game's `ctx.status` line is a big pill at the top centre (colour tints
   the pill and the screen edge, `vibrate` buzzes).

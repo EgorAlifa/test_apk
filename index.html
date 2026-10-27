@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Шоу Артёма и Егора</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Manrope:wght@500;700;800&display=swap">
+<!-- fonts are optional (system fallback below): loaded without blocking the first paint, so a dead/blocked font host never delays the page -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Manrope:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
 <style>
 :root{
   --night:#170c2b;--plum:#2a1748;--plum2:#3a2163;--gold:#ffc94a;--coral:#ff5d73;--mint:#5ce1c6;--sky:#7aa8ff;--violet:#c792ff;
@@ -315,6 +316,41 @@ html.padmode #adm:not(.open):has(#admNote:not(:empty))::after{content:"";positio
 html.padmode #adm.open{width:min(380px,calc(100vw - 12px - var(--sl) - var(--sr0)));max-height:calc(100dvh - var(--st) - var(--sb) - 12px);overflow:auto;padding:10px 12px 12px;gap:10px;background:#1e1036;box-shadow:0 0 0 100vmax rgba(10,4,22,.6),0 18px 50px rgba(0,0,0,.6);overscroll-behavior:contain;touch-action:pan-y}
 html.padmode #adm.open::before{content:"";position:fixed;inset:0;z-index:-1}
 html.padmode #adm.open .admbtns button{font-size:15px;padding:12px 10px;min-height:44px}
+/* ---------- join options (local mode: Wi-Fi + mobile internet) ---------- */
+.joinlab{font:800 13px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--mint);text-align:center;margin:0 0 10px}
+.joinalt{display:flex;gap:14px;align-items:center;margin:18px auto 0;width:min(380px,100%)}
+.joinalt .qrsm{background:#fff;border-radius:12px;padding:8px;width:120px;flex:none;aspect-ratio:1;display:grid;place-items:center}
+.joinalt .qrsm img,.joinalt .qrsm canvas{width:100%!important;height:auto!important}
+.joinalt .joinlink{text-align:left;margin:4px 0 0}
+.qrfail{color:var(--night);font:800 clamp(16px,2vw,22px)/1.35 var(--body);text-align:center;overflow-wrap:anywhere}
+.qrfail b{display:block;font-size:clamp(20px,2.6vw,30px);margin-top:10px;color:#6b2fd1}
+.diaglink{display:block;margin:10px auto 0;font:700 13px var(--body);color:var(--muted);background:none;border:0;text-decoration:underline;text-underline-offset:3px;padding:8px}
+/* ---------- connection diagnostics (phone: tap the dot; host: link in the lobby) ---------- */
+button.conn{border:0;padding:0;position:relative;flex:none;vertical-align:1px}
+button.conn::after{content:"";position:absolute;inset:-14px}
+html.padmode .padnet .rtt{pointer-events:auto;cursor:pointer;padding:10px 0}
+.diag{position:fixed;inset:0;z-index:60;background:rgba(10,4,22,.78);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(12px,env(safe-area-inset-top,0px)) 12px max(12px,env(safe-area-inset-bottom,0px));touch-action:pan-y;overscroll-behavior:contain}
+.diagbox{width:min(100%,560px);background:#1e1036;border:1.5px solid var(--plum2);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;user-select:text;-webkit-user-select:text}
+.diaghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.diaghead h3{font-size:19px}
+.diaghead button{font:800 20px var(--body);background:var(--plum2);color:var(--ink);border:0;border-radius:12px;width:44px;height:44px;flex:none}
+.diagsum{font:700 15px/1.45 var(--body);background:rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+.diagsum b{color:var(--gold)}
+.diaglist{display:flex;flex-direction:column;gap:8px}
+.dcard{background:rgba(42,23,72,.7);border:1.5px solid var(--plum2);border-radius:14px;padding:10px 12px;font:600 14px/1.45 var(--body);color:var(--muted)}
+.dcard .dn{display:flex;justify-content:space-between;gap:8px;align-items:center;font:800 16px var(--body);color:var(--ink)}
+.dcard .dn i{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:8px;background:var(--muted)}
+.dcard.ok{border-color:color-mix(in srgb,var(--mint) 55%,transparent)} .dcard.ok .dn i{background:var(--mint)}
+.dcard.wait .dn i{background:var(--gold)} .dcard.bad .dn i{background:var(--coral)}
+.dcard .ds{font-weight:800;font-size:14px;white-space:nowrap}
+.dcard.ok .ds{color:var(--mint)} .dcard.wait .ds{color:var(--gold)} .dcard.bad .ds{color:var(--coral)}
+.dcard .de{color:var(--coral);overflow-wrap:anywhere}
+.diagmore{font:600 13px/1.5 var(--body);color:var(--muted);overflow-wrap:anywhere}
+.diagmore div+div{margin-top:2px}
+.diagbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.diagbtns button{font:800 15px var(--body);border:0;border-radius:12px;min-height:46px;background:var(--plum2);color:var(--ink)}
+#diagTxt{width:100%;min-height:120px;font:12px/1.4 ui-monospace,monospace;background:var(--night);color:var(--ink);border:1px solid var(--plum2);border-radius:10px}
+.waitdiag{font-size:14px;padding:8px 14px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -363,8 +399,11 @@ html.padmode #adm.open .admbtns button{font-size:15px;padding:12px 10px;min-heig
     <div class="row" id="resetConfirm" hidden style="margin-top:10px"><span class="muted">Точно обнулить очки всех игроков?</span><button class="btn" id="resetYes">Да</button><button class="btn ghost" id="resetNo">Нет</button></div>
   </section>
   <section>
+    <div class="joinlab" id="joinLab" hidden>Wi-Fi праздника</div>
     <div class="qrbox"><div id="qr"></div></div>
     <div class="joinlink" id="joinLink"></div>
+    <div class="joinalt" id="joinAlt" hidden><div class="qrsm" id="qr2"></div><div><div class="joinlab" style="text-align:left;margin:0">Мобильный интернет</div><div class="joinlink" id="joinLink2"></div></div></div>
+    <button class="diaglink" type="button" id="hostDiag">Диагностика связи</button>
   </section>
 </main>
 
@@ -402,7 +441,7 @@ html.padmode #adm.open .admbtns button{font-size:15px;padding:12px 10px;min-heig
 
 <!-- PLAYER -->
 <main id="player" hidden>
-  <div class="ptop"><span class="me"><span class="conn" id="conn"></span><span id="meName">Шоу Артёма и Егора</span></span><span class="score" id="meScore"></span></div>
+  <div class="ptop"><span class="me"><button type="button" class="conn" id="conn" aria-label="Диагностика связи"></button><span id="meName">Шоу Артёма и Егора</span></span><span class="score" id="meScore"></span></div>
   <section class="adm" id="adm" hidden>
     <div class="admhead" id="admHead"><b>Пульт ведущего</b><span class="muted" id="admMode"></span><button class="admtog" id="admTog" type="button">открыть ▾</button></div>
     <form class="other" id="admLock" hidden><input id="admPass" type="password" inputmode="numeric" placeholder="Пароль ведущего" aria-label="Пароль ведущего"><button class="btn">OK</button></form>
@@ -420,6 +459,7 @@ html.padmode #adm.open .admbtns button{font-size:15px;padding:12px 10px;min-heig
     <h2 id="waitTitle">Ты в игре!</h2>
     <p class="muted" id="waitText">Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.</p>
     <p class="note"><button class="btn ghost" id="notMe" style="font-size:14px;padding:8px 14px">Это не я</button></p>
+    <p class="note" id="waitDiagRow" hidden><button class="btn ghost waitdiag" id="waitDiag" type="button">Диагностика связи</button></p>
   </section>
   <section class="pscreen" id="pQ" hidden>
     <div class="qhead"><span class="lab" id="qLab"></span><span class="q" id="qText"></span></div>
@@ -452,8 +492,23 @@ html.padmode #adm.open .admbtns button{font-size:15px;padding:12px 10px;min-heig
   </section>
 </main>
 
-<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- connection diagnostics: one panel for host and phone -->
+<div class="diag" id="diag" hidden role="dialog" aria-modal="true" aria-labelledby="diagH">
+  <div class="diagbox">
+    <div class="diaghead"><h3 id="diagH">Диагностика связи</h3><button type="button" id="diagX" aria-label="Закрыть">✕</button></div>
+    <div class="diagsum" id="diagSum"></div>
+    <div class="diaglist" id="diagList"></div>
+    <div class="diagmore" id="diagMore"></div>
+    <div class="diagbtns"><button type="button" id="diagRe">Переподключить</button><button type="button" id="diagCopy">Скопировать отчёт</button></div>
+    <textarea id="diagTxt" readonly hidden aria-label="Отчёт о связи"></textarea>
+  </div>
+</div>
+
+<!-- libraries are vendored (vendor/, same origin as the page, works offline from the laptop server); the CDN is only a fallback -->
+<script src="vendor/mqtt.min.js"></script>
+<script>window.mqtt||document.write('<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"><\/script>')</script>
+<script src="vendor/qrcode.min.js"></script>
+<script>window.QRCode||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>')</script>
 <!-- action mini-games: one file each, see docs/action-games-spec.md -->
 <script src="games/sumo.js"></script>
 <script src="games/bomb.js"></script>
@@ -466,7 +521,6 @@ const TL={"total": 762.6, "finalStart": 744.6, "questions": [{"id": 0, "kind": "
 const GUESTS=["Артём","Егор Н","Егор П","Паша","Катя","Аня","Рома","Никита","Илья","Клим"];
 const ADMIN="Егор Н"; // this guest gets the remote control on their phone (after entering the host password)
 const PASS_HASH="b6e4c34afe9e1aeda8cb003ad6480dbd0f8973c837ffcd3566b11c24b802bf61"; // SHA-256 of "aeshow:" + host password
-async function passHash(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("aeshow:"+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 /* Mini-games played live after (or between) the video. */
 const GAMES=[
   {id:"maj",title:"Кто из нас?",kind:"maj",n:5,dur:15,pool:[
@@ -479,32 +533,164 @@ const GAMES=[
 (window.ACTION_GAMES||[]).forEach(m=>{if(m&&m.id&&!GAMES.some(g=>g.id===m.id))GAMES.push({id:m.id,title:m.title,kind:"action",mod:m})});
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
-/* ---------- network: MQTT over WebSocket ----------
-   Host and phones talk through public MQTT brokers, so it works from any network (Wi-Fi, LTE, NAT).
-   Every client connects to all brokers at once and sends each message through every connected one;
-   receivers drop duplicates, so the show keeps working while at least one broker is reachable. */
+/* ---------- network ----------
+   Host and phones talk through several transports at once: the public MQTT brokers (any network: Wi-Fi, LTE, NAT) and,
+   when the page is served by the laptop (server.js, docs/local-mode-spec.md), its WebSocket relay on the party Wi-Fi.
+   Every message goes out through every connected transport; receivers drop duplicates by the message id (w.i), so the
+   show keeps working while at least one transport gets through.
+   Rules that keep public brokers happy (they rate-limit / drop chatty clients and connection storms):
+   - at most BUS_RATE messages per second leave a client (token bucket; QoS 0 extras are dropped, QoS 1 waits);
+   - QoS 1 only for game-critical messages, QoS 0 for ping/pong/HUD/input/state refreshes;
+   - mqtt.js reconnects on its own (with backoff); a transport is torn down and rebuilt only when it is provably dead
+     (a probe got no answer), at most once per 30 s per transport, and never all of them in a loop. */
 const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
-const STALE=12000; // ms without messages before the other side counts as offline
+const PUBLIC_URL="https://egoralifa.github.io/test_apk/"; // GitHub Pages: guests on mobile internet in local mode
+const STALE=15000;      // ms without messages before the other side counts as offline (pings every 5 s)
+const KEEPALIVE=30;     // s, MQTT keepalive
+const BUS_RATE=8,BUS_BURST=4; // messages per second leaving this client, burst size: ~12 in any 1 s window, leaving room for network bunching
+const KICK_GAP=30000;   // ms, min time between two forced rebuilds of one transport
 const rid=n=>Math.random().toString(36).slice(2,2+n);
-function mqttBus(subTopic,onData,onStatus){
-  const me=rid(8),seen=new Set(),seenQ=[],dec=new TextDecoder();let seq=0;
-  const clients=BROKERS.map(url=>{
-    const c=mqtt.connect(url,{clientId:"aeshow_"+rid(10),clean:true,keepalive:20,reconnectPeriod:3000,connectTimeout:8000});
-    c.on("connect",()=>{c.subscribe(subTopic,{qos:1});onStatus()});
-    c.on("close",onStatus);c.on("error",()=>{});
-    c.on("message",(t,buf)=>{let w;try{w=JSON.parse(dec.decode(buf))}catch(e){return}
-      if(!w||!w.i||seen.has(w.i))return;
-      seen.add(w.i);seenQ.push(w.i);if(seenQ.length>3000)seen.delete(seenQ.shift());
-      onData(w)});
-    return c});
-  return{
-    connected:()=>clients.filter(c=>c.connected).length,
-    // drop every socket and connect again right now: after the phone slept, a socket can stay "connected" but dead (half-open)
-    // until the keepalive notices it ~30 s later, and all that time nothing gets through
-    kick(){clients.forEach(c=>{try{c.end(true,{},()=>{try{c.reconnect()}catch(e){}})}catch(e){}})},
-    pub(topic,w,qos=1){w.i=me+"."+(++seq);const s=JSON.stringify(w);clients.forEach(c=>{if(c.connected)c.publish(topic,s,{qos})})}
+const hasMqtt=()=>typeof mqtt!=="undefined"&&!!mqtt&&typeof mqtt.connect==="function";
+function brokerName(u){try{const h=new URL(u).hostname;if(/^(localhost|[\d.]+)$/.test(h))return h+":"+new URL(u).port;
+  return h.split(".").find(x=>!["broker","test","www","mqtt"].includes(x))||h}catch(e){return u}}
+const newStats=()=>({state:"connecting",err:"",connects:0,disconnects:0,kicks:0,inN:0,outN:0,first:0,dup:0,lastRx:0,lastMsg:0,upAt:0,rtt:0,ring:[],inPs:0,outPs:0});
+const errText=e=>String(e&&(e.message||e.type)||e||"ошибка").slice(0,140);
+/* one MQTT broker. kick() builds a brand-new client (new clientId) and fully detaches the old one: mqtt.js 5's
+   end(true)+reconnect() on the same client leaves a stray "close" from the old socket that schedules another reconnect,
+   which then tears down the fresh connection (and reusing the clientId makes the broker kick the twin session) */
+function mqttTransport(url,subs,onRaw,onState){
+  const T={name:brokerName(url),kind:"mqtt",url,st:newStats(),c:null,lastKick:-1e9,probeAt:0,probeSent:0};let fails=0;
+  function open(){
+    let c;try{c=mqtt.connect(url,{clientId:"aeshow_"+rid(10),clean:true,keepalive:KEEPALIVE,reconnectPeriod:2000+Math.random()*1000|0,connectTimeout:10000,resubscribe:false})}
+    catch(e){T.st.state="error";T.st.err=errText(e);return}
+    T.c=c;T.st.state="connecting";
+    c.on("connect",()=>{if(T.c!==c)return;fails=0;c.options.reconnectPeriod=2000+Math.random()*1000|0;Object.assign(T.st,{state:"connected",err:"",lastRx:Date.now(),upAt:Date.now()});T.st.connects++;T.probeAt=0;
+      c.subscribe(subs,{qos:1},e=>{if(e&&T.c===c)T.st.err="подписка: "+errText(e)});onState()});
+    c.on("packetreceive",()=>{if(T.c===c)T.st.lastRx=Date.now()});
+    c.on("message",(t,buf)=>{if(T.c===c)onRaw(buf,T,t)});
+    c.on("error",e=>{if(T.c===c)T.st.err=errText(e)});
+    c.on("reconnect",()=>{if(T.c===c){T.st.state="connecting";onState()}});
+    c.on("close",()=>{if(T.c!==c)return;if(T.st.state==="connected")T.st.disconnects++;T.st.state="offline";
+      fails++;c.options.reconnectPeriod=Math.min(12000,2000*2**Math.min(3,fails-1))+Math.random()*1500|0; // backoff 2 s … 12 s, jittered
+      onState()});
   }
+  T.connected=()=>!!T.c&&T.c.connected;
+  T.publish=(topic,s,qos)=>{const c=T.c;if(!c||!c.connected)return false;try{c.publish(topic,s,{qos});T.st.outN++;return true}catch(e){T.st.err=errText(e);return false}};
+  // probe: a QoS 1 publish nobody subscribes to; the broker's PUBACK proves the socket is alive
+  T.probe=()=>{const c=T.c;if(!c||!c.connected||Date.now()-T.probeSent<3000)return;T.probeSent=Date.now();if(!T.probeAt)T.probeAt=T.probeSent;try{c.publish("aeshow/probe/"+rid(6),"",{qos:1})}catch(e){}};
+  T.kick=(why,force)=>{const now=Date.now();if(!force&&now-T.lastKick<KICK_GAP)return false;T.lastKick=now;T.st.kicks++;T.probeAt=0;
+    const old=T.c;T.c=null;if(old){try{old.options.reconnectPeriod=0;old.removeAllListeners();old.on("error",()=>{});old.end(true)}catch(e){}}
+    if(T.st.state==="connected")T.st.disconnects++;T.st.err=why?"переподключение: "+why:"";open();onState();return true};
+  open();return T}
+/* the laptop's WebSocket relay (server.js): {op:"sub"|"pub"|"ping"} up, {t,m} / {op:"pong"} down */
+function localTransport(url,subs,onRaw,onState){
+  const T={name:"local",kind:"local",url,st:newStats(),ws:null,lastKick:-1e9,probeAt:0,probeSent:0,pingAt:0};let fails=0,timer=0;
+  function detach(){const ws=T.ws;T.ws=null;if(!ws)return;ws.onopen=ws.onmessage=ws.onerror=ws.onclose=null;try{ws.close()}catch(e){}}
+  function retry(){clearTimeout(timer);fails++;timer=setTimeout(open,Math.min(10000,1000*2**Math.min(4,fails-1))*(.75+Math.random()*.5))}
+  function down(why){if(T.st.state==="connected")T.st.disconnects++;T.st.state="offline";if(why)T.st.err=why;detach();onState();retry()}
+  function open(){clearTimeout(timer);let ws;
+    try{ws=new WebSocket(url)}catch(e){T.st.state="error";T.st.err=errText(e);onState();retry();return}
+    T.ws=ws;T.st.state="connecting";
+    const to=setTimeout(()=>{if(T.ws===ws&&ws.readyState!==1)down("таймаут подключения")},8000);
+    ws.onopen=()=>{clearTimeout(to);if(T.ws!==ws)return;fails=0;Object.assign(T.st,{state:"connected",err:"",lastRx:Date.now(),upAt:Date.now()});T.st.connects++;T.probeAt=0;
+      try{subs.forEach(t=>ws.send(JSON.stringify({op:"sub",t})))}catch(e){}onState()};
+    ws.onmessage=e=>{if(T.ws!==ws)return;T.st.lastRx=Date.now();let f;try{f=JSON.parse(e.data)}catch(_){return}if(!f)return;
+      if(f.op==="pong"){if(T.pingAt){const r=Date.now()-T.pingAt;T.st.rtt=T.st.rtt?Math.round(T.st.rtt*.6+r*.4):r;T.pingAt=0}return}
+      if(typeof f.m==="string")onRaw(f.m,T,f.t)};
+    ws.onerror=()=>{if(T.ws===ws)T.st.err="ошибка WebSocket"};
+    ws.onclose=e=>{clearTimeout(to);if(T.ws!==ws)return;down(T.st.err||("закрыто"+(e&&e.code?" ("+e.code+")":"")))}}
+  T.connected=()=>!!T.ws&&T.ws.readyState===1&&T.st.state==="connected";
+  T.publish=(topic,s)=>{const ws=T.ws;if(!T.connected())return false;try{ws.send(JSON.stringify({op:"pub",t:topic,m:s}));T.st.outN++;return true}catch(e){T.st.err=errText(e);return false}};
+  T.probe=()=>{if(!T.connected()||Date.now()-T.probeSent<3000)return;T.probeSent=Date.now();if(!T.probeAt)T.probeAt=T.probeSent;T.pingAt=Date.now();try{T.ws.send('{"op":"ping"}')}catch(e){}};
+  T.kick=(why,force)=>{const now=Date.now();if(!force&&now-T.lastKick<KICK_GAP)return false;T.lastKick=now;T.st.kicks++;T.probeAt=0;
+    if(T.st.state==="connected")T.st.disconnects++;T.st.state="connecting";T.st.err=why?"переподключение: "+why:"";detach();fails=0;open();onState();return true};
+  setInterval(()=>{if(T.connected()&&!T.pingAt){T.pingAt=Date.now();try{T.ws.send('{"op":"ping"}')}catch(e){}}else if(T.pingAt&&Date.now()-T.pingAt>20000)T.pingAt=0},10000); // own ping: RTT + liveness
+  open();return T}
+/* is this page served by the laptop server? (GitHub Pages answers 404) */
+function detectLocal(){
+  if(!/^https?:$/.test(location.protocol)||!window.fetch)return Promise.resolve(null);
+  return new Promise(res=>{let done=false;const ac=window.AbortController?new AbortController():null;
+    const fin=v=>{if(done)return;done=true;clearTimeout(t);res(v)},t=setTimeout(()=>{try{ac&&ac.abort()}catch(e){}fin(null)},1500);
+    fetch("/__local",{cache:"no-store",signal:ac?ac.signal:undefined}).then(r=>r.ok?r.json():null).then(j=>fin(j&&j.local?j:null),()=>fin(null))})}
+const relayUrl=()=>(location.protocol==="https:"?"wss://":"ws://")+location.host+"/relay";
+function makeBus(subs,onData,onStatus,opt={}){
+  const me=rid(8),seen=new Set(),seenQ=[],dec=new TextDecoder(),tr=[];let seq=0,tokens=BUS_BURST,lastFill=performance.now(),dropped=0,drainT=0;const q=[];
+  const onState=()=>{try{onStatus()}catch(e){}};
+  function onRaw(raw,T,topic){T.st.inN++;T.st.lastMsg=Date.now();let w;try{w=JSON.parse(typeof raw==="string"?raw:dec.decode(raw))}catch(e){return}
+    if(!w||!w.i)return;if(opt.tap)try{opt.tap(w,T)}catch(e){}
+    if(seen.has(w.i)){T.st.dup++;return}
+    seen.add(w.i);seenQ.push(w.i);if(seenQ.length>3000)seen.delete(seenQ.shift());T.st.first++;
+    onData(w,String(topic||""))}
+  if(hasMqtt())BROKERS.forEach(u=>tr.push(mqttTransport(u,subs,onRaw,onState)));
+  function fill(){const now=performance.now();tokens=Math.min(BUS_BURST,tokens+(now-lastFill)/1000*BUS_RATE);lastFill=now}
+  function out(x){tr.forEach(T=>T.publish(x.topic,x.s,x.qos))}
+  function drain(){drainT=0;fill();while(q.length&&tokens>=1){tokens--;out(q.shift())}if(q.length)drainT=setTimeout(drain,Math.ceil((1-tokens)/BUS_RATE*1000)+5)}
+  // watchdog: probe a transport that has been quiet for a while; rebuild it only if the probe goes unanswered
+  setInterval(()=>{const now=Date.now();
+    tr.forEach(T=>{const s=T.st;s.ring.push([s.inN,s.outN]);if(s.ring.length>6)s.ring.shift();const o=s.ring[0],n=s.ring.length-1||1;s.inPs=(s.inN-o[0])/n;s.outPs=(s.outN-o[1])/n;
+      if(!T.connected()){T.probeAt=0;return}
+      if(T.probeAt&&now-T.probeAt>6000){if(s.lastRx<T.probeAt){T.kick("нет ответа на проверку")}else T.probeAt=0;return}
+      if(now-s.lastRx>KEEPALIVE*1000*.8)T.probe()})},1000);
+  return{tr,me,
+    connected:()=>tr.filter(T=>T.connected()).length,
+    stats:()=>({queued:q.length,dropped}),
+    addLocal(url){if(tr.some(T=>T.kind==="local"))return;tr.unshift(localTransport(url,subs,onRaw,onState));onState()},
+    // something looks wrong (host silent, command not acked, phone woke up): ask every transport to prove it is alive
+    probe(){tr.forEach(T=>T.probe())},
+    kickAll(why){tr.forEach(T=>T.kick(why,true))}, // only from the «Переподключить» button
+    pub(topic,w,qos=1){w.i=me+"."+(++seq);const x={topic,s:JSON.stringify(w),qos};fill();
+      if(!q.length&&tokens>=1){tokens--;out(x);return}
+      if(qos===0&&q.length>=6){dropped++;return} // a backlog: fresh QoS 0 state will follow anyway
+      q.push(x);if(q.length>200){const i=q.findIndex(y=>y.qos===0);q.splice(i>=0?i:0,1);dropped++}
+      if(!drainT)drainT=setTimeout(drain,Math.ceil((1-tokens)/BUS_RATE*1000)+5)}}
 }
+/* SHA-256 without crypto.subtle (it only exists on https / localhost; the laptop server is plain http on the LAN) */
+function sha256hex(str){
+  const msg=new TextEncoder().encode(str),K=[],H=[],fr=x=>(x-Math.floor(x))*4294967296|0;
+  for(let n=2,c=0;c<64;n++){let p=true;for(let d=2;d*d<=n;d++)if(n%d===0){p=false;break}if(p){if(c<8)H[c]=fr(Math.sqrt(n));K[c++]=fr(Math.cbrt(n))}}
+  const l=msg.length,L=(l+72>>6)<<6,m=new Uint8Array(L);m.set(msg);m[l]=128;const dv=new DataView(m.buffer);dv.setUint32(L-4,l*8>>>0);dv.setUint32(L-8,Math.floor(l/536870912));
+  const w=new Int32Array(64),ro=(x,k)=>x>>>k|x<<32-k;
+  for(let o=0;o<L;o+=64){for(let i=0;i<16;i++)w[i]=dv.getInt32(o+i*4);
+    for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];w[i]=(ro(a,7)^ro(a,18)^a>>>3)+(ro(b,17)^ro(b,19)^b>>>10)+w[i-7]+w[i-16]|0}
+    let [a,b,c,d,e,f,g,h]=H;
+    for(let i=0;i<64;i++){const t1=h+(ro(e,6)^ro(e,11)^ro(e,25))+(e&f^~e&g)+K[i]+w[i]|0,t2=(ro(a,2)^ro(a,13)^ro(a,22))+(a&b^a&c^b&c)|0;h=g;g=f;f=e;e=d+t1|0;d=c;c=b;b=a;a=t1+t2|0}
+    [a,b,c,d,e,f,g,h].forEach((v,i)=>H[i]=H[i]+v|0)}
+  return H.map(x=>(x>>>0).toString(16).padStart(8,"0")).join("")}
+async function passHash(t){const s="aeshow:"+t;
+  try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}}catch(e){}
+  return sha256hex(s)}
+/* diagnostics panel: info() returns {sum:[lines], tr:[transports], more:[lines]} and is re-read every second while open */
+const diag={iv:0,info:null,
+  open(info){diag.info=info;$("diag").hidden=false;$("diagTxt").hidden=true;diag.draw();clearInterval(diag.iv);diag.iv=setInterval(diag.draw,1000)},
+  close(){$("diag").hidden=true;clearInterval(diag.iv);diag.iv=0},
+  ago(t){if(!t)return"никогда";const s=Math.round((Date.now()-t)/1000);return s<2?"только что":s<120?s+" с назад":Math.round(s/60)+" мин назад"},
+  stateOf(T){const s=T.st;if(T.connected())return["ok","на связи"+(s.upAt?" · "+diag.dur(Date.now()-s.upAt):"")];if(s.state==="connecting")return["wait","подключаюсь…"];return["bad",s.state==="error"?"ошибка":"нет связи"]},
+  dur(ms){const s=ms/1000|0;return s<60?s+" с":s<3600?(s/60|0)+" мин":(s/3600|0)+" ч "+((s%3600)/60|0)+" мин"},
+  label(T){return T.kind==="local"?"Wi-Fi праздника (ноутбук)":T.name},
+  lines(T){const s=T.st,r=[];
+    r.push(`вход ${s.inPs.toFixed(1)}/с · выход ${s.outPs.toFixed(1)}/с`+(T.rttHost?` · до ведущего ${T.rttHost} мс`:"")+(s.rtt&&T.kind==="local"?` · до ноутбука ${s.rtt} мс`:""));
+    r.push(`подключений ${s.connects} · обрывов ${s.disconnects}`+(s.kicks?` · пересоздан ${s.kicks}`:"")+` · последний пакет ${diag.ago(s.lastRx)}`);
+    if(s.first||s.dup)r.push(`сообщений первым ${s.first} · дублей ${s.dup}`);return r},
+  draw(){if(!diag.info)return;let I;try{I=diag.info()}catch(e){I={sum:["ошибка: "+errText(e)],tr:[],more:[]}}
+    const sum=$("diagSum");sum.innerHTML="";I.sum.forEach(t=>{const d=document.createElement("div");if(Array.isArray(t)){const b=document.createElement("b");b.textContent=t[0];d.append(b," "+t[1])}else d.textContent=t;sum.append(d)});
+    const L=$("diagList");L.innerHTML="";
+    if(!I.tr.length){const d=document.createElement("div");d.className="dcard bad";d.textContent=hasMqtt()?"Нет ни одного канала связи":"Библиотека связи (mqtt.min.js) не загрузилась — обновите страницу";L.append(d)}
+    I.tr.forEach(T=>{const [cl,st]=diag.stateOf(T),d=document.createElement("div");d.className="dcard "+cl;
+      const h=document.createElement("div");h.className="dn";const nm=document.createElement("span");nm.append(document.createElement("i"),diag.label(T));const ss=document.createElement("span");ss.className="ds";ss.textContent=st;h.append(nm,ss);d.append(h);
+      diag.lines(T).forEach(t=>{const x=document.createElement("div");x.textContent=t;d.append(x)});
+      if(T.st.err){const x=document.createElement("div");x.className="de";x.textContent="последняя ошибка: "+T.st.err;d.append(x)}
+      L.append(d)});
+    const M=$("diagMore");M.innerHTML="";(I.more||[]).forEach(t=>{const d=document.createElement("div");d.textContent=t;M.append(d)})},
+  text(){const I=diag.info?diag.info():{sum:[],tr:[],more:[]},o=[new Date().toLocaleString("ru-RU")+" "+location.href];
+    I.sum.forEach(t=>o.push(Array.isArray(t)?t.join(" "):t));
+    I.tr.forEach(T=>{o.push("— "+diag.label(T)+": "+diag.stateOf(T)[1]);diag.lines(T).forEach(t=>o.push("   "+t));if(T.st.err)o.push("   ошибка: "+T.st.err)});
+    (I.more||[]).forEach(t=>o.push(t));o.push("UA: "+navigator.userAgent);return o.join("\n")}};
+$("diagX").onclick=()=>diag.close();
+$("diag").onclick=e=>{if(e.target===$("diag"))diag.close()};
+$("diagCopy").onclick=()=>{const t=diag.text(),ta=$("diagTxt");ta.value=t;ta.hidden=false;ta.focus();ta.select();let ok=false;
+  try{ok=document.execCommand("copy")}catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>{$("diagCopy").textContent="Скопировано"},()=>{});
+  else if(ok)$("diagCopy").textContent="Скопировано";setTimeout(()=>{$("diagCopy").textContent="Скопировать отчёт"},2500)};
 const hashJoin=(location.hash.match(/join=([\w-]+)/)||[])[1];
 
 /* ---------- confetti ---------- */
@@ -536,22 +722,58 @@ function host(){
   const T="aeshow/"+hostId;
   const conns=new Map(); // phone id -> connection {open, send, close}
   function connOf(cid){let c=conns.get(cid);
-    if(!c){c={cid,seen:-1e9,was:false,get open(){return Date.now()-this.seen<STALE},send(m){bus.pub(T+"/p/"+cid,{m})},close(){this.seen=-1e9}};conns.set(cid,c)}
+    if(!c){c={cid,seen:-1e9,was:false,via:{},get open(){return Date.now()-this.seen<STALE},send(m,qos=1){bus.pub(T+"/p/"+cid,{m},qos)},close(){this.seen=-1e9}};conns.set(cid,c)}
     return c}
-  let bus,qrDrawn=false;
-  function netStatus(){const n=bus?bus.connected():0;
-    if(n){setNet("Связь есть, можно подключаться"+(n<BROKERS.length?` (серверов ${n} из ${BROKERS.length})`:""),"ok");if(!qrDrawn){qrDrawn=true;drawQR()}}
-    else setNet("Нет связи с сервером. Проверьте интернет.","err")}
+  let bus=null,local=null,netKey="";
+  // redrawn only when the set of live transports changes (so it does not overwrite e.g. the test-question result)
+  function netStatus(){const k=bus?bus.tr.map(x=>x.name+(x.connected()?1:0)).join():"-"+hasMqtt();if(k===netKey)return;netKey=k;
+    if(!bus){setNet(hasMqtt()?"Подключаюсь…":"Не загрузилась библиотека связи (vendor/mqtt.min.js). Обновите страницу.","err");return}
+    const tr=bus.tr,on=tr.filter(x=>x.connected()),loc=tr.find(x=>x.kind==="local"),mq=tr.filter(x=>x.kind==="mqtt"),mqOn=mq.filter(x=>x.connected()).length;
+    if(!on.length){setNet(loc?"Нет связи ни с ноутбуком, ни с интернет-серверами":hasMqtt()?"Нет связи с сервером. Проверьте интернет.":"Не загрузилась библиотека связи. Обновите страницу.","err");return}
+    const parts=[];if(loc)parts.push("Wi-Fi праздника: "+(loc.connected()?"есть":"нет"));
+    if(mq.length)parts.push(loc?`интернет: ${mqOn} из ${mq.length}`:mqOn<mq.length?`серверов ${mqOn} из ${mq.length}`:"");
+    setNet("Связь есть, можно подключаться"+(parts.filter(Boolean).length?" ("+parts.filter(Boolean).join(", ")+")":""),"ok")}
   function startNet(){
-    bus=mqttBus(T+"/h",w=>{if(!w.f||!w.m)return;const c=connOf(String(w.f));c.seen=Date.now();
-      if(w.m.t==="ping")c.send({t:"pong",who:!c._name});else onMsg(c,w.m);
-      if(!c.was){c.was=true;renderChips()}},netStatus);
-    setInterval(()=>{let ch=false;conns.forEach(c=>{if(c.was&&!c.open){c.was=false;ch=true}});if(ch)renderChips()},3000)}
+    // the host listens on …/h; phones get personal messages on …/p/<id> and shared ones on …/all
+    bus=makeBus([T+"/h"],w=>{if(!w.f||!w.m)return;const c=connOf(String(w.f));c.seen=Date.now();
+      if(w.m.t==="ping")c.send({t:"pong",who:!c._name,pt:w.m.pt},0);else onMsg(c,w.m);
+      if(!c.was){c.was=true;renderChips()}},netStatus,{tap:(w,tr)=>{if(w.f){const c=conns.get(String(w.f));if(c)c.via[tr.name]=Date.now()}}});
+    netStatus();drawQR();
+    detectLocal().then(j=>{if(!j)return;local=j;bus.addLocal(relayUrl());drawQR()});
+    setInterval(()=>{let ch=false;conns.forEach(c=>{if(c.was&&!c.open){c.was=false;ch=true}});if(ch)renderChips()},3000);
+    setInterval(netStatus,2000);
+    // laptop back from sleep: make every transport prove it is alive (a dead one is rebuilt, a healthy one is left alone)
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&bus)bus.probe()});
+    let beat=Date.now();setInterval(()=>{const now=Date.now();if(now-beat>5000&&bus)bus.probe();beat=now},1000)}
   function setNet(t,c){const s=$("netStatus");s.textContent=t;s.className="status "+(c||"")}
-  function joinUrl(){return location.origin+location.pathname+"#join="+hostId}
-  function drawQR(){$("qr").innerHTML="";new QRCode($("qr"),{text:joinUrl(),width:640,height:640,colorDark:"#170c2b",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});$("joinLink").textContent=joinUrl()}
-  function send(p,m){if(p.conn&&p.conn.open){try{p.conn.send(m)}catch(e){}}}
-  function bcast(m){players.forEach(p=>send(p,m))}
+  // join links: GitHub Pages / wherever the page came from; in local mode the big QR is the laptop's LAN address
+  function lanBase(){if(!local)return null;const here=location.origin+"/";const u=(local.urls||[]);
+    return /^(localhost|127\.|\[?::1)/.test(location.hostname)?(u[0]||null):here}
+  function joinUrl(){const b=lanBase();return (b||location.origin+location.pathname)+"#join="+hostId}
+  function publicJoin(){return PUBLIC_URL+"#join="+hostId}
+  function qrInto(el,text,size){el.innerHTML="";
+    if(typeof QRCode==="function"){try{new QRCode(el,{text,width:size,height:size,colorDark:"#170c2b",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});return}catch(e){}}
+    const d=document.createElement("div");d.className="qrfail";d.textContent=size>300?"QR-код не загрузился. Откройте на телефоне:":"Ссылка:";const b=document.createElement("b");b.textContent=text.replace(/^https?:\/\//,"");d.append(b);el.append(d)}
+  function drawQR(){const lan=!!lanBase();
+    qrInto($("qr"),joinUrl(),640);$("joinLink").textContent=joinUrl();$("joinLab").hidden=!lan;$("joinAlt").hidden=!lan;
+    if(lan){qrInto($("qr2"),publicJoin(),240);$("joinLink2").textContent=publicJoin()}}
+  function send(p,m,qos=1){if(p.conn&&p.conn.open){try{p.conn.send(m,qos)}catch(e){}}}
+  // the same message for every phone: one publish on the shared topic instead of one per player
+  // (phones act on it only after the host has welcomed them)
+  function bcast(m,qos=1){if(bus)bus.pub(T+"/all",{m},qos)}
+  /* a per-player message for many players (results, final places, pad phases) as ONE shared message: fields equal for
+     everybody stay on top, the rest goes to R[name]; each phone merges its own part (a burst of 10 messages would be
+     spread over ~1 s by the rate limit, and public brokers dislike the burst) */
+  function bcastEach(list,fn){const ms=list.map(p=>[p.name,fn(p)]).filter(x=>x[1]);if(!ms.length)return;
+    const top={},R={},keys=new Set();ms.forEach(([,m])=>Object.keys(m).forEach(k=>keys.add(k)));
+    keys.forEach(k=>{const v=JSON.stringify(ms[0][1][k]);if(ms.every(([,m])=>JSON.stringify(m[k])===v))top[k]=ms[0][1][k]});
+    ms.forEach(([n,m])=>{const o={};for(const k in m)if(!(k in top))o[k]=m[k];R[n]=o});top.R=R;bcast(top)}
+  $("diagRe").onclick=()=>{if(!bus)return;bus.kickAll("по кнопке");$("diagRe").disabled=true;setTimeout(()=>{$("diagRe").disabled=false},3000)};
+  $("hostDiag").onclick=()=>diag.open(()=>{const on=[...conns.values()].filter(c=>c._name);
+    const st=bus?bus.stats():{queued:0,dropped:0};
+    return{sum:[["Ведущий:",hostId],["Режим:",local?"ноутбук (Wi-Fi праздника) + интернет":"только интернет-серверы"],["Игроков на связи:",`${[...players.values()].filter(p=>p.conn&&p.conn.open).length} из ${players.size}`]],
+      tr:bus?bus.tr:[],
+      more:[`очередь отправки ${st.queued} · отброшено ${st.dropped}`].concat(on.map(c=>`${c._name}: ${diag.ago(c.seen)} · ${Object.entries(c.via).filter(([,t])=>Date.now()-t<20000).map(([n])=>n).join(", ")||"—"}`))}});
   // order: score, then the stored tie-break («Перестрелка») rank among equal scores, then join order
   function ranked(){const tb=tbMap(),ord=new Map([...players.keys()].map((n,i)=>[n,i])),tr=n=>tb.has(n)?tb.get(n):1e9;
     return [...players.values()].sort((a,b)=>b.score-a.score||tr(a.name)-tr(b.name)||ord.get(a.name)-ord.get(b.name))}
@@ -584,15 +806,21 @@ function host(){
     if(m.t==="in"){actInput(p,m);return}
     if(m.t==="tapped")onTapped(p,m);
     if(m.t==="auth"&&p.name===ADMIN&&m.h===PASS_HASH){conn._admin=true;lastAdm=""}
-    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c]){send(p,{t:"ack",c:m.c});CMDS[m.c](m)}
+    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c]){send(p,{t:"ack",c:m.c,ci:m.ci});
+      if(m.ci&&cmdSeen.has(m.ci))return; // the phone repeats a command it got no ack for: run it once
+      if(m.ci){cmdSeen.add(m.ci);if(cmdSeen.size>50)cmdSeen.delete(cmdSeen.values().next().value)}
+      CMDS[m.c](m)}
     if(m.t==="leave"){detach(conn);renderChips()} // keep the score: picking the same name again restores it
   }
   // a phone loses its name (leave / takeover / switch): the player and their score stay
   function detach(conn){const p=players.get(conn._name);if(p&&p.conn===conn)p.conn=null;conn._name=null;conn._admin=false}
   // is something running that this player will be sent right after "welcome"? if not, the phone drops stale screens
   function activeFor(p){return !!(open||sd&&sd.bucket&&sd.bucket.includes(p.name)||arena&&arena.tap&&arena.tap.ph!=="done"||arena&&arena.act&&arena.act.byName.has(p.name))}
-  function sendQ(p,o){const q=o.q,left=o.live?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
-    send(p,{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.live&&video.paused,mine:p.answers[q.id]?p.answers[q.id].opt:null})}
+  function qMsg(o){const q=o.q,left=o.live?Math.max(0,o.dur-(performance.now()-o.t0)/1000):Math.max(0,q.close-video.currentTime);
+    return{t:"q",qid:q.id,kind:q.kind,label:q.label,i:q.i,n:q.n,text:q.text||"",options:q.options,left,dur:q.close-q.open,paused:!o.live&&video.paused}}
+  // personal copy (rejoin) carries the player's own answer; the shared copy does not (phones keep what they picked)
+  function sendQ(p,o){const q=o.q;send(p,Object.assign(qMsg(o),{mine:p.answers[q.id]?p.answers[q.id].opt:null}))}
+  function bcastQ(o){bcast(qMsg(o))}
 
   function renderChips(){
     $("pcount").textContent=players.size;
@@ -607,25 +835,25 @@ function host(){
     const q=o.q;
     if(!final){bcast({t:"idle",text:"Вопрос отменён, смотрим дальше"});return}
     if(o.test){
-      players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:"test",ok:true,opt:a?a.opt:null,gain:0,score:p.score,rank:rankOf(p.name),total:players.size})});
+      bcastEach([...players.values()],p=>{const a=p.answers[q.id];return{t:"res",qid:q.id,kind:"test",ok:true,opt:a?a.opt:null,gain:0,score:p.score,rank:rankOf(p.name),total:players.size}});
       players.forEach(p=>delete p.answers[q.id]);showStripText(`Связь работает: ответили ${countAns(q)} из ${players.size}`);return}
     if(q.kind==="who"){
       const tally=[0,0];players.forEach(p=>{const a=p.answers[q.id];if(a)tally[a.opt]++});showBars(q,tally);
-      players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:"who",opt:a?a.opt:null,tally,options:q.options,score:p.score,rank:rankOf(p.name),total:players.size})});
+      bcastEach([...players.values()],p=>{const a=p.answers[q.id];return{t:"res",qid:q.id,kind:"who",opt:a?a.opt:null,tally,options:q.options,score:p.score,rank:rankOf(p.name),total:players.size}});
       return}
     if(q.kind==="vote"||q.kind==="maj"){
       const tally=q.options.map(()=>0);players.forEach(p=>{const a=p.answers[q.id];if(a)tally[a.opt]++});
       const max=Math.max(0,...tally);q.top=max?tally.map((v,i)=>v===max?i:-1).filter(i=>i>=0):[];
       const first=!scored.has(q.id),gainOf=a=>first&&q.kind==="maj"&&a&&q.top.includes(a.opt)?300:0; // gain actually added now
       if(first){players.forEach(p=>p.score+=gainOf(p.answers[q.id]));scored.add(q.id);saveScored();save()}
-      players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,opt:a?a.opt:null,options:q.options,top:q.top,win:q.win,gain:gainOf(a),score:p.score,rank:rankOf(p.name),total:players.size})});
+      bcastEach([...players.values()],p=>{const a=p.answers[q.id];return{t:"res",qid:q.id,kind:q.kind,opt:a?a.opt:null,options:q.options,top:q.top,win:q.win,gain:gainOf(a),score:p.score,rank:rankOf(p.name),total:players.size}});
       renderChips();return}
     let fastest=null,okN=0,ansN=0;const first=!scored.has(q.id); // rewound into a scored question: late answers add nothing
     if(first){
       players.forEach(p=>{const a=p.answers[q.id];const g=points(q,a);p.score+=g;if(a)p._last=g})
       scored.add(q.id);saveScored();save()}
     players.forEach(p=>{const a=p.answers[q.id];if(a){ansN++;if(a.opt===q.correct){okN++;if(!fastest||a.el<fastest.el)fastest={name:p.name,el:a.el}}}});
-    players.forEach(p=>{const a=p.answers[q.id];send(p,{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:first?points(q,a):0,score:p.score,rank:rankOf(p.name),total:players.size})});
+    bcastEach([...players.values()],p=>{const a=p.answers[q.id];return{t:"res",qid:q.id,kind:q.kind,ok:!!a&&a.opt===q.correct,opt:a?a.opt:null,answer:q.answer,gain:first?points(q,a):0,score:p.score,rank:rankOf(p.name),total:players.size}});
     renderChips();
     const st=$("strip");st.innerHTML="";
     const s1=document.createElement("span");s1.className="ok";s1.textContent=`Правильно ответили ${okN} из ${players.size}`;st.append(s1);
@@ -642,7 +870,7 @@ function host(){
     for(let i=0;i<tot;i++){const x=document.createElement("span");if(i<n)x.className="on";d.append(x)}pill.append(t,d);pill.hidden=!$("show").hidden?false:true}
   function openQ(q,mode,dur=10){ // mode: undefined (video), "test" or "live"
     open={q,test:mode==="test",live:!!mode,t0:performance.now(),dur};$("strip").hidden=true;$("bars").hidden=true;
-    players.forEach(p=>sendQ(p,open));updatePill()}
+    bcastQ(open);players.forEach(p=>{if(q.id in p.answers)sendQ(p,open)});updatePill()} // reopened (rewind / back from mini-games): show their earlier answer
 
   /* --- test question from lobby --- */
   let testIv=null;
@@ -690,8 +918,8 @@ function host(){
   $("cLobby").onclick=()=>{video.pause();if(open)closeQ(false);podHide();$("show").hidden=true;$("lobby").hidden=false;try{document.exitFullscreen()}catch(e){}
     resumeAt=video.currentTime;store.set("aeshow-vpos",resumeAt.toFixed(1));startLabel();renderChips()};
   addEventListener("keydown",e=>{if($("show").hidden||!$("arena").hidden||!$("podium").hidden)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click()}if(e.code==="ArrowLeft")$("cBack").click();if(e.code==="ArrowRight")$("cFwd").click();if(e.key==="f"||e.key==="F")$("cFull").click()});
-  video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";adminNote="";if(open)players.forEach(p=>sendQ(p,open))});
-  video.addEventListener("pause",()=>{$("cPlay").textContent="Играть";if(open)players.forEach(p=>sendQ(p,open))});
+  video.addEventListener("play",()=>{$("cPlay").textContent="Пауза";adminNote="";if(open)bcastQ(open)});
+  video.addEventListener("pause",()=>{$("cPlay").textContent="Играть";if(open)bcastQ(open)});
   video.addEventListener("ended",()=>{store.del("aeshow-vpos");resumeAt=0;startLabel();podShow("video")});
 
   let boardShownFor=null;
@@ -760,8 +988,9 @@ function host(){
     pd.append(pdm);
     if(r.length>3){const rest=document.createElement("div");rest.className="rest";r.slice(3).forEach((p,i)=>{const x=document.createElement("span");x.textContent=`${i+4}. ${p.name} · ${p.score}`;rest.append(x)});pd.append(rest)}
     if(r.length){setTimeout(()=>{burst(260,.3,.4);burst(260,.7,.35)},1300);setTimeout(()=>burst(300,.5,.25),1900)}
-    renderChips();players.forEach(podSendFinal)}
-  function podSendFinal(p){send(p,{t:"final",kind:pod.kind,rank:rankOf(p.name),total:players.size,score:p.score})}
+    renderChips();bcastEach([...players.values()],p=>finalMsg(p))}
+  function finalMsg(p){return{t:"final",kind:pod.kind,rank:rankOf(p.name),total:players.size,score:p.score}}
+  function podSendFinal(p){send(p,finalMsg(p))}
   function podRejoin(p){if(!pod||pod.kind==="video"&&aShown())return;
     if(sd){if(sd.bucket&&sd.bucket.includes(p.name)&&sd.ph!=="res")send(p,{t:"tap",ph:sd.ph,r:sd.r,sd:1,title:sd.title});else send(p,{t:"idle",text:"Перестрелка: смотри на экран"})}
     else if(pod.shown)podSendFinal(p)}
@@ -917,7 +1146,7 @@ function host(){
     const sid=`tap${arena.stamp}_${tp.r}`,first=!scored.has(sid);
     ok.forEach(([n,v],i)=>{v.place=i+1;v.gain=PR[i]||0;const p=players.get(n);if(p&&first)p.score+=v.gain});
     if(first){scored.add(sid);saveScored();save()}
-    players.forEach(p=>{const v=tp.taps.get(p.name)||{};send(p,{t:"tap",ph:"res",r:tp.r,ms:v.ms,early:!!v.early,place:v.place,gain:v.gain||0,score:p.score})});
+    bcastEach([...players.values()],p=>{const v=tp.taps.get(p.name)||{};return{t:"tap",ph:"res",r:tp.r,ms:v.ms,early:!!v.early,place:v.place,gain:v.gain||0,score:p.score}});
     aSet(`${arena.game.title} · раунд ${tp.r} из ${arena.game.rounds}`,ok.length?`Быстрее всех: ${ok[0][0]}!`:"Никто не успел");
     const list=document.createElement("div");list.className="alist";
     ok.slice(0,8).forEach(([n,v],i)=>{const d=document.createElement("div");d.style.animationDelay=(i*.06)+"s";
@@ -930,7 +1159,7 @@ function host(){
   /* --- action games (games/*.js, contract in docs/action-games-spec.md) ---
      The host owns the simulation: fixed 60 Hz steps, rendered on #aCanvas scaled to a 1600x900 world.
      Phones are controllers (screen pPad) and only send {t:"in"} input messages. */
-  const AW=1600,AH=900,INTRO=5,APR=[500,300,150],ASTEP=1/60,STALE_IN=1500;
+  const AW=1600,AH=900,INTRO=5,APR=[500,300,150],ASTEP=1/60,STALE_IN=2500; // phones repeat a held stick every 1 s
   const ACOL=["#ff5d73","#ffc94a","#5ce1c6","#7aa8ff","#c792ff","#ff9f43","#9be15d","#ff7ad9","#3fd7ff","#f4f4f4"];
   const AFONT='"Unbounded","Arial Black",system-ui,sans-serif',BFONT='"Manrope",system-ui,sans-serif';
   const cv=$("aCanvas"),cg=cv.getContext("2d");
@@ -954,8 +1183,8 @@ function host(){
     if(!list.length){aSet(g.title,"Нет игроков на связи");aCtl();arena.to=setTimeout(()=>arenaIdle(),3000);return}
     const A={g,mod,ph:"intro",t0:performance.now(),last:performance.now(),acc:0,elim:[],banners:[],order:null,byName:new Map()};
     const ctx=A.ctx={W:AW,H:AH,t:0,rand:Math.random,drawPlayer,
-      players:list.map((p,i)=>({name:p.name,color:ACOL[i%ACOL.length],idx:i,input:{x:0,y:0,btn:false,taps:0},alive:true,data:{},_k:0,_in:0,_st:{text:"",color:null},_sent:null,_vib:0,_stAt:0,
-        _s:0,_inAt:0,_ok:0,_cdL:0,_cdT:0,_cdAt:0,_cdS:0,_cdSAt:0,_pulse:-1e9,_hud:null,_hudAt:0})),
+      players:list.map((p,i)=>({name:p.name,color:ACOL[i%ACOL.length],idx:i,input:{x:0,y:0,btn:false,taps:0},alive:true,data:{},_k:0,_in:0,_st:{text:"",color:null},_vb:0,_vm:0,
+        _s:0,_inAt:0,_ok:0,_cdL:0,_cdT:0,_cdAt:0,_cdS:0,_cdSAt:0,_pulse:-1e9})),
       ack(ap){if(!ap||A.byName.get(ap.name)!==ap)return;A.usesAck=true;ap._ok++;ap._pulse=performance.now()},
       cooldown(ap,left,total){if(!ap||A.byName.get(ap.name)!==ap)return;ap._cdL=Math.max(0,+left||0);ap._cdT=Math.max(0,+total||0);ap._cdAt=A.ctx.t},
       pulse(ap){if(ap)ap._pulse=performance.now()},
@@ -969,40 +1198,43 @@ function host(){
     aSet("","");cv.hidden=false;$("arena").classList.add("actmode");sizeCv();aCtl();
     players.forEach(p=>{if(!A.byName.has(p.name))send(p,{t:"idle",text:`Идёт «${g.title}» — смотри на экран. Сыграешь в следующем раунде!`})});
     padAll(A);A.iv=setInterval(()=>{if(document.hidden)actStep(A)},250);requestAnimationFrame(()=>actLoop(A))}
-  /* game-driven status line on one phone: stored per player, flushed by actLoop only when it changed (≥250 ms apart) */
-  const ST_GAP=250,STC=["red","green","gold"];
+  /* game-driven status line per phone: stored per player and carried by the shared HUD below, so a status change costs
+     no message of its own; a vibration bumps the player's counter vb (the phone buzzes vm ms when it sees vb grow) */
+  const STC=["red","green","gold"];
   function actStatus(A,ap,text,o){
     if(!ap||A.byName.get(ap.name)!==ap||(A.ph!=="intro"&&A.ph!=="play"))return; // robots / ended rounds: ignore
     o=o||{};const t=text==null?"":String(text).slice(0,60),c=STC.includes(o.color)?o.color:null;
-    const cc=t?c:null;if(t===ap._st.text&&cc===ap._st.color)return; // unchanged: no message, no repeated vibration
-    if(o.vibrate>0&&t)ap._vib=Math.max(ap._vib,Math.min(1500,o.vibrate|0));
+    const cc=t?c:null;if(t===ap._st.text&&cc===ap._st.color)return; // unchanged: nothing to send, no repeated vibration
+    if(o.vibrate>0&&t){ap._vb++;ap._vm=Math.min(1500,o.vibrate|0)}
     ap._st={text:t,color:cc}}
-  function actFlush(A,now){A.ctx.players.forEach(ap=>{
-    if(now-ap._stAt<ST_GAP||(!ap._vib&&ap._sent&&ap._sent.text===ap._st.text&&ap._sent.color===ap._st.color))return;
-    padSend(A,ap)});
-    actHud(A,now)}
-  /* per-player HUD during play: time left, live place / alive count, echo of the last input (s) and press counter (k)
-     the engine has processed, game acks (ok) and the real cooldown. Sent QoS 0 only when something changed:
-     press-related changes at most every 60 ms (so the phone can confirm a press quickly), the rest at most every 300 ms. */
-  const HUD_GAP=300,HUD_URGENT=60;
+  function actFlush(A,now){actHud(A,now)}
+  /* HUD during play: ONE QoS 0 message on the shared topic for all players of the round (public brokers drop clients that
+     publish tens of messages per second, which a per-player HUD did). Per player (array index = ap.idx): k last press
+     counter the engine processed, ok count of ctx.ack, s/sd input echo for the RTT, pl live place, cd/cdT cooldown,
+     st/sc status line, vb/vm vibration. Round-wide: tx seconds left (phones count down locally), al/n alive/players.
+     Sent only when something changed: press-related changes and status lines at most every 333 ms, anything else at most
+     every 1 s, and a 1.5 s heartbeat so phones can tell "quiet" from "lost". */
+  const HUD_GAP=1000,HUD_URGENT=333,HUD_BEAT=1500;
   const cdOf=(A,ap)=>ap.alive&&A.ctx.t-ap._cdAt<=.1?ap._cdL:0; // a game that stops reporting (player fell, round over) = ready
-  function hudOf(A,ap,now,places){const left=Math.max(0,(A.mod.duration||60)-A.ctx.t),ps=A.ctx.players;
-    const h={tl:Math.ceil(left),tx:Math.round(left*10)/10,al:ps.filter(p=>p.alive).length,n:ps.length,k:ap._k,ok:ap._ok,s:ap._s,sd:ap._inAt?Math.round(now-ap._inAt):0};
+  function hudOf(A,ap,now,places){const h={k:ap._k,ok:ap._ok,s:ap._s,sd:ap._inAt?Math.round(now-ap._inAt):0};
     if(places){const i=places.indexOf(ap);h.pl=i<0?0:i+1}
     if(ap._cdT>0){h.cd=Math.round(cdOf(A,ap)*10)/10;h.cdT=Math.round(ap._cdT*100)/100}
+    if(ap._st.text){h.st=ap._st.text;if(ap._st.color)h.sc=ap._st.color}
+    if(ap._vb){h.vb=ap._vb;h.vm=ap._vm}
     return h}
-  function sendQ0(p,m){if(p.conn&&p.conn.open&&p.conn.cid){try{bus.pub(T+"/p/"+p.conn.cid,{m},0)}catch(e){}}}
+  function hudTop(A){const ps=A.ctx.players;return{tx:Math.round(Math.max(0,(A.mod.duration||60)-A.ctx.t)*10)/10,al:ps.filter(p=>p.alive).length,n:ps.length}}
   function actHud(A,now){if(A.ph!=="play")return;let places;
-    if(A.mod.hud!=="alive"&&A.mod.standings){if(!A.plAt||now-A.plAt>=100){const o=actStandings(A);A.pl=Array.isArray(o)?o:null;A.plAt=now}places=A.pl}
-    const tap=A.mod.controls==="tap";
-    A.ctx.players.forEach(ap=>{const p=players.get(ap.name);if(!p||!p.conn||!p.conn.open)return;
-      const h=hudOf(A,ap,now,places),o=ap._hud||{};
+    if(A.mod.hud!=="alive"&&A.mod.standings){if(!A.plAt||now-A.plAt>=250){const o=actStandings(A);A.pl=Array.isArray(o)?o:null;A.plAt=now}places=A.pl}
+    const tap=A.mod.controls==="tap",ps=A.ctx.players,P=ps.map(ap=>hudOf(A,ap,now,places)),top=hudTop(A),last=A.hud||{P:[]};
+    let urgent=false,change=top.al!==last.al;
+    ps.forEach((ap,i)=>{const h=P[i],o=last.P[i]||{};
       const cdDrift=ap._cdT>0&&Math.abs(cdOf(A,ap)-Math.max(0,ap._cdS-(now-ap._cdSAt)/1000))>.2;
-      const urgent=!tap&&(h.k!==o.k||h.ok!==o.ok||cdDrift);
-      if(!urgent&&!cdDrift&&h.tl===o.tl&&h.pl===o.pl&&h.al===o.al&&h.s===o.s&&h.k===o.k&&h.ok===o.ok)return;
-      if(now-ap._hudAt<(urgent?HUD_URGENT:HUD_GAP))return;
-      ap._hud=h;ap._hudAt=now;if(ap._cdT>0){ap._cdS=cdOf(A,ap);ap._cdSAt=now}
-      sendQ0(p,Object.assign({t:"hud",round:arena.stamp},h))})}
+      if(!tap&&(h.k!==o.k||h.ok!==o.ok)||cdDrift||h.st!==o.st||h.sc!==o.sc||h.vb!==o.vb)urgent=true;
+      else if(h.k!==o.k||h.s!==o.s||h.pl!==o.pl)change=true});
+    const since=now-(A.hudAt||0);
+    if(!(urgent&&since>=HUD_URGENT||change&&since>=HUD_GAP||since>=HUD_BEAT))return;
+    A.hud=Object.assign(top,{P});A.hudAt=now;ps.forEach(ap=>{if(ap._cdT>0){ap._cdS=cdOf(A,ap);ap._cdSAt=now}});
+    bcast(Object.assign({t:"hud",round:arena.stamp},A.hud),0)}
   function actPlay(A){if(A.ph!=="intro")return;A.ph="play";phMark();A.ctx.t=0;A.acc=0;A.last=performance.now();A.ctx.banner("Старт!",.9);padAll(A)}
   function actDefaultOrder(A,rest){const alive=rest.filter(p=>p.alive),out=A.elim.filter(p=>rest.includes(p)).reverse();
     return alive.concat(out,rest.filter(p=>!alive.includes(p)&&!out.includes(p)))}
@@ -1013,7 +1245,7 @@ function host(){
     (Array.isArray(order)?order:[]).forEach(p=>{if(all.includes(p)&&!seen.has(p)){seen.add(p);o.push(p)}});
     A.order=o.concat(actDefaultOrder(A,all.filter(p=>!seen.has(p))));
     A.ph="done";phMark();A.doneAt=performance.now();A.banners=[];A.ctx.banner("Финиш!",1.8);
-    all.forEach(ap=>{ap._st={text:"",color:null};ap._vib=0})}
+    all.forEach(ap=>{ap._st={text:"",color:null}})}
   function actNext(){const A=arena&&arena.act;if(!A){arenaIdle();return}
     if(A.ph==="intro")actPlay(A);else if(A.ph==="play")actFinish(A,actStandings(A));else if(A.ph==="done")actResults(A);else arenaIdle(A.g.title)}
   // drawing follows requestAnimationFrame; while the tab is hidden (rAF paused) a timer keeps the simulation going
@@ -1084,12 +1316,12 @@ function host(){
   function padMsg(A,ap){const p=players.get(ap.name),ph=A.ph==="res"?"res":A.ph==="intro"?"intro":ap.alive?"play":"out";
     return{t:"pad",ph,round:arena.stamp,game:A.g.id,title:A.g.title,rules:A.mod.rules||"",controls:A.mod.controls||"stick",btnLabel:A.mod.btnLabel||"",color:ap.color,
       left:ph==="intro"?Math.max(0,INTRO-(performance.now()-A.t0)/1000):0,place:ap.place||0,gain:ap.gain||0,score:p?p.score:0,n:A.ctx.players.length,
-      st:ph==="res"?"":ap._st.text,sc:ph==="res"?null:ap._st.color,
+      st:ph==="res"?"":ap._st.text,sc:ph==="res"?null:ap._st.color,ix:ap.idx,vb:ap._vb,
       dur:A.mod.duration||60,hm:A.mod.hud==="alive"||!A.mod.standings?"alive":"place",hl:A.mod.aliveLabel||"",
-      hud:ph==="play"||ph==="out"?hudOf(A,ap,performance.now(),A.pl):null}}
-  function padSend(A,ap){const p=players.get(ap.name);if(!p)return;const m=padMsg(A,ap);
-    if(ap._vib){m.vib=ap._vib;ap._vib=0}ap._sent={text:m.st,color:m.sc};ap._stAt=performance.now();send(p,m)}
-  function padAll(A){A.ctx.players.forEach(ap=>padSend(A,ap))}
+      hud:ph==="play"||ph==="out"?Object.assign(hudTop(A),hudOf(A,ap,performance.now(),A.pl)):null}}
+  // phase changes only (intro / play / out / result, and the full state on rejoin): QoS 1, one per player
+  function padSend(A,ap){const p=players.get(ap.name);if(!p)return;send(p,padMsg(A,ap))}
+  function padAll(A){bcastEach(A.ctx.players.map(ap=>players.get(ap.name)).filter(Boolean),p=>padMsg(A,A.byName.get(p.name)))} // all players of the round in one message
   function actRejoin(A,p){const ap=A.byName.get(p.name);if(ap)padSend(A,ap);else send(p,{t:"idle",text:`Идёт «${A.g.title}» — смотри на экран. Сыграешь в следующем раунде!`})}
   function actInput(p,m){const A=arena&&arena.act;if(!A)return;const ap=A.byName.get(p.name);if(!ap)return;
     let x=+m.x||0,y=+m.y||0;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
@@ -1108,7 +1340,7 @@ function host(){
   $("aVote").onclick=startVote;$("aNext").onclick=()=>userNext();$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
 
   /* --- remote control from the admin's phone --- */
-  let adminNote="",lastAdm="",lastAdmAt=0;
+  let adminNote="",lastAdm="",lastAdmAt=0;const cmdSeen=new Set();
   const playFail="Ноутбук не дал запустить видео: браузер ждёт клика. Кликните один раз по странице на ноутбуке и снова нажмите «Играть» здесь.";
   const CMDS={
     play:m=>{if($("show").hidden||aShown())return;const want=m&&m.want||(video.paused?"play":"pause"); // want: what the button said when tapped
@@ -1131,7 +1363,7 @@ function host(){
   for(const k of Object.keys(CMDS)){if(["podium","podHide","podStop","next"].includes(k))continue;const f=CMDS[k];CMDS[k]=m=>{if(pod&&pod.kind==="final"||sd)return;f(m)}}
   function adminState(){return{mode:pod&&pod.kind==="final"?"podium":aShown()?"arena":pod?"podium":!$("show").hidden?"show":"lobby",pod:pod?pod.kind:null,sd:!!sd,paused:video.paused,phase:arena?arena.phase:null,tok:phTok,canStart:!$("start").disabled,startLabel:$("start").textContent,resume:!!resumeAt,testing:!!testIv,note:adminNote}}
   setInterval(()=>{const p=players.get(ADMIN);if(!p||!p.conn||!p.conn.open||!p.conn._admin)return;const st=adminState(),s=JSON.stringify(st);
-    if(s!==lastAdm||performance.now()-lastAdmAt>5000){lastAdm=s;lastAdmAt=performance.now();send(p,{t:"admin",st})}},700);
+    if(s!==lastAdm||performance.now()-lastAdmAt>8000){const ch=s!==lastAdm;lastAdm=s;lastAdmAt=performance.now();send(p,{t:"admin",st},ch?1:0)}},700); // a change: QoS 1; the refresh: QoS 0
 
   renderChips();startNet();requestAnimationFrame(tick);
 }
@@ -1148,32 +1380,48 @@ function player(){
   $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
   $("otherName").onkeydown=e=>{if(e.key==="Enter")$("otherGo").click()};
   $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});forget()};
-  function forget(){pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";admShape="";admOk=false;$("admAsk").hidden=true;document.documentElement.classList.remove("isadm");if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+  function forget(){welcomed=false;pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";admShape="";admOk=false;$("admAsk").hidden=true;document.documentElement.classList.remove("isadm");if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
   function join(n){myName=n;$("nameNote").textContent="";store.set("aeshow-name",n);$("meName").textContent=n;
     $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
-    if(conn&&conn.open)conn.send({t:"join",name:n})}
+    conn.send({t:"join",name:n})} // also the first knock when the host has not answered yet
   function setConn(on){$("conn").className="conn"+(on?" on":"")}
   const T="aeshow/"+hostId;
   let cid=store.get("aeshow-cid");if(!cid){cid=rid(10);store.set("aeshow-cid",cid)}
-  let hostSeen=-1e9,knocks=0;
+  let hostSeen=-1e9,knocks=0,welcomed=false,hostRtt=0,lastUp=0,pingT=0,isLocal=false;
   // liveness uses the wall clock: performance.now() may not advance while the phone sleeps, which would make a dead link look fresh
-  const conn={get open(){return Date.now()-hostSeen<STALE},send(m,qos){bus.pub(T+"/h",{f:cid,m},qos)}};
-  const bus=mqttBus(T+"/p/"+cid,w=>{const m=w.m;if(!m)return;const was=conn.open;hostSeen=Date.now();knocks=0;
+  let lastSent=0;
+  const conn={get open(){return Date.now()-hostSeen<STALE},send(m,qos){lastSent=Date.now();bus.pub(T+"/h",{f:cid,m},qos)}};
+  // personal messages on …/p/<cid>, messages for every phone on …/all (used only once the host has welcomed us)
+  const bus=makeBus([T+"/p/"+cid,T+"/all"],(w,topic)=>{const m=w.m;if(!m)return;
+    const shared=topic.endsWith("/all");if(shared&&!welcomed&&m.t!=="pong")return;
+    const was=conn.open;hostSeen=Date.now();knocks=0;
     if((!was&&m.t!=="welcome"||m.who)&&myName)conn.send({t:"join",name:myName}); // host does not know us (e.g. it reloaded)
-    if(!was)setConn(true);
-    if(m.t!=="pong")onMsg(m)},()=>{if(bus&&bus.connected())tickNet()});
-  // ping the host; while it is silent, keep knocking with "join" so we get back in as soon as it is reachable
-  let kickAt=0;
-  function reconnect(){if(Date.now()-kickAt<15000)return;kickAt=Date.now();bus.kick()}
+    if(!was){setConn(true);$("waitDiagRow").hidden=true}
+    if(m.t==="pong"){if(m.pt){const r=Date.now()-m.pt;if(r>=0&&r<30000)hostRtt=hostRtt?Math.round(hostRtt*.6+r*.4):r}return}
+    onMsg(m)},
+    ()=>{const n=bus?bus.connected():0;if(n>lastUp){clearTimeout(pingT);pingT=setTimeout(tickNet,300)}lastUp=n}, // a transport came up: knock at once
+    {tap:(w,tr)=>{if(w.m&&w.m.t==="pong"&&w.m.pt){const r=Date.now()-w.m.pt;if(r>=0&&r<30000)tr.rttHost=tr.rttHost?Math.round(tr.rttHost*.6+r*.4):r}}});
+  detectLocal().then(j=>{if(j){isLocal=true;bus.addLocal(relayUrl())}});
+  /* ping the host every 5 s; while it is silent, keep knocking with "join" so we get back in as soon as it is reachable.
+     No reconnect from here: the bus probes and rebuilds only transports that are provably dead (see makeBus) */
   function tickNet(){
-    if(conn.open){conn.send({t:"ping"});if(Date.now()-hostSeen>7000)reconnect();return} // pongs stopped: the socket may be dead
+    if(!hasMqtt()&&!bus.tr.length&&performance.now()>2500){setConn(false);if(!$("pWait").hidden){$("waitTitle").textContent="Не загрузилась библиотека связи";$("waitText").textContent="Обновите страницу. Если не поможет — откройте ссылку в Chrome или Safari.";$("waitDiagRow").hidden=false}return}
+    // no ping while both directions are busy anyway (a game: HUD in, inputs out); otherwise one every 5 s
+    if(conn.open){const now=Date.now();if(!(now-hostSeen<2500&&now-lastSent<4000))conn.send({t:"ping",pt:now},0);return}
     setConn(false);
-    if(knocks>=2&&bus.connected())reconnect(); // sockets say "connected" but the host has been silent for a while
-    if(!myName){conn.send({t:"ping"});return}
+    if(!myName){conn.send({t:"ping",pt:Date.now()},0);return}
     conn.send({t:"join",name:myName});
-    if(++knocks>=2&&!$("pWait").hidden){$("waitTitle").textContent=bus.connected()?"Ведущий пока не на связи":"Нет интернета";$("waitText").textContent="Пробую снова…"}}
+    if(++knocks>=2){bus.probe();$("waitDiagRow").hidden=false;
+      if(!$("pWait").hidden){$("waitTitle").textContent=bus.connected()?"Ведущий пока не на связи":"Нет связи с сервером";$("waitText").textContent=bus.connected()?"Пробую снова… Ноутбук ведущего должен быть открыт на странице с QR-кодом.":"Пробую снова… Проверь интернет или Wi-Fi."}}}
+  const openDiag=()=>diag.open(()=>{const st=bus.stats();
+    return{sum:[["Ведущий:",conn.open?`на связи${hostRtt?", ответ за "+hostRtt+" мс":""}`:`нет ответа (последний ${diag.ago(hostSeen>0?hostSeen:0)})`],["Я:",(myName||"имя не выбрано")+(welcomed?" · в игре":"")],
+      ["Страница:",isLocal?"с ноутбука (Wi-Fi праздника) + интернет":location.protocol==="https:"?"из интернета (GitHub)":location.host]],
+      tr:bus.tr,more:[`очередь отправки ${st.queued} · отброшено ${st.dropped} · id ${cid}`,`шоу ${hostId}`+(hasMqtt()?"":" · mqtt.min.js НЕ загружен")]}});
+  $("conn").onclick=openDiag;$("waitDiag").onclick=openDiag;$("netRtt").onclick=openDiag;
+  $("diagRe").onclick=()=>{bus.kickAll("по кнопке");$("diagRe").disabled=true;setTimeout(()=>{$("diagRe").disabled=false;tickNet()},3000)};
   function onMsg(m){
-    if(m.t==="welcome"){myName=m.name;$("nameNote").textContent="";$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN){$("adm").hidden=true;document.documentElement.classList.remove("isadm")}else adminAuth();
+    if(m.R){const r=m.R[myName];if(!r)return;m=Object.assign({},m,r);delete m.R} // shared message with a part per player
+    if(m.t==="welcome"){welcomed=true;myName=m.name;$("nameNote").textContent="";$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN){$("adm").hidden=true;document.documentElement.classList.remove("isadm")}else adminAuth();
       if(!m.active){pad=null;cur=null;tap=null;stopTimer()} // the host has nothing open (e.g. it reloaded): drop a stale question / pad
       if(!cur&&!pad){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
     if(m.t==="idle"){pad=null;cur=null;stopTimer();$("waitTitle").textContent="Смотри на экран";$("waitText").textContent=m.text||"";scr("pWait")}
@@ -1184,18 +1432,20 @@ function player(){
     if(m.t==="pad")onPad(m);
     if(m.t==="hud")onHud(m);
     if(m.t==="admin")renderAdmin(m.st);
+    if(m.t==="ack")admAck(m);
     if(m.t==="taken"&&myName===m.name){forget();$("nameNote").textContent=`Имя «${m.name}» уже занято на другом телефоне. Выбери своё имя.`}
     if(m.t==="kicked")forget();
     if(m.t==="final"){cur=null;tap=null;pad=null;stopTimer();const vid=m.kind==="video";$("resBig").className="big ok";$("resBig").textContent=m.rank===1&&!vid?"Победа!":`${m.rank}-е место`;$("meScore").textContent=m.score+" очк.";
       $("resGain").textContent=m.score+" очков";$("resText").textContent=vid?`Итоги видео-викторины: ${m.rank}-е место из ${m.total}.`:m.rank===1?"Финальный подиум: ты лучший игрок вечера! Забирай приз.":`Финальный подиум: ${m.rank}-е место из ${m.total}. Спасибо за игру!`;scr("pRes");if(m.rank<=3)burst(220,.5,.3)}
   }
   function showQ(m){
-    pad=null;const fresh=!cur||cur.qid!==m.qid;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine:m.mine};
+    // the shared copy of a question has no "mine": keep what this phone already picked
+    pad=null;const fresh=!cur||cur.qid!==m.qid,mine=m.mine!=null?m.mine:fresh?null:cur.mine;cur={qid:m.qid,left:m.left,dur:m.dur,paused:m.paused,at:performance.now(),mine};
     $("qLab").textContent=`${m.label} · ${m.i} из ${m.n}`;$("qText").textContent=m.text||(m.kind==="who"?"Артём или Егор?":m.kind==="tf"?"Правда или ложь?":"Что это?");
     const o=$("opts");if(fresh){o.innerHTML="";o.className="opts"+(m.options.length===2?" two":"")+(m.options.length>4?" many":"")+(m.kind==="tf"?" tf":"");
       m.options.forEach((t,i)=>{const b=document.createElement("button");b.className="o"+(i%4);b.textContent=t;b.onclick=()=>pick(i);o.append(b)});
       if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}}
-    if(m.mine!=null)markChosen(m.mine);
+    if(mine!=null)markChosen(mine);
     scr("pQ");startTimer()}
   function pick(i){if(!cur||cur.mine!=null||!conn||!conn.open)return;cur.mine=i;markChosen(i);conn.send({t:"answer",qid:cur.qid,opt:i})}
   function markChosen(i){if(cur)cur.mine=i;const o=$("opts");o.classList.add("chosen");[...o.children].forEach((b,k)=>b.classList.toggle("pick",k===i))}
@@ -1234,7 +1484,7 @@ function player(){
      Stick and button are separate hit areas with their own pointers, so two thumbs work at the same time.
      The host answers with {t:"hud"}: it echoes the last input seq (s) and press counter (k) it processed, so the pad can
      show round-trip time, confirm presses and notice when nothing gets through. */
-  let pad=null,padEnd=0,padB=false,padK=0,padSent="",padAt=0,padForce=0,SR=60;
+  let pad=null,padEnd=0,padB=false,padK=0,padSent="",padAt=0,padDue=false,padEcho=0,vbSeen=0,SR=60;
   const stk={id:null,ox:0,oy:0,x:0,y:0,at:0},PP=$("pPad"),SA=$("stickArea"),sBase=$("stickBase"),knob=$("knob"),actBtn=$("actBtn"),btnArea=$("btnArea"),bigTap=$("bigTap"),btnIds=new Set();
   const buzz=ms=>{if(navigator.vibrate)try{navigator.vibrate(ms)}catch(_){}};
   // link state: input seq -> send time, presses waiting for the host, last HUD
@@ -1249,7 +1499,8 @@ function player(){
     $("noNet").hidden=true;$("netRtt").className="rtt";$("netRtt").lastChild.textContent="";$("hudTime").textContent="";$("hudPlace").textContent="";cdShow(0)}
   function onPad(m){
     cur=null;stopTimer();tap=null;
-    if(!pad||pad.round!==m.round){stickReset();linkReset();padK=0;padSent=""}
+    if(!pad||pad.round!==m.round){stickReset();linkReset();padK=0;padSent="";vbSeen=m.vb||0}
+    vbSeen=Math.max(vbSeen,m.vb||0); // a vibration that happened before this message is not replayed
     const was=pad&&pad.round===m.round?pad.ph:null;pad=m;
     if(m.score!=null){$("meScore").textContent=m.score+" очк.";$("padScore").textContent=m.score+" очк."}
     if(m.ph==="res"){stickReset();const big=$("resBig");big.className="big "+(m.place<=3?"ok":"no");big.textContent=m.place===1?"Победа!":`${m.place}-е место`;
@@ -1262,15 +1513,20 @@ function player(){
     if(m.ph==="intro")padEnd=performance.now()+m.left*1000;
     const msg=$("padMsg"),txt=m.ph==="out"?"Ты выбыл — смотри на экран":m.ph==="play"?"Играй! Смотри на экран":msg.textContent;
     if(msg.textContent!==txt)msg.textContent=txt; // a fresh text restarts the "go" toast animation; the same one must not
-    const st=m.st&&m.ph!=="res"?String(m.st):"",sc=st&&["red","green","gold"].includes(m.sc)?m.sc:"";
-    $("padSt").hidden=!st;$("padSt").textContent=st;$("padSt").className="padst "+sc;$("padTint").className=sc;PP.dataset.sc=sc;
-    if(m.vib>0)buzz(Math.min(1500,m.vib|0));
+    setSt(m.ph!=="res"?m.st:"",m.sc);
     if(m.ph==="out"){stickReset();pend.length=0;cd=null;cdShow(0);if(was!=="out")buzz([80,60,80])}
     if(m.ph==="play"&&was!=="play"){playAt=Date.now();if(was==="intro")buzz(60)}
     if(m.hud)hudApply(m.hud,true);
     scr("pPad")}
-  function onHud(h){if(!pad||h.round!==pad.round||pad.ph==="res"||pad.ph==="intro")return;hudApply(h,false)}
+  // status line (ctx.status): big pill + screen tint
+  function setSt(t,c){const st=t?String(t):"",sc=st&&["red","green","gold"].includes(c)?c:"";
+    if($("padSt").textContent===st&&PP.dataset.sc===sc&&$("padSt").hidden===!st)return;
+    $("padSt").hidden=!st;$("padSt").textContent=st;$("padSt").className="padst "+sc;$("padTint").className=sc;PP.dataset.sc=sc}
+  // the HUD is one message for the whole round; our part is P[ix]
+  function onHud(m){if(!pad||m.round!==pad.round||pad.ph==="res"||pad.ph==="intro"||!Array.isArray(m.P)||!m.P[pad.ix])return;
+    hudApply(Object.assign({tx:m.tx,al:m.al,n:m.n},m.P[pad.ix]),false)}
   function hudApply(h,full){const now=Date.now();hudAt=now;
+    if(pad.ph==="play"){setSt(h.st,h.sc);if(h.vb>vbSeen){vbSeen=h.vb;if(!full&&h.vm>0)buzz(Math.min(1500,h.vm|0))}}
     if(h.tx!=null)hudEnd=now+h.tx*1000;
     const place=pad.hm==="place"&&h.pl?`${h.pl}-й из ${h.n}`:h.al!=null?`${pad.hl||"В игре"} ${h.al}/${h.n}`:"";$("hudPlace").textContent=place;
     // input echo: round trip = now - send time - how long the host held it before this HUD
@@ -1290,23 +1546,33 @@ function player(){
   function cdReady(){actBtn.classList.remove("ready");void actBtn.offsetWidth;actBtn.classList.add("ready")}
   function cdTick(){cdRaf=0;const l=cdLeft();cdShow(cd&&cd.total?Math.min(1,l/cd.total):0);if(l>0)cdRaf=requestAnimationFrame(cdTick);else if(cd&&cd.left>0){cd.left=0;cdReady()}}
   function netShow(){const now=Date.now(),e=$("netRtt");if(!pad||!pad.dur)return; // an older host sends no HUD: nothing to judge
-    const lost=pad.ph==="play"&&(pend.length&&now-pend[0].at>700||(hudAt?now-hudAt:now-playAt)>2500);
+    // the host batches HUD updates (≤ 4/s, heartbeat 1.5 s), so "lost" = a press unconfirmed for 2 s or no HUD for 4 s
+    const lost=pad.ph==="play"&&(pend.length&&now-pend[0].at>2000||(hudAt?now-hudAt:now-playAt)>4000);
     $("noNet").hidden=!lost;
-    if(lost&&!kicked){kicked=true;try{tickNet()}catch(_){}} // let the reconnect logic knock right away
+    if(lost&&!kicked){kicked=true;try{bus.probe();tickNet()}catch(_){}} // check the transports (a dead one gets rebuilt) and knock
     if(!lost)kicked=false;
     e.className="rtt"+(lost?" r":rtt?(rtt<250?" g":rtt<600?" y":" r"):"");e.lastChild.textContent=rtt&&!lost?rtt+" мс":"";
-    if(stk.id!=null){const live=now-inAckAt<1000;SA.classList.toggle("live",live);SA.classList.toggle("stale",!live&&performance.now()-stk.at>1000)}}
+    if(stk.id!=null){const live=now-inAckAt<2500;SA.classList.toggle("live",live);SA.classList.toggle("stale",!live&&performance.now()-stk.at>1000)}}
   function hudTime(){if(!pad||!pad.dur||pad.ph==="intro"||!hudEnd)return;const l=Math.max(0,(hudEnd-Date.now())/1000),s=Math.ceil(l);
     $("hudTime").textContent=`${s/60|0}:${String(s%60).padStart(2,"0")}`;$("hudTime").classList.toggle("low",s<=10);$("padProg").style.transform=`scaleX(${Math.min(1,l/pad.dur).toFixed(4)})`}
   const padLive=()=>pad&&pad.ph==="play"&&!PP.hidden&&conn.open;
-  function padSend(force){const x=Math.round(stk.x*100)/100,y=Math.round(stk.y*100)/100,key=`${x},${y},${padB?1:0},${padK}`,now=performance.now();
-    if(!force&&key===padSent&&now>padForce&&!((stk.id!=null||padB||pend.length)&&now-padAt>400))return;
+  /* inputs: at most 8/s and only when something changed (stick quantised to 24 directions × 4 steps), a held stick or
+     button repeats every 1 s, an unconfirmed press every 0.4 s, and the last change once more after 0.3 s (QoS 0 may drop it) */
+  const IN_GAP=125,IN_BEAT=1000,IN_PEND=400,IN_ECHO=300;
+  function qStick(){let l=Math.hypot(stk.x,stk.y);if(l<.15)return[0,0];l=Math.min(1,Math.max(.25,Math.round(l*4)/4));const a=Math.round(Math.atan2(stk.y,stk.x)/(Math.PI/12))*(Math.PI/12);
+    return[Math.round(Math.cos(a)*l*100)/100,Math.round(Math.sin(a)*l*100)/100]}
+  function padSend(force){const [x,y]=qStick(),key=`${x},${y},${padB?1:0},${padK}`,now=performance.now(),since=now-padAt,changed=key!==padSent;
+    const echo=padEcho&&now>=padEcho;
+    if(!(changed||force||echo||(x||y||padB)&&since>=IN_BEAT||pend.length&&since>=IN_PEND))return;
+    if(since<IN_GAP){padDue=true;return}
+    padDue=false;padEcho=changed||force?now+IN_ECHO:0;
     const s=++padS;sentAt.set(s,Date.now());if(sentAt.size>64)sentAt.delete(sentAt.keys().next().value);
     conn.send({t:"in",x,y,b:padB?1:0,k:padK,s},0);padSent=key;padAt=now}
-  function padNow(){if(!padLive())return;padForce=performance.now()+300;padSend(true)} // + a few repeats: QoS 0 may drop one
+  function padNow(){if(!padLive())return;padSend(true)}
   setInterval(()=>{if(!pad||PP.hidden)return;
     if(pad.ph==="intro"){const s=Math.ceil((padEnd-performance.now())/1000);$("padMsg").textContent=s>0?`Старт через ${s}…`:"Старт!"}
-    if(padLive())padSend(false);hudTime();netShow()},80);
+    if(padLive())padSend(padDue)},40);
+  setInterval(()=>{if(!pad||PP.hidden)return;hudTime();netShow()},100);
   // floating stick: wherever the thumb lands in the stick area becomes the centre; the base follows if the thumb runs away
   function stickMove(e){const r=SA.getBoundingClientRect();let dx=e.clientX-r.left-stk.ox,dy=e.clientY-r.top-stk.oy;const d=Math.hypot(dx,dy),lim=SR*1.5;
     if(d>lim){const k=(d-lim)/d;stk.ox+=dx*k;stk.oy+=dy*k;dx-=dx*k;dy-=dy*k;sBase.style.left=stk.ox+"px";sBase.style.top=stk.oy+"px"}
@@ -1373,20 +1639,27 @@ function player(){
     // the buttons are created only when the set of commands changes; otherwise they are updated in place,
     // so a state update (it comes every time the video pauses / plays) never replaces a button under the finger
     const box=$("admBtns"),shape=B.map(x=>x.c).join();
-    if(shape!==admShape){admShape=shape;box.innerHTML="";B.forEach(()=>{const e=document.createElement("button");e.type="button";e.onclick=()=>admTap(e);box.append(e)})}
+    if(shape!==admShape){admShape=shape;const old=new Map([...box.children].map(e=>[e._x&&e._x.c,e])); // a command that stays keeps its button element
+      box.replaceChildren(...B.map(x=>{let e=old.get(x.c);if(!e){e=document.createElement("button");e.type="button";e.onclick=()=>admTap(e)}old.delete(x.c);return e}))}
     B.forEach((x,i)=>{const e=box.children[i];e._x=x;e.className=x.main?"main":"";e.disabled=!!x.dis;e.textContent=x.t});
     if(asking&&!B.some(x=>x.c===asking.c&&x.ask===asking.ask&&!x.dis))askClose()} // the state moved on: that action no longer applies
   function admTap(e){const x=e._x;if(!x)return;if(!wakeLock){wakeTry=0;keepAwake()}
-    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — переподключаюсь… Нажми ещё раз через пару секунд.";admKey="";kickAt=0;reconnect();tickNet();return}
+    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — жду связь… Нажми ещё раз через пару секунд.";admKey="";bus.probe();tickNet();return}
     if(x.ask){askOpen(x);return}
     admSend(x,e)}
   function admSend(x,e){
     const m={t:"cmd",c:x.c};if(x.c==="next")m.tok=admTok;
     if(x.c==="play"&&admSt){m.want=admSt.paused?"play":"pause"; // flip the label at once; the host gets the wanted state, so a quick second tap cannot undo the first
       admWant=!admSt.paused;admPend=performance.now()+2500;renderAdmin(admSt)}
-    conn.send(m);e.classList.add("sent");setTimeout(()=>e.classList.remove("sent"),350);
-    // the host answers every command right away; silence means it got lost on a dead link: say so and reconnect
-    const at=Date.now();setTimeout(()=>{if(hostSeen>=at)return;$("admNote").textContent="Команда не дошла до ноутбука — переподключаюсь… Нажми ещё раз.";admKey="";kickAt=0;reconnect()},2500)}
+    m.ci=rid(8);conn.send(m);e.classList.add("sent");setTimeout(()=>e.classList.remove("sent"),350);
+    /* the host acks every command at once (ack carries ci). No ack in 3 s: send the same command again (same ci, so the
+       host runs it only once) and check the transports; still nothing after 8 s: say so. Never a reconnect storm. */
+    const P={ci:m.ci,t1:0,t2:0};admCmdP=P;
+    P.t1=setTimeout(()=>{if(admCmdP!==P)return;conn.send(m);bus.probe();$("admNote").textContent="Связь медленная — повторяю команду…"},3000);
+    P.t2=setTimeout(()=>{if(admCmdP!==P)return;admCmdP=null;$("admNote").textContent="Команда не дошла до ноутбука. Проверь связь (точка вверху слева) и нажми ещё раз."},8000)}
+  let admCmdP=null;
+  function admAck(m){const P=admCmdP;if(!P||m.ci!==P.ci)return;clearTimeout(P.t1);clearTimeout(P.t2);admCmdP=null;
+    if(/^(Связь медленная|Команда не дошла)/.test($("admNote").textContent)){$("admNote").textContent=admSt&&admSt.note||"";admKey=""}}
   /* confirmation popup for destructive commands (not window.confirm: that would freeze the page and the connection) */
   let asking=null;
   function askOpen(x){asking=x;$("askQ").textContent=x.ask;$("askYes").textContent="Да";$("admAsk").hidden=false}
@@ -1394,12 +1667,13 @@ function player(){
   $("askNo").onclick=askClose;
   $("admAsk").onclick=e=>{if(e.target===$("admAsk"))askClose()};
   $("askYes").onclick=()=>{const x=asking;askClose();if(!x)return;
-    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — переподключаюсь… Нажми ещё раз через пару секунд.";admKey="";kickAt=0;reconnect();tickNet();return}
+    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — жду связь… Нажми ещё раз через пару секунд.";admKey="";bus.probe();tickNet();return}
     admSend(x,[...$("admBtns").children].find(b=>b._x&&b._x.c===x.c)||$("askYes"))}
   if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
-  setConn(false);setInterval(tickNet,4000);
-  // back from a locked screen / another app: if the host went quiet meanwhile, reconnect at once instead of waiting for the keepalive
-  const wake=()=>{if(document.hidden)return;if(Date.now()-hostSeen>6000){kickAt=0;reconnect()}tickNet();keepAwake()};
+  setConn(false);setInterval(tickNet,5000);
+  // back from a locked screen / another app: make every transport prove it is alive (a probe costs one tiny message; only a
+  // transport that does not answer is rebuilt) and knock at the host right away
+  const wake=()=>{if(document.hidden)return;bus.probe();tickNet();keepAwake()};
   document.addEventListener("visibilitychange",wake);addEventListener("pageshow",wake);addEventListener("online",wake);
   // timers stand still while the phone sleeps: a big wall-clock gap between two beats means we just woke up (no event is guaranteed)
   let beat=Date.now();setInterval(()=>{const now=Date.now(),gap=now-beat;beat=now;if(gap>5000)wake()},1000);
