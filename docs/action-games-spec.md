@@ -84,26 +84,26 @@ For balance, the other sources of points: video quiz 125–250 per correct answe
 «Перестрелка» (one tap-reaction round for the tied players), which only orders them and adds no points.
 
 ## Network protocol (engine)
-Budget: public brokers drop clients that publish tens of messages per second, so every client stays under ~8 msgs/s
-(the bus has a token bucket: QoS 0 extras are dropped, QoS 1 waits). Topics: phone → host `aeshow/<id>/h`; host → one
+Budget: public brokers drop clients that publish tens of messages per second, so every client stays under 4 msgs/s
+(per-transport token buckets, everything MQTT QoS 0; lost screen messages are healed by the `sv` heartbeat + `{t:"sync"}`, see local-mode-spec.md). Topics: phone → host `aeshow/<id>/h`; host → one
 phone `aeshow/<id>/p/<cid>`; host → every phone `aeshow/<id>/all` (phones act on it only after the host welcomed them).
-- phone → host: `{t:"in", x, y, b, k, s}` (k = press counter, s = message sequence number, echoed in the HUD), QoS 0.
-  Only when something changed (stick quantised to 24 directions × 4 steps), at most 8/s; a held stick/button is repeated
+- phone → host: `{t:"in", x, y, b, k, s}` (k = press counter, s = message sequence number, echoed in the HUD), latest wins.
+  Only when something changed (stick quantised to 24 directions × 4 steps), at most 4/s; a held stick/button is repeated
   every 1 s, an unconfirmed press every 0.4 s, and the last change once more after 0.3 s. The host zeroes an input that
   has not been refreshed for 2.5 s.
-- host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score, st, sc, ix, vb}`, QoS 1,
+- host → phone: `{t:"pad", ph, game, title, rules, controls, btnLabel, color, place, gain, score, st, sc, ix, vb, sv}`,
   only on phase changes: `ph` ∈ `"intro"` (rules + countdown), `"play"`, `"out"` (eliminated, still watching), `"res"`
   (round result), and the full state again when a phone rejoins mid-round.
   Extra fields: `round` (round id), `left` (seconds until start, intro only), `n` (players in round), `st`/`sc` (current
   `ctx.status`), `ix` (this player's index in the HUD array), `vb` (vibration counter, see below), `dur` (round length),
   `hm` (`"place"`|`"alive"`), `hl` (alive label) and `hud` (this player's current HUD, during play/out).
-- host → all phones during play: ONE `{t:"hud", round, tx, al, n, P:[…]}` message on the shared topic, QoS 0.
+- host → all phones during play: ONE `{t:"hud", round, tx, al, n, P:[…]}` message on the shared topic (latest wins).
   `tx` seconds left (phones count down locally), `al`/`n` alive / players; `P[ix]` per player: `k` last press counter the
   engine processed, `ok` count of `ctx.ack`, `s` last input sequence received and `sd` ms it was held before this HUD
   (phone RTT = now − send time of `s` − `sd`), `pl` live place (place games), `cd`/`cdT` cooldown from `ctx.cooldown`,
   `st`/`sc` the `ctx.status` line, `vb`/`vm` vibration counter and length (the phone buzzes when `vb` grows).
-  Sent only when something changed: press-related changes and status lines at most every 333 ms, anything else at most
-  every 1 s, plus a 1.5 s heartbeat — at most 3 msgs/s for the whole room, whatever the number of players.
+  Sent only when something changed: press-related changes and status lines at most every 500 ms, anything else at most
+  every 1 s, plus a 2.5 s heartbeat — at most 2 msgs/s for the whole room, whatever the number of players.
   Players not in the round get `{t:"idle"}` ("сыграешь в следующем раунде").
 
 ## Engine responsibilities (host)
@@ -128,7 +128,7 @@ phone `aeshow/<id>/p/<cid>`; host → every phone `aeshow/<id>/all` (phones act 
   RTT (green < 250 ms, yellow < 600 ms, red otherwise), score. The admin remote collapses to a 44 px ☰ button in the
   strip and opens as a sheet over a dimmed backdrop; it never overlaps the hit areas.
 - Press feedback: instant local press animation; the flash + vibration only when the host confirms (`ok`/`k` echo); a
-  press that reached the host during cooldown gets a small shake. No echo within 2 s (or no HUD for 4 s) →
+  press that reached the host during cooldown gets a small shake. No echo within 2 s (or no HUD for 6 s) →
   «нет связи» chip; the phone then probes its transports (a dead one is rebuilt) and knocks at the host. The knob glows while the host is acknowledging recent
   stick input and turns grey when that is stale for > 1 s.
 - Screen edge glows in the player's colour; the game's `ctx.status` line is a big pill at the top centre (colour tints
