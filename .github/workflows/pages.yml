@@ -32,6 +32,7 @@ jobs:
           test "$size" -eq 97240930
           cp index.html _site/
           cp -r games _site/
+          if [ -d vendor ]; then cp -r vendor _site/; fi
           cp apk.html *.apk _site/ 2>/dev/null || true
           touch _site/.nojekyll
 
