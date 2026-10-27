@@ -61,12 +61,12 @@ server → client:
   jitter); "latest wins" messages (HUD, input, ping, admin state, heartbeat) replace their queued copy; a transport's queue is
   dropped when it goes down.
 - Reliability is end-to-end. Screen messages (welcome, idle, q, res, tap, pad, final) carry a version `sv`
-  (monotonic, `max(prev+1, Date.now())` on the host); the host remembers each player's last one. Every 1.5 s it
+  (a counter per host page load, plus an epoch id `ep` that is new on every load; phones compare versions only within one epoch and accept anything from a new epoch, so the laptop clock never matters); the host remembers each player's last one. Every 1.5 s it
   broadcasts `{t:"sv", ht, v:{name:sv}}` on `/all`; a phone whose version is older sends `{t:"sync"}` and gets its
   current screen again (fresh for an open question / pad); a phone missing from `v` (host reloaded, welcome lost)
   joins again. Phones ignore screen messages older than the one they show. Phone → host requests are repeated until
   confirmed: join (2 → 5 s until welcome), answer (until the heartbeat lists the player in `a`), tap result (×3, counted
-  once), admin commands (2.5 s, 5 s; same `ci`, run once; a late older command — `cs` timestamp — is ignored), admin auth.
+  once), admin commands (held until acked or replaced by a newer one: sent at once, every 2.5 s and whenever a transport connects, button shows «Отправляю…»; same `ci` runs once; `cs` is a per-phone counter kept in localStorage and the host orders commands per phone by it — a late older one is acked with `stale` and the phone says so), admin auth.
 - Reconnects: mqtt.js reconnects by itself (first retry after ~1 s, then backoff 2 → 8 s, jittered); the local transport retries 1 → 10 s.
   A transport that has been quiet for 24 s, or when the page suspects trouble (phone woke up, host silent, command not
   acked, «нет связи»), gets a probe (MQTT: a PINGREQ, which no broker counts as a publish; relay:

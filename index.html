@@ -739,7 +739,7 @@ function host(){
   let bus=null,local=null,netKey="";
   // redrawn only when the set of live transports changes (so it does not overwrite e.g. the test-question result)
   let upN=0;
-  function netStatus(){const n=bus?bus.connected():0;if(n>upN&&lastShared&&Date.now()-lastShared.sv<60000)replayShared(); // our link came (back) up: what went out meanwhile may be lost
+  function netStatus(){const n=bus?bus.connected():0;if(n>upN&&lastShared&&svN-lastShared.sv<40)replayShared(); // our link came (back) up: what went out meanwhile may be lost
     upN=n;const k=(bus?"b:"+bus.tr.map(x=>x.name+(x.connected()?1:0)).join():"-")+"|"+hasMqtt();if(k===netKey)return;netKey=k;
     if(!bus){setNet(hasMqtt()?"Подключаюсь…":"Не загрузилась библиотека связи (vendor/mqtt.min.js). Обновите страницу.","err");return}
     const tr=bus.tr,on=tr.filter(x=>x.connected()),loc=tr.find(x=>x.kind==="local"),mq=tr.filter(x=>x.kind==="mqtt"),mqOn=mq.filter(x=>x.connected()).length;
@@ -759,7 +759,7 @@ function host(){
     setInterval(()=>{let ch=false;conns.forEach(c=>{if(c.was&&!c.open){c.was=false;ch=true}});if(ch)renderChips()},3000);
     setInterval(netStatus,2000);
     // state heartbeat: every player's current screen version; a phone that is behind asks for {t:"sync"}
-    setInterval(()=>{if(!players.size)return;const v={};players.forEach(p=>{if(p.sv)v[p.name]=p.sv});const h={t:"sv",ht:Date.now(),v};
+    setInterval(()=>{if(!players.size)return;const v={};players.forEach(p=>{if(p.sv)v[p.name]=p.sv});const h={t:"sv",ep:EP,hs:svN,v};
       if(open){h.q=open.q.id;h.a=[...players.values()].filter(p=>open.q.id in p.answers).map(p=>p.name)} // who has answered: phones stop repeating their answer
       bcast(h,0)},1500);
     // laptop back from sleep: make every transport prove it is alive (a dead one is rebuilt, a healthy one is left alone)
@@ -780,9 +780,10 @@ function host(){
   /* screen messages (what a phone shows) are stamped with a version sv and remembered per player as p.last,
      so a phone that missed one gets it again on {t:"sync"} (the transports are QoS 0, messages can be lost) */
   const SCREEN=new Set(["welcome","idle","q","res","tap","pad","final"]);let svN=0;
-  const nextSv=()=>svN=Math.max(svN+1,Date.now()); // grows across laptop reloads too
+  const nextSv=()=>++svN;
+  const EP=rid(6); // epoch: a new one on every host page load; phones compare versions only within one epoch (no trust in the laptop clock)
   const isPlayer=c=>!!(c._name&&players.get(c._name)&&players.get(c._name).conn===c);
-  function stamp(p,m,sv){if(!SCREEN.has(m.t))return m;m=Object.assign({},m,{sv:sv||nextSv()});p.sv=m.sv;p.last=m;return m}
+  function stamp(p,m,sv){if(!SCREEN.has(m.t))return m;m=Object.assign({},m,{sv:sv||nextSv(),ep:EP});p.sv=m.sv;p.last=m;return m}
   function send(p,m,qos=1){m=stamp(p,m);if(p.conn&&p.conn.open){try{p.conn.send(m,qos)}catch(e){}}}
   // a phone is behind (or just reconnected): its current screen again, fresh where it is live (open question, pad)
   function resync(p){const L=p.last;
@@ -792,7 +793,7 @@ function host(){
     send(p,Object.assign({},L))}
   // the same message for every phone: one publish on the shared topic instead of one per player
   // (phones act on it only after the host has welcomed them)
-  function bcast(m,qos=1){if(SCREEN.has(m.t)){const sv=nextSv();m=Object.assign({},m,{sv});players.forEach(p=>stamp(p,m,sv));lastShared={sv,m}}if(bus)bus.pub(T+"/all",{m},qos)}
+  function bcast(m,qos=1){if(SCREEN.has(m.t)){const sv=nextSv();m=Object.assign({},m,{sv,ep:EP});players.forEach(p=>stamp(p,m,sv));lastShared={sv,m}}if(bus)bus.pub(T+"/all",{m},qos)}
   /* the last screen message that went to everybody: when several phones are behind on exactly that one (the host's own
      link dropped for a moment) it is sent once more on /all instead of once per phone */
   let lastShared=null,replayT=0,replayAt=0;
@@ -807,7 +808,7 @@ function host(){
     const top={},R={},keys=new Set();ms.forEach(([,m])=>Object.keys(m).forEach(k=>keys.add(k)));
     keys.forEach(k=>{const v=JSON.stringify(ms[0][1][k]);if(ms.every(([,m])=>JSON.stringify(m[k])===v))top[k]=ms[0][1][k]});
     ms.forEach(([n,m])=>{const o={};for(const k in m)if(!(k in top))o[k]=m[k];R[n]=o});
-    const sv=SCREEN.has(top.t)?nextSv():0;if(sv){top.sv=sv;ms.forEach(([n,m])=>{const p=players.get(n);if(p)stamp(p,Object.assign({},m),sv)})}
+    const sv=SCREEN.has(top.t)?nextSv():0;if(sv){top.sv=sv;top.ep=EP;ms.forEach(([n,m])=>{const p=players.get(n);if(p)stamp(p,Object.assign({},m),sv)})}
     top.R=R;if(sv)lastShared={sv,m:top};if(bus)bus.pub(T+"/all",{m:top},1)}
   $("diagRe").onclick=()=>{if(!bus)return;bus.kickAll("по кнопке");$("diagRe").disabled=true;setTimeout(()=>{$("diagRe").disabled=false},3000)};
   $("hostDiag").onclick=()=>diag.open(()=>{const on=[...conns.values()].filter(c=>c._name);
@@ -840,7 +841,7 @@ function host(){
       return}
     const p=players.get(conn._name);if(!p)return;
     if(m.t==="sync"){if(p.conn!==conn){conn.send({t:"pong",who:true},0);return}
-      if(lastShared&&p.sv===lastShared.sv&&+m.sv<p.sv){replayShared();return} // behind on the shared screen: one replay for everybody
+      if(m.ep===EP&&lastShared&&p.sv===lastShared.sv&&+m.sv<p.sv){replayShared();return} // behind on the shared screen: one replay for everybody
       resync(p);return}
     if(m.t==="answer"&&open&&m.qid===open.q.id&&!(open.q.id in p.answers)){
       const opt=+m.opt;if(!(opt>=0&&opt<open.q.options.length))return;
@@ -850,11 +851,14 @@ function host(){
     if(m.t==="in"){actInput(p,m);return}
     if(m.t==="tapped")onTapped(p,m);
     if(m.t==="auth"&&p.name===ADMIN&&m.h===PASS_HASH){conn._admin=true;lastAdm=""}
-    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c]){send(p,{t:"ack",c:m.c,ci:m.ci});
-      if(m.ci&&cmdSeen.has(m.ci))return; // the phone repeats a command it got no ack for: run it once
-      if(m.cs&&m.cs<cmdCs)return;if(m.cs)cmdCs=m.cs; // a late copy of an older command (e.g. «Пауза» after «Играть»): ignore
+    if(m.t==="cmd"&&p.name===ADMIN&&conn._admin&&CMDS[m.c]){
+      if(m.ci&&cmdSeen.has(m.ci)){send(p,{t:"ack",c:m.c,ci:m.ci});return} // the phone repeats a command it got no ack for: run it once
+      // order per sending phone (its own counter, not its clock): a late copy of an older command (e.g. «Пауза» arriving
+      // after «Играть») is not run, and the phone is told so instead of being silently ignored
+      const last=cmdCs.get(conn.cid);if(m.cs!=null&&last!=null&&+m.cs<=last){send(p,{t:"ack",c:m.c,ci:m.ci,stale:1},0);return}
+      if(m.cs!=null)cmdCs.set(conn.cid,+m.cs);
       if(m.ci){cmdSeen.add(m.ci);if(cmdSeen.size>50)cmdSeen.delete(cmdSeen.values().next().value)}
-      CMDS[m.c](m)}
+      send(p,{t:"ack",c:m.c,ci:m.ci});CMDS[m.c](m)}
     if(m.t==="leave"){detach(conn);renderChips()} // keep the score: picking the same name again restores it
   }
   // a phone loses its name (leave / takeover / switch): the player and their score stay
@@ -1385,7 +1389,7 @@ function host(){
   $("aVote").onclick=startVote;$("aNext").onclick=()=>userNext();$("aStop").onclick=()=>arenaIdle();$("aClose").onclick=closeArena;
 
   /* --- remote control from the admin's phone --- */
-  let adminNote="",lastAdm="",lastAdmAt=0;const cmdSeen=new Set();let cmdCs=0;
+  let adminNote="",lastAdm="",lastAdmAt=0;const cmdSeen=new Set(),cmdCs=new Map();
   const playFail="Ноутбук не дал запустить видео: браузер ждёт клика. Кликните один раз по странице на ноутбуке и снова нажмите «Играть» здесь.";
   const CMDS={
     play:m=>{if($("show").hidden||aShown())return;const want=m&&m.want||(video.paused?"play":"pause"); // want: what the button said when tapped
@@ -1425,7 +1429,7 @@ function player(){
   $("otherGo").onclick=()=>{const v=$("otherName").value.trim();if(v)join(v)};
   $("otherName").onkeydown=e=>{if(e.key==="Enter")$("otherGo").click()};
   $("notMe").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});forget()};
-  function forget(){welcomed=false;mySv=0;clearTimeout(knockT);pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";admShape="";admOk=false;$("admAsk").hidden=true;document.documentElement.classList.remove("isadm");if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
+  function forget(){welcomed=false;mySv=0;myEp="";clearTimeout(knockT);pad=null;cur=null;tap=null;stopTimer();store.del("aeshow-name");myName=null;$("adm").hidden=true;admKey="";admShape="";admOk=false;$("admAsk").hidden=true;document.documentElement.classList.remove("isadm");if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}$("meName").textContent="Шоу Артёма и Егора";$("meScore").textContent="";scr("pName")}
   function join(n){myName=n;$("nameNote").textContent="";store.set("aeshow-name",n);$("meName").textContent=n;
     $("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait");
     welcomed=false;knockN=0;knock()}
@@ -1437,7 +1441,7 @@ function player(){
   function setConn(on){$("conn").className="conn"+(on?" on":"")}
   const T="aeshow/"+hostId;
   let cid=store.get("aeshow-cid");if(!cid){cid=rid(10);store.set("aeshow-cid",cid)}
-  let hostSeen=-1e9,knocks=0,welcomed=false,hostRtt=0,lastUp=0,pingT=0,isLocal=false,mySv=0,syncAt=0;
+  let hostSeen=-1e9,knocks=0,welcomed=false,hostRtt=0,lastUp=0,pingT=0,isLocal=false,mySv=0,myEp="",syncAt=0;
   // liveness uses the wall clock: performance.now() may not advance while the phone sleeps, which would make a dead link look fresh
   let lastSent=0;
   const conn={get open(){return Date.now()-hostSeen<STALE},send(m,qos){lastSent=Date.now();bus.pub(T+"/h",{f:cid,m},qos)}};
@@ -1450,16 +1454,18 @@ function player(){
     if(m.t==="sv"){onSv(m);return}
     if(m.t==="pong"){if(m.pt){const r=Date.now()-m.pt;if(r>=0&&r<30000)hostRtt=hostRtt?Math.round(hostRtt*.6+r*.4):r}return}
     onMsg(m)},
-    ()=>{const n=bus?bus.connected():0;if(n>lastUp){clearTimeout(pingT);pingT=setTimeout(()=>{requestSync();tickNet()},300)}lastUp=n}, // a transport came up: catch up at once (we may have missed something)
+    ()=>{const n=bus?bus.connected():0;if(n>lastUp){clearTimeout(pingT);pingT=setTimeout(()=>{requestSync();admFlush();tickNet()},300)}lastUp=n}, // a transport came up: catch up at once (we may have missed something)
     {rate:4,tap:(w,tr)=>{if(w.m&&w.m.t==="pong"&&w.m.pt){const r=Date.now()-w.m.pt;if(r>=0&&r<30000)tr.rttHost=tr.rttHost?Math.round(tr.rttHost*.6+r*.4):r}}});
   detectLocal().then(j=>{if(j){isLocal=true;bus.addLocal(relayUrl())}});
   // host heartbeat: our screen version there; missing = it does not know us, newer = we missed a screen message
-  function onSv(m){if(!myName||m.ht<mySv)return; // an old heartbeat that arrived late
+  function onSv(m){if(!myName)return;
+    if(m.ep!==myEp){const v=m.v&&m.v[myName];if(v==null||!welcomed)knockSoon();else requestSync();return} // another host epoch (it reloaded)
+    if(m.hs<mySv)return; // an old heartbeat that arrived late
     if(cur&&m.q===cur.qid&&Array.isArray(m.a)&&m.a.includes(myName))cur.got=true; // our answer is in
     const v=m.v&&m.v[myName];
     if(v==null||!welcomed){knockSoon();return}
     if(v>mySv)requestSync()}
-  function requestSync(){if(!welcomed||Date.now()-syncAt<1500)return;syncAt=Date.now();conn.send({t:"sync",sv:mySv})}
+  function requestSync(){if(!welcomed||Date.now()-syncAt<1500)return;syncAt=Date.now();conn.send({t:"sync",sv:mySv,ep:myEp})}
   /* ping the host every 5 s; while it is silent, keep knocking with "join" so we get back in as soon as it is reachable.
      No reconnect from here: the bus probes and rebuilds only transports that are provably dead (see makeBus) */
   function tickNet(){
@@ -1480,7 +1486,8 @@ function player(){
   $("diagRe").onclick=()=>{bus.kickAll("по кнопке");$("diagRe").disabled=true;setTimeout(()=>{$("diagRe").disabled=false;tickNet()},3000)};
   function onMsg(m){
     if(m.R){const r=m.R[myName];if(!r)return;m=Object.assign({},m,r);delete m.R} // shared message with a part per player
-    if(m.sv){if(m.sv<=mySv)return;mySv=m.sv} // (equal = a replay of the screen we already show) // screen messages are versioned: a late, older one must not replace a newer screen
+    if(m.sv){if(m.ep!==myEp){myEp=m.ep;mySv=0} // a new host epoch: its versions start over
+      if(m.sv<=mySv)return;mySv=m.sv} // (equal = a replay of the screen we already show) // screen messages are versioned: a late, older one must not replace a newer screen
     if(m.t==="welcome"){welcomed=true;clearTimeout(knockT);myName=m.name;$("nameNote").textContent="";$("meName").textContent=m.name;$("meScore").textContent=m.score+" очк.";if(m.name!==ADMIN){$("adm").hidden=true;document.documentElement.classList.remove("isadm")}else adminAuth();
       if(!m.active){pad=null;cur=null;tap=null;stopTimer()} // the host has nothing open (e.g. it reloaded): drop a stale question / pad
       if(!cur&&!pad){$("waitTitle").textContent=`Ты в игре, ${m.name}!`;$("waitText").textContent="Смотри на экран. Когда начнётся вопрос, здесь появятся кнопки.";scr("pWait")}}
@@ -1697,32 +1704,37 @@ function player(){
     else if(st.mode==="show"){b("play",st.paused?"▶ Играть":"⏸ Пауза",{main:1});b("back","−10 с");b("fwd","+10 с");b("vote","Мини-игра",{ask:"Поставить видео на паузу и открыть мини-игры?"});b("podium","Финальный подиум",{ask:"Показать финальный подиум? Открытый вопрос или раунд закроется."});b("lobby","В лобби",{ask:"Остановить шоу и вернуться в лобби?"})}
     else{if(!st.phase||st.phase==="idle"){b("vote","Голосование за игру",{main:1});b("kick","Выкинуть всех игроков",{ask:"Выкинуть всех игроков? Их очки обнулятся."})}else{b("next","Дальше ⏭",{main:1});b("endgame","Прервать игру",{ask:"Прервать игру без очков?"})}b("podium","Финальный подиум",{ask:"Показать финальный подиум? Открытый вопрос или раунд закроется."});b("close","Закрыть мини-игры",{ask:"Закрыть мини-игры?"})}
     const mode={lobby:"Лобби",show:st.paused?"Видео на паузе":"Идёт видео",arena:"Мини-игры",podium:st.sd?"Перестрелка":st.pod==="final"?"Финальный подиум":"Итоги видео"}[st.mode];
-    const key=JSON.stringify([B,mode,st.note]);$("adm").hidden=false;if(key===admKey)return;admKey=key;
+    const key=JSON.stringify([B,mode,st.note,admCmdP&&admCmdP.ci]);$("adm").hidden=false;if(key===admKey)return;admKey=key;
     $("admMode").textContent=mode;$("admNote").textContent=st.note||"";
     // the buttons are created only when the set of commands changes; otherwise they are updated in place,
     // so a state update (it comes every time the video pauses / plays) never replaces a button under the finger
     const box=$("admBtns"),shape=B.map(x=>x.c).join();
     if(shape!==admShape){admShape=shape;const old=new Map([...box.children].map(e=>[e._x&&e._x.c,e])); // a command that stays keeps its button element
       box.replaceChildren(...B.map(x=>{let e=old.get(x.c);if(!e){e=document.createElement("button");e.type="button";e.onclick=()=>admTap(e)}old.delete(x.c);return e}))}
-    B.forEach((x,i)=>{const e=box.children[i];e._x=x;e.className=x.main?"main":"";e.disabled=!!x.dis;e.textContent=x.t});
+    B.forEach((x,i)=>{const e=box.children[i];e._x=x;e.className=x.main?"main":"";e.disabled=!!x.dis;e.textContent=admCmdP&&admCmdP.c===x.c?"Отправляю…":x.t});
     if(asking&&!B.some(x=>x.c===asking.c&&x.ask===asking.ask&&!x.dis))askClose()} // the state moved on: that action no longer applies
   function admTap(e){const x=e._x;if(!x)return;if(!wakeLock){wakeTry=0;keepAwake()}
-    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — жду связь… Нажми ещё раз через пару секунд.";admKey="";bus.probe();tickNet();return}
     if(x.ask){askOpen(x);return}
     admSend(x,e)}
   function admSend(x,e){
     const m={t:"cmd",c:x.c};if(x.c==="next")m.tok=admTok;
     if(x.c==="play"&&admSt){m.want=admSt.paused?"play":"pause"; // flip the label at once; the host gets the wanted state, so a quick second tap cannot undo the first
       admWant=!admSt.paused;admPend=performance.now()+2500;renderAdmin(admSt)}
-    m.ci=rid(8);m.cs=Date.now();conn.send(m);e.classList.add("sent");setTimeout(()=>e.classList.remove("sent"),350);
-    /* the host acks every command at once (ack carries ci). No ack: the same command again after 2.5 s and 5 s (same ci,
-       so the host runs it only once) and the transports get checked; still nothing after 9 s: say so. */
-    const P={ci:m.ci,t1:0,t2:0};admCmdP=P;
-    const again=k=>{P.t1=setTimeout(()=>{if(admCmdP!==P)return;conn.send(m);bus.probe();$("admNote").textContent="Связь медленная — повторяю команду…";if(k<2)again(k+1)},2500)};again(1);
-    P.t2=setTimeout(()=>{if(admCmdP!==P)return;admCmdP=null;clearTimeout(P.t1);$("admNote").textContent="Команда не дошла до ноутбука. Проверь связь (точка вверху слева) и нажми ещё раз."},9000)}
-  let admCmdP=null;
-  function admAck(m){const P=admCmdP;if(!P||m.ci!==P.ci)return;clearTimeout(P.t1);clearTimeout(P.t2);admCmdP=null;
-    if(/^(Связь медленная|Команда не дошла)/.test($("admNote").textContent)){$("admNote").textContent=admSt&&admSt.note||"";admKey=""}}
+    m.ci=rid(8);m.cs=nextCs();e.classList.add("sent");setTimeout(()=>e.classList.remove("sent"),350);
+    /* the command is held until the host acks it (ack carries ci) or a newer command replaces it: it goes out now, again
+       every 2.5 s (same ci, so the host runs it once), and at once whenever a transport (re)connects; while nothing is
+       connected it simply waits. The button reads «Отправляю…» meanwhile. */
+    const P={m,c:x.c,ci:m.ci,t:0,at:Date.now()};if(admCmdP)clearInterval(admCmdP.t);admCmdP=P;admKey="";if(admSt)renderAdmin(admSt);
+    admFlush();P.t=setInterval(()=>{if(admCmdP!==P){clearInterval(P.t);return}admFlush();bus.probe();
+      if(Date.now()-P.at>6000)$("admNote").textContent=bus.connected()?"Связь медленная — повторяю команду…":"Нет связи — команда отправится, как только связь появится."},2500)}
+  let admCmdP=null,admSeq=+store.get("aeshow-cseq")||0;
+  // per-phone command counter (the host orders commands per phone by it, never by the phone's clock)
+  function nextCs(){admSeq++;store.set("aeshow-cseq",String(admSeq));return admSeq}
+  function admFlush(){const P=admCmdP;if(P&&bus.connected())conn.send(P.m)}
+  function admAck(m){const P=admCmdP;if(!P||m.ci!==P.ci)return;clearInterval(P.t);admCmdP=null;admKey="";
+    if(m.stale)$("admNote").textContent="Ноутбук уже выполнил более новую команду — эта пропущена. Нажми ещё раз, если нужно.";
+    else if(/^(Связь медленная|Нет связи — команда)/.test($("admNote").textContent))$("admNote").textContent=admSt&&admSt.note||"";
+    if(admSt)renderAdmin(admSt)}
   /* confirmation popup for destructive commands (not window.confirm: that would freeze the page and the connection) */
   let asking=null;
   function askOpen(x){asking=x;$("askQ").textContent=x.ask;$("askYes").textContent="Да";$("admAsk").hidden=false}
@@ -1730,7 +1742,6 @@ function player(){
   $("askNo").onclick=askClose;
   $("admAsk").onclick=e=>{if(e.target===$("admAsk"))askClose()};
   $("askYes").onclick=()=>{const x=asking;askClose();if(!x)return;
-    if(!conn.open){$("admNote").textContent="Нет связи с ноутбуком — жду связь… Нажми ещё раз через пару секунд.";admKey="";bus.probe();tickNet();return}
     admSend(x,[...$("admBtns").children].find(b=>b._x&&b._x.c===x.c)||$("askYes"))}
   if(myName){$("meName").textContent=myName;$("waitTitle").textContent="Подключаюсь…";$("waitText").textContent="Секунду.";scr("pWait")}else scr("pName");
   setConn(false);setInterval(tickNet,5000);
