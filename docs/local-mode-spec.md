@@ -52,3 +52,28 @@ server → client:
 - Connection diagnostics: tapping the connection dot on a phone (and a small link on the host lobby) opens a
   panel listing each transport (local / emqx / hivemq / mosquitto): state, last error, reconnect count,
   round-trip time to the host.
+
+### Page networking rules (implemented)
+- Topics: phone → host `aeshow/<id>/h`, host → one phone `aeshow/<id>/p/<cid>`, host → every phone `aeshow/<id>/all`
+  (phones act on `/all` only after the host has welcomed them). The relay and the brokers carry the same topics.
+- Everything is published with MQTT QoS 0 (subscriptions too, `queueQoSZero:false`): mqtt.js never replays anything
+  after a reconnect. Each transport has its own send queue + token bucket (host and phones 4 msgs/s, burst 1, small
+  jitter); "latest wins" messages (HUD, input, ping, admin state, heartbeat) replace their queued copy; a transport's queue is
+  dropped when it goes down.
+- Reliability is end-to-end. Screen messages (welcome, idle, q, res, tap, pad, final) carry a version `sv`
+  (a counter per host page load, plus an epoch id `ep` that is new on every load; phones compare versions only within one epoch and accept anything from a new epoch, so the laptop clock never matters); the host remembers each player's last one. Every 1.5 s it
+  broadcasts `{t:"sv", ht, v:{name:sv}}` on `/all`; a phone whose version is older sends `{t:"sync"}` and gets its
+  current screen again (fresh for an open question / pad); a phone missing from `v` (host reloaded, welcome lost)
+  joins again. Phones ignore screen messages older than the one they show. Phone → host requests are repeated until
+  confirmed: join (2 → 5 s until welcome), answer (until the heartbeat lists the player in `a`), tap result (×3, counted
+  once), admin commands (held until acked or replaced by a newer one: sent at once, every 2.5 s and whenever a transport connects, button shows «Отправляю…»; same `ci` runs once; `cs` is a per-phone counter kept in localStorage and the host orders commands per phone by it — a late older one is acked with `stale` and the phone says so), admin auth.
+- Reconnects: mqtt.js reconnects by itself (first retry after ~1 s, then backoff 2 → 8 s, jittered); the local transport retries 1 → 10 s.
+  A transport that has been quiet for 24 s, or when the page suspects trouble (phone woke up, host silent, command not
+  acked, «нет связи»), gets a probe (MQTT: a PINGREQ, which no broker counts as a publish; relay:
+  `{op:"ping"}`). Only a transport that leaves the probe unanswered for 6 s is rebuilt (a brand-new mqtt client with a
+  new clientId; never `end()+reconnect()` on the same client), at most once per 30 s per transport.
+- Diagnostics: phone — tap the connection dot left of the name (in a game: the RTT dot top right; on the waiting screen
+  also the «Диагностика связи» button); host — «Диагностика связи» under the QR code. Per transport: state, how long it
+  has been up, messages in/out per second, round trip to the host (phone) / to the laptop (local), connects /
+  disconnects / rebuilds, last packet, last error. «Скопировать отчёт» copies all of it as text to send to the
+  developers; «Переподключить» rebuilds every transport once.
